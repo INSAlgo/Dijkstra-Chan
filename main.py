@@ -1,20 +1,37 @@
 import discord
 from argparse import ArgumentParser
- 
+import re
+
+from codeforces_client import get_future_contests
+
+
 intents = discord.Intents.all()
-client = discord.Client(command_prefix='!', intents=intents)
- 
+client = discord.Client(intents=intents)
+
+
 @client.event
 async def on_ready():
-    print('We have logged in as {0.user}'.format(client))
- 
+    print(f"We have logged in as {client.user}")
+
+
 @client.event
 async def on_message(message: discord.Message):
     if message.author == client.user:
         return
- 
-    if message.content.startswith('hi'):
+
+    if message.content.startswith('hi') :
         await message.channel.send('Hello!')
+
+    # Command to get N contests to come :
+    elif re.fullmatch("^CodeForces rounds( [0-9]+)?$", message.content) is not None :
+
+        # Parsing the number of contests wanted :
+        if message.content[-1].isnumeric() :
+            nb = int(message.content.split(' ')[-1])
+        else :
+            nb = 0
+
+        await message.channel.send(get_future_contests(nb))
 
 
 if __name__ == "__main__" :
