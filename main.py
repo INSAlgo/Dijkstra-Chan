@@ -1,4 +1,5 @@
 import discord
+from argparse import ArgumentParser
  
 intents = discord.Intents.all()
 client = discord.Client(command_prefix='!', intents=intents)
@@ -14,5 +15,35 @@ async def on_message(message: discord.Message):
  
     if message.content.startswith('hi'):
         await message.channel.send('Hello!')
- 
-client.run('MTA0NzIxODUwODc1MDE0MzU3OA.GRYSeJ.wwIuJ3jUk0DSP0Z1K38R1eTtTh14zVxgR7kOhU')
+
+
+if __name__ == "__main__" :
+
+    parser = ArgumentParser(description="")
+
+    parser.add_argument(
+        '-t', '--token',
+        help="The file to read the token from, or the token itself if -nf.",
+        action="store",
+        default="token",
+        required=False
+    )
+
+    parser.add_argument(
+        '-nf', '--is_not_file',
+        help="If given, reads the file given in -t, else takes -t as the token.",
+        action="store_true",
+        required=False
+    )
+
+    args = parser.parse_args()
+
+    if args.is_not_file :
+        token = args.token
+    
+    else :
+        File = open(args.token)
+        token = File.readline().strip('\n')
+        File.close()
+
+    client.run(token)
