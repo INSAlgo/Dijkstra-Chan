@@ -1,6 +1,9 @@
 from client_template import Client
 from datetime import datetime, timedelta
 
+from event import Event
+from reminder import Reminder
+
 CF_client = Client("codeforces.com/api/")
 
 def get_contests(statuses: set[str] = {"BEFORE"}) -> tuple[int, list[dict] | str] :
@@ -25,7 +28,7 @@ def get_contests(statuses: set[str] = {"BEFORE"}) -> tuple[int, list[dict] | str
 
     return 0, res
 
-def get_future_contests(nb: int = 0) -> tuple[int, list[dict] | str] :
+def get_fut_cont_message(nb: int = 0) -> tuple[int, list[dict] | str] :
     err_code, res = get_contests()
 
     if err_code == 1 :
@@ -37,10 +40,11 @@ def get_future_contests(nb: int = 0) -> tuple[int, list[dict] | str] :
     if nb < 1 :
         nb = len(res)
     
-    res.sort(key=lambda c : c["startTimeSeconds"])
+    res.sort(key=lambda c : c["startTimeSeconds"] if ("startTimeSeconds" in c) else float("inf"))
 
     contests = []
 
+    i = 0
     for contest in res[:nb] :
         lines = []
 
@@ -53,17 +57,18 @@ def get_future_contests(nb: int = 0) -> tuple[int, list[dict] | str] :
             lines.append("Start date unknown")
         
         m = contest["durationSeconds"] // 60
-        lines.append(f"For a duration of {m//60} hours and {m%60} minutes")
+        lines.append(f"For a duration of {m//60} hour(s) and {m%60} minutes")
         
-        if "difficulty" in contest.keys() :
-            dif = contest["difficulty"] + "/5"
-        else :
-            dif = "unknown"
-        if "kind" in contest.keys() :
-            kind = contest["kind"]
-        else :
-            kind = "unknown"
-        lines.append(f"difficulty : {dif}, kind : {kind}")
+        ## Usually "unknwon", so it's useless to add them
+        # if "difficulty" in contest.keys() :
+        #     dif = contest["difficulty"] + "/5"
+        # else :
+        #     dif = "unknown"
+        # if "kind" in contest.keys() :
+        #     kind = contest["kind"]
+        # else :
+        #     kind = "unknown"
+        # lines.append(f"difficulty : {dif}, kind : {kind}")
 
         if "description" in contest.keys() :
             lines.append(contest["description"])
@@ -71,3 +76,67 @@ def get_future_contests(nb: int = 0) -> tuple[int, list[dict] | str] :
         contests.append('\n'.join(lines))
     
     return '\n\n'.join(contests)
+
+def CF_contest_event(contest: dict[str]) -> tuple[int, Event | str] :
+    if "startTimeSeconds" not in contest :
+        return 1, "no timestamp"
+    
+    name = contest["name"]
+    link = "https://codeforces.com/contests/" + str(contest["id"])
+    website = "CodeForces"
+
+    m = contest["durationSeconds"] // 60
+    desc = f"Will be {m//60} hour(s) and {m%60} minutes long"
+    if "description" in contest.keys() :
+        desc += '\n' + contest["desc"]
+    
+    timestamp = datetime.fromtimestamp(contest["startTimeSeconds"])
+    
+    return 0, Event(name, link, website, desc, timestamp)
+
+def get_fut_cont_reminders(test=False) -> tuple[int, list[Event] | str]:
+    err_code, res = get_contests()
+
+    if err_code == 1 :
+        return 1, "client.get() error : " + res
+    elif err_code == 2 :
+        return 1, "CodeForces response not OK : " + res
+    
+    reminders = []
+
+    for contest in res :
+        err_code, event = CF_contest_event(contest)
+
+        if err_code == 1 :
+            # contest without a date
+            continue
+        
+        reminders.append(Reminder(event, "5min"))
+        reminders.append(Reminder(event, "hour"))
+        reminders.append(Reminder(event, "day"))
+    
+    if test :
+        # Sets reminders to test messages
+        reminders.append(Reminder(
+            Event(
+                "Test_day", "", "", "test for day reminder",
+                datetime.now() + timedelta(days=1, seconds=60)
+            ),
+            "day"
+        ))
+        reminders.append(Reminder(
+            Event(
+                "Test_hour", "", "", "test for hour reminder",
+                datetime.now() + timedelta(days=1, seconds=3720)
+            ),
+            "hour"
+        ))
+        reminders.append(Reminder(
+            Event(
+                "Test_5min", "", "", "test for 5min reminder",
+                datetime.now() + timedelta(days=1, seconds=480)
+            ),
+            "5min"
+        ))
+    
+    return 0, reminders
