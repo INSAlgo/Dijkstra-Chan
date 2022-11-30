@@ -1,63 +1,63 @@
 import discord
 import asyncio
 from argparse import ArgumentParser
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import re
-import heapq
+from queue import PriorityQueue as PQ
 
-from codeforces_client import get_fut_cont_message, get_fut_cont_reminders
-from event import msg_to_event
-from reminder import Reminder
+from codeforces_client import get_fut_cont_message, get_fut_cont_events
+from event import Event, msg_to_event, save_events, load_events
+from reminder import Reminder, generate_queue
 
 
 intents = discord.Intents.all()
 client = discord.Client(intents=intents)
+notif_channel: discord.TextChannel = None
 
-reminders: list[Reminder] = []
-remind_instance = 0
+events: set[Event] = set()
+reminders: PQ[Reminder] = PQ()
+cur_rem: asyncio.Task[None] | None = None
 
 
-def update_reminders() :
+async def wait_reminder() :
     global reminders
-    reminders = []
 
-    err_code, CF_cont_reminders = get_fut_cont_reminders(test=True)
-    if err_code == 1 :
-        print(CF_cont_reminders)
+    time = (reminders.queue[0].time - datetime.now()).total_seconds()
+    print("waiting for a reminder...")
+    await asyncio.sleep(time)
+    await notif_channel.send(reminders.get().msg())
 
-    reminders += CF_cont_reminders
-
-    heapq.heapify(reminders)
-
-
-async def wait_until(time: datetime) :
-    if (time - datetime.now()).total_seconds() < 0 :
-        return 1
-    await asyncio.sleep((time - datetime.now()).total_seconds())
-    return 0
-
-
-async def remind(instance: int) :
-    global reminders
-    channel = discord.utils.get(client.get_all_channels(), name="annonces-automatiques")
-
-    while reminders :
-        next_rem = reminders[0]
-        err_code = await wait_until(next_rem.time)
-
-        if remind_instance != instance :
-            return
-
-        if err_code == 0 :
-            await channel.send(next_rem.msg())
-        heapq.heappop(reminders)
-
+    # Loops to wait for the next reminder
+    global cur_rem
+    if reminders.empty() :
+        cur_rem = None
+    else :
+        cur_rem = asyncio.ensure_future(wait_reminder())
 
 @client.event
 async def on_ready() :
-    update_reminders()
-    remind(0)
+    global events
+    events = load_events()
+    err_code, CF_contests = get_fut_cont_events()
+    if err_code > 0 :
+        print(CF_contests)
+    else :
+        events |= CF_contests
+    
+    global reminders
+    reminders = generate_queue(events)
+
+    global notif_channel
+    notif_channel = discord.utils.get(client.get_all_channels(), name="annonces-automatiques")
+
+    global cur_rem
+    if cur_rem is not None :
+        cur_rem.cancel()
+    if reminders.empty() :
+        cur_rem = None
+    else :
+        cur_rem = asyncio.ensure_future(wait_reminder())
 
 
 @client.event
@@ -79,21 +79,33 @@ async def on_message(message: discord.Message):
 
         await message.channel.send(get_fut_cont_message(nb))
     
-    # Command to add an event to the queue of reminders :
-    elif message.content.startswith("add event reminders") :
-        global remind_instance
+    # Command to add an event :
+    elif message.content.startswith("add event") :
         event = msg_to_event(message.content)
 
         if event is None :
             await message.channel.send("please format the date as YYYY/MM/DD HH:MM")
         
         else :
-            heapq.heappush(reminders, Reminder(event, "5min"))
-            heapq.heappush(reminders, Reminder(event, "hour"))
-            heapq.heappush(reminders, Reminder(event, "day"))
-            remind_instance += 1
-            remind(remind_instance)
-            await message.channel.send(f"Reminders for {event.name} have been succesfully added to the queue!")
+            global events
+            global reminders
+            global cur_rem
+
+            events.add(event)
+            await message.channel.send(f"event {event.name} succesfully added to the list!")
+            reminders = generate_queue(events)
+            await message.channel.send("succesfully generated new reminders!")
+
+            if cur_rem is not None :
+                cur_rem.cancel()
+            if reminders.empty() :
+                cur_rem = None
+            else :
+                cur_rem = asyncio.ensure_future(wait_reminder())
+            
+    
+    elif message.content == "update events" :
+        pass
 
 
 if __name__ == "__main__" :
@@ -126,3 +138,4 @@ if __name__ == "__main__" :
         File.close()
 
     client.run(token)
+    save_events(events)

@@ -81,20 +81,21 @@ def CF_contest_event(contest: dict[str]) -> tuple[int, Event | str] :
     if "startTimeSeconds" not in contest :
         return 1, "no timestamp"
     
-    name = contest["name"]
-    link = "https://codeforces.com/contests/" + str(contest["id"])
-    website = "CodeForces"
+    attrs = {}
+
+    attrs["name"] = contest["name"]
+    attrs["link"] = "https://codeforces.com/contests/" + str(contest["id"])
+    attrs["webs"] = "CodeForces"
+    attrs["time"] = contest["startTimeSeconds"]
 
     m = contest["durationSeconds"] // 60
-    desc = f"Will be {m//60} hour(s) and {m%60} minutes long"
+    attrs["desc"] = f"Will be {m//60} hour(s) and {m%60} minutes long"
     if "description" in contest.keys() :
-        desc += '\n' + contest["desc"]
+        attrs["desc"] += '\n' + contest["desc"]
     
-    timestamp = datetime.fromtimestamp(contest["startTimeSeconds"])
-    
-    return 0, Event(name, link, website, desc, timestamp)
+    return 0, Event(attrs)
 
-def get_fut_cont_reminders(test=False) -> tuple[int, list[Event] | str]:
+def get_fut_cont_events() -> tuple[int, set[Event] | str]:
     err_code, res = get_contests()
 
     if err_code == 1 :
@@ -102,7 +103,7 @@ def get_fut_cont_reminders(test=False) -> tuple[int, list[Event] | str]:
     elif err_code == 2 :
         return 1, "CodeForces response not OK : " + res
     
-    reminders = []
+    events = set()
 
     for contest in res :
         err_code, event = CF_contest_event(contest)
@@ -111,32 +112,6 @@ def get_fut_cont_reminders(test=False) -> tuple[int, list[Event] | str]:
             # contest without a date
             continue
         
-        reminders.append(Reminder(event, "5min"))
-        reminders.append(Reminder(event, "hour"))
-        reminders.append(Reminder(event, "day"))
+        events.add(event)
     
-    if test :
-        # Sets reminders to test messages
-        reminders.append(Reminder(
-            Event(
-                "Test_day", "", "", "test for day reminder",
-                datetime.now() + timedelta(days=1, seconds=60)
-            ),
-            "day"
-        ))
-        reminders.append(Reminder(
-            Event(
-                "Test_hour", "", "", "test for hour reminder",
-                datetime.now() + timedelta(days=1, seconds=3720)
-            ),
-            "hour"
-        ))
-        reminders.append(Reminder(
-            Event(
-                "Test_5min", "", "", "test for 5min reminder",
-                datetime.now() + timedelta(days=1, seconds=480)
-            ),
-            "5min"
-        ))
-    
-    return 0, reminders
+    return 0, events

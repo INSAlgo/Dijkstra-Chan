@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from queue import PriorityQueue as PQ
 
 from event import Event
 
@@ -23,6 +24,7 @@ class Reminder :
         self.delay: str = delay
         self.time: datetime = event.time - delays[delay]
         self.event: Event = event
+        self.future: bool = (self.time > datetime.now())
     
     def __lt__(self, other: Reminder) :
         return self.time < other.time
@@ -32,3 +34,14 @@ class Reminder :
     
     def msg(self) :
         return messages[self.delay] + "\n>>>" + self.event.msg()
+
+def generate_queue(events: set[Event]) -> PQ[Reminder] :
+    reminders = PQ()
+
+    for event in events :
+        for delay in delays.keys() :
+            rem = Reminder(event, delay)
+            if rem.future :
+                reminders.put(rem)
+
+    return reminders
