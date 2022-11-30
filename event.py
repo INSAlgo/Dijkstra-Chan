@@ -24,6 +24,8 @@ class Event :
         self.name = attrs["name"]
         self.link = attrs["link"]
         self.webs = attrs["webs"]
+        if self.webs == "" :
+            self.webs = " "
         self.desc = attrs["desc"]
         self.time = None
 
@@ -57,9 +59,12 @@ class Event :
             "time" : int(self.time.timestamp()), "desc" : self.desc
         }
     
+    def __eq__(self, other: Event) :
+        return (self.webs, self.name, self.time.timestamp()) == (other.webs, other.name, other.time.timestamp())
+    
     def __hash__(self) :
         # For identification, to avoid duplicate events
-        return int(f"{self.webs.__hash__()}{abs(self.name.__hash__())}{abs(self.time.timestamp())}"[:-2])
+        return int(self.webs.__hash__() * self.name.__hash__() * self.time.timestamp())
 
     def msg(self) -> str :
         """

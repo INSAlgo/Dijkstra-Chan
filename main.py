@@ -139,3 +139,4 @@ if __name__ == "__main__" :
 
     client.run(token)
     save_events(events)
+    print("saved", len(events), "events to json.")

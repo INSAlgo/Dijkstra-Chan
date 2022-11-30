@@ -33,7 +33,7 @@ class Reminder :
         return self.msg() + "\n\n"
     
     def msg(self) :
-        return messages[self.delay] + "\n>>>" + self.event.msg()
+        return messages[self.delay] + "\n>>> " + self.event.msg()
 
 def generate_queue(events: set[Event]) -> PQ[Reminder] :
     reminders = PQ()
