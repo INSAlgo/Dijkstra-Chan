@@ -25,9 +25,24 @@ class Event :
 
         lines = []
         lines.append(f"**{self.name}**")
-        lines.append(f"__from {self.webs}__")
+        lines.append(f"*from {self.webs}*")
         lines.append(f"main page : {self.link}")
         lines.append(f"To happen on : {self.time.strftime('%B %d, %Y, %H:%M')}")
         lines.append(self.description)
 
         return '\n'.join(lines)
+
+def msg_to_event(message: str) -> Event | None :
+    lines = message.split('\n')[1:] # the first line is the command keyword
+    name = lines[0]
+    link = lines[1]
+    website = lines[2]
+
+    time = lines[3]
+    try :
+        data = map(int, (time[:4], time[5:7], time[8:10], time[11:13], time[14:16]))
+        time = datetime(*data)
+    except ValueError :
+        return None
+    
+    return Event(name, link, website, '\n'.join(lines[4:]), time)

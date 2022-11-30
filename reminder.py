@@ -12,9 +12,9 @@ delays = {
 }
 
 messages = {
-    "5min": ":warning: **Get ready, this event is in 5 minutes** :\n",
-    "hour": ":alarm_clock: **Friendly reminder that this event is in an hour** :\n",
-    "day": ":bell: **New event for tomorrow** :\n"
+    "5min": ":warning: **Get ready, this event is in 5 minutes** :",
+    "hour": ":alarm_clock: **Friendly reminder that this event is in an hour** :",
+    "day": ":bell: **New event for tomorrow** :"
 }
 
 class Reminder :
@@ -31,4 +31,4 @@ class Reminder :
         return self.msg() + "\n\n"
     
     def msg(self) :
-        return messages[self.delay] + self.event.msg()
+        return messages[self.delay] + "\n>>>" + self.event.msg()
