@@ -6,7 +6,7 @@ from datetime import datetime
 import re
 from queue import PriorityQueue as PQ
 
-from codeforces_client import get_fut_cont_message, get_fut_cont_events
+from codeforces_client import get_fut_cont_events
 from event import Event, msg_to_event, save_events, load_events, remove_passed_events
 from reminder import Reminder, generate_queue
 
@@ -19,6 +19,25 @@ events: set[Event] = set()
 reminders: PQ[Reminder] = PQ()
 cur_rem: asyncio.Task[None] | None = None
 
+File = open("help.txt")
+help_txt = File.read()
+File.close()
+
+
+#=================================================================================================================================================================
+
+def update_events() -> int :
+    global events
+    prev_N = len(events)
+
+    err_code, CF_events = get_fut_cont_events()
+    if err_code == 1 :
+        print(CF_events)
+    
+    else :
+        events |= CF_events
+
+    return len(events) - prev_N
 
 async def wait_reminder() :
     global reminders
@@ -35,15 +54,13 @@ async def wait_reminder() :
     else :
         cur_rem = asyncio.ensure_future(wait_reminder())
 
+
+#=================================================================================================================================================================
+
 @client.event
 async def on_ready() :
     global events
     events = load_events()
-    err_code, CF_contests = get_fut_cont_events()
-    if err_code > 0 :
-        print(CF_contests)
-    else :
-        events |= CF_contests
     
     global reminders
     reminders = generate_queue(events)
@@ -60,25 +77,20 @@ async def on_ready() :
         cur_rem = asyncio.ensure_future(wait_reminder())
 
 
+#=================================================================================================================================================================
+
 @client.event
 async def on_message(message: discord.Message):
+    global events
+    global reminders
+    global cur_rem
+
     if message.author == client.user:
         return
 
-    if message.content.startswith('hi') :
-        await message.channel.send('Hello!')
+    if message.content.lower() == "help me dijkstra-chan!" :
+        await message.channel.send(help_txt)
 
-    # Command to get N contests to come :
-    elif re.fullmatch("^CodeForces rounds( [0-9]+)?$", message.content) is not None :
-
-        # Parsing the number of contests wanted :
-        if message.content[-1].isnumeric() :
-            nb = int(message.content.split(' ')[-1])
-        else :
-            nb = 0
-
-        await message.channel.send(get_fut_cont_message(nb))
-    
     # Command to add an event :
     elif message.content.startswith("add event") :
         event = msg_to_event(message.content)
@@ -87,9 +99,6 @@ async def on_message(message: discord.Message):
             await message.channel.send("please format the date as YYYY/MM/DD HH:MM")
         
         else :
-            global events
-            global reminders
-            global cur_rem
 
             events.add(event)
             await message.channel.send(f"event {event.name} succesfully added to the list!")
@@ -104,15 +113,37 @@ async def on_message(message: discord.Message):
                 cur_rem = asyncio.ensure_future(wait_reminder())
     
     # Command to display events :
-    elif message.content == "get events" :
+    elif re.fullmatch("^get events( [0-9]+)?$", message.content) is not None :
         events = remove_passed_events(events)
         list_events = list(events)
         list_events.sort()
-        await message.channel.send('\n\n'.join([ev.msg() for ev in list_events]))
+        
+        # Parsing the number of events wanted :
+        if message.content[-1].isnumeric() :
+            nb = int(message.content.split(' ')[-1])
+        else :
+            nb = len(list_events)
+        
+        await message.channel.send('\n\n'.join([ev.msg() for ev in list_events[:nb]]))
     
+    # Command to fetch events :
     elif message.content == "update events" :
-        pass
+        events = remove_passed_events(events)
+        N = update_events()
+        await message.channel.send(f"{N} new event(s) found!")
 
+        if N > 0 :
+            reminders = generate_queue(events)
+
+            if cur_rem is not None :
+                cur_rem.cancel()
+            if reminders.empty() :
+                cur_rem = None
+            else :
+                cur_rem = asyncio.ensure_future(wait_reminder())
+
+
+#=================================================================================================================================================================
 
 if __name__ == "__main__" :
 

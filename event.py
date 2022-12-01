@@ -91,7 +91,7 @@ def msg_to_event(message: str) -> Event | None :
     attrs["name"] = lines[0]
     attrs["link"] = lines[1]
     attrs["webs"] = lines[2]
-    attrs["desc"] = '\n'.join(lines[4:])
+    attrs["desc"] = '\n'.join(lines[4:10])
 
     time = lines[3]
     try :
