@@ -67,7 +67,7 @@ class Event :
     
     def __hash__(self) :
         # For identification, to avoid duplicate events
-        return int(self.webs.__hash__() * self.name.__hash__() * self.time.timestamp())
+        return self.name.__hash__()
 
     def msg(self) -> str :
         """
