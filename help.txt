@@ -13,7 +13,7 @@
 > {description (can be 1 to 6 lines)}
     *Adds an event to the list and adds its reminders to the queue*
 
-> update events ~~TODO~~
+> update events
     *Search for new events in linked websites (see at the end) and add their reminders*
 
 **REMINDERS**
