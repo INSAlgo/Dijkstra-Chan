@@ -59,6 +59,9 @@ class Event :
             "time" : int(self.time.timestamp()), "desc" : self.desc
         }
     
+    def __lt__(self, other: Event) :
+        return self.time < other.time
+    
     def __eq__(self, other: Event) :
         return (self.webs, self.name, self.time.timestamp()) == (other.webs, other.name, other.time.timestamp())
     

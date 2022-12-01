@@ -7,7 +7,7 @@ import re
 from queue import PriorityQueue as PQ
 
 from codeforces_client import get_fut_cont_message, get_fut_cont_events
-from event import Event, msg_to_event, save_events, load_events
+from event import Event, msg_to_event, save_events, load_events, remove_passed_events
 from reminder import Reminder, generate_queue
 
 
@@ -102,7 +102,13 @@ async def on_message(message: discord.Message):
                 cur_rem = None
             else :
                 cur_rem = asyncio.ensure_future(wait_reminder())
-            
+    
+    # Command to display events :
+    elif message.content == "get events" :
+        events = remove_passed_events(events)
+        list_events = list(events)
+        list_events.sort()
+        await message.channel.send('\n\n'.join([ev.msg() for ev in list_events]))
     
     elif message.content == "update events" :
         pass
