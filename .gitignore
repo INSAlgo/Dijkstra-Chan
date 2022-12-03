@@ -1,4 +1,4 @@
 env/
-token
+*token*
 test*
 __pycache__/

@@ -7,7 +7,7 @@ import re
 from queue import PriorityQueue as PQ
 
 from codeforces_client import get_fut_cont_events
-from github_client import search_correction, reload_repo_tree
+from github_client import GH_Client
 from event import Event, msg_to_event, save_events, load_events, remove_passed_events
 from reminder import Reminder, generate_queue
 
@@ -81,7 +81,7 @@ async def on_ready() :
     else :
         cur_rem = asyncio.ensure_future(wait_reminder())
     
-    err_code, msg = reload_repo_tree()
+    err_code, msg = gh_client.reload_repo_tree()
     await debug_channel.send(msg)
 
 
@@ -165,7 +165,7 @@ async def on_message(message: discord.Message):
     
     # Command to reload solutions repo tree cache :
     elif message.content == "reload solutions tree" :
-        _, msg = reload_repo_tree()
+        _, msg = gh_client.reload_repo_tree()
         await message.channel.send(msg)
 
     # Command to get the solution of an exercise :
@@ -173,7 +173,7 @@ async def on_message(message: discord.Message):
         webs = message.content.split(" ")[2]
         file_name = " ".join(message.content.split(" ")[3:])
 
-        _, raw_message = search_correction(webs, file_name)
+        _, raw_message = gh_client.search_correction(webs, file_name)
         await message.channel.send(raw_message)
 
 
@@ -198,6 +198,21 @@ if __name__ == "__main__" :
         required=False
     )
 
+    parser.add_argument(
+        '-ght', '--github_token',
+        help="The file to read the github token from, or the token itself if -nf.",
+        action="store",
+        default="github_token",
+        required=False
+    )
+
+    parser.add_argument(
+        '-ghnf', '--gh_is_not_file',
+        help="If given, reads the file given in -ght, else takes -ght as the github token.",
+        action="store_true",
+        required=False
+    )
+
     args = parser.parse_args()
 
     if args.is_not_file :
@@ -208,6 +223,15 @@ if __name__ == "__main__" :
         token = File.readline().strip('\n')
         File.close()
 
+    if args.gh_is_not_file :
+        gh_token = args.github_token
+    
+    else :
+        File = open(args.github_token)
+        token = File.readline().strip('\n')
+        File.close()
+
+    gh_client = GH_Client()
     client.run(token)
     save_events(events)
     print("saved", len(events), "events to json.")
