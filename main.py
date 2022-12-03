@@ -159,7 +159,6 @@ async def on_message(message: discord.Message):
     
     # Command to get the solution of an exercise :
     elif re.fullmatch("^get solution [A-Z]{2} .*", message.content) is not None :
-        print("got here")
         webs = message.content.split(" ")[2]
         file_name = " ".join(message.content.split(" ")[3:])
 
