@@ -6,6 +6,7 @@ from datetime import datetime
 import re
 from queue import PriorityQueue as PQ
 
+from token_error import TokenError
 from codeforces_client import get_fut_cont_events
 from github_client import GH_Client
 from event import Event, msg_to_event, save_events, load_events, remove_passed_events
@@ -14,8 +15,14 @@ from reminder import Reminder, generate_queue
 
 intents = discord.Intents.all()
 client = discord.Client(intents=intents)
+gh_client: GH_Client = None
+server: discord.Guild = None
+
 notif_channel: discord.TextChannel = None
 debug_channel: discord.TextChannel = None
+
+admin_role: discord.Role = None
+bureau_role: discord.Role = None
 
 events: set[Event] = set()
 reminders: PQ[Reminder] = PQ()
@@ -23,6 +30,9 @@ cur_rem: asyncio.Task[None] | None = None
 
 File = open("help.txt")
 help_txt = File.read()
+File.close()
+File = open("admin_help.txt")
+admin_help_txt = File.read()
 File.close()
 
 rec = 1
@@ -41,6 +51,17 @@ def update_events() -> int :
         events |= CF_events
 
     return len(events) - prev_N
+
+async def connect_gh_client() :
+    global gh_client
+    try :
+        gh_client = GH_Client(gh_token)
+    except TokenError :
+        await debug_channel.send("The github token is wrong or has expired, please generate a new one. See README for more info.")
+        raise TokenError
+    except Exception as err :
+        await debug_channel.send(err)
+        raise Exception
 
 async def wait_reminder() :
     global reminders
@@ -73,6 +94,14 @@ async def on_ready() :
     global debug_channel
     debug_channel = discord.utils.get(client.get_all_channels(), name="dijkstra-chan-debug")
 
+    global server
+    server = notif_channel.guild
+
+    global admin_role
+    admin_role = discord.utils.get(server.roles, name="Admin bot")
+    global bureau_role
+    admin_role = discord.utils.get(server.roles, name="Bureau")
+
     global cur_rem
     if cur_rem is not None :
         cur_rem.cancel()
@@ -80,8 +109,9 @@ async def on_ready() :
         cur_rem = None
     else :
         cur_rem = asyncio.ensure_future(wait_reminder())
-    
-    err_code, msg = gh_client.reload_repo_tree()
+
+    await connect_gh_client()
+    _, msg = gh_client.reload_repo_tree()
     await debug_channel.send(msg)
 
 
@@ -94,10 +124,13 @@ async def on_message(message: discord.Message):
     global cur_rem
     global rec
 
+    # Silly recursive function
     if re.fullmatch("^factorial [0-9]+$", message.content) is not None :
         nb = int(message.content.split(' ')[-1])
         if nb < 0 :
             await message.channel.send(f"number cannot be negative !")
+        elif nb > 20 :
+            await message.channel.send(f"factorial {nb-1}\njust joking, I'm not doing that")
         elif nb <= 1 :
             await message.channel.send(f"result : {rec}")
             rec = 1
@@ -106,14 +139,22 @@ async def on_message(message: discord.Message):
             await message.channel.send(f"factorial {nb-1}")
         return
 
+    # Avoid answering itself
     if message.author == client.user:
         return
 
+    # Help message :
     if message.content.lower() == "help me dijkstra-chan!" :
-        await message.channel.send(help_txt)
+        if admin_role in message.author.roles and message.channel == debug_channel :
+            await debug_channel.send(admin_help_txt)
+        else :
+            await message.channel.send(help_txt)
 
-    # Command to add an event :
+    # (admin) Command to add an event :
     elif message.content.startswith("add event") :
+        if admin_role not in message.author.roles :
+            return
+        
         event = msg_to_event(message.content)
 
         if event is None :
@@ -147,8 +188,11 @@ async def on_message(message: discord.Message):
         
         await message.channel.send('\n\n'.join([ev.msg() for ev in list_events[:nb]]))
     
-    # Command to fetch events :
+    # (admin) Command to fetch events from websites :
     elif message.content == "update events" :
+        if admin_role not in message.author.roles :
+            return
+        
         events = remove_passed_events(events)
         N = update_events()
         await message.channel.send(f"{N} new event(s) found!")
@@ -163,8 +207,11 @@ async def on_message(message: discord.Message):
             else :
                 cur_rem = asyncio.ensure_future(wait_reminder())
     
-    # Command to reload solutions repo tree cache :
+    # (admin) Command to reload solutions repo tree cache :
     elif message.content == "reload solutions tree" :
+        if admin_role not in message.author.roles :
+            return
+        
         _, msg = gh_client.reload_repo_tree()
         await message.channel.send(msg)
 
@@ -175,6 +222,14 @@ async def on_message(message: discord.Message):
 
         _, raw_message = gh_client.search_correction(webs, file_name)
         await message.channel.send(raw_message)
+    
+    # (admin) Command to change github token :
+    elif message.content.startswith("update github token ") :
+        if bureau_role not in message.author.roles :
+            return
+        
+        gh_token = message.content.split(' ')[-1]
+        await connect_gh_client()
 
 
 #=================================================================================================================================================================
@@ -228,10 +283,9 @@ if __name__ == "__main__" :
     
     else :
         File = open(args.github_token)
-        token = File.readline().strip('\n')
+        gh_token = File.readline().strip('\n')
         File.close()
 
-    gh_client = GH_Client()
     client.run(token)
     save_events(events)
     print("saved", len(events), "events to json.")

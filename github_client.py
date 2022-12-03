@@ -1,6 +1,7 @@
 from base64 import standard_b64decode as b64dcd
 from datetime import datetime
 
+from token_error import TokenError
 from client_template import Client
 from levenshtein import dist
 
@@ -14,12 +15,13 @@ class GH_Client (Client) :
             "Accept": "application/vnd.github+json",
             "Authorization": "Bearer " + token
         }
-        if self.get(route="rate_limit") :
-            print("status :", self.lr_status_code())
-            print("headers :", self.lr_headers())
-            print("response :", self.lr_response())
-        else :
-            print("error :", self.lr_error())
+
+        if not self.get(route="rate_limit") :
+            raise Exception(self.lr_error())
+        if self.lr_status_code() == 401 :
+            raise TokenError
+        elif self.lr_status_code() != 200 :
+            raise Exception(f"status code not OK : {self.lr_status_code()}")
 
         self.files: dict[str, list[str]] = {}
     
@@ -124,8 +126,3 @@ class GH_Client (Client) :
         
         except :
             return 5, "could not decode file"
-
-if __name__ == "__main__" :
-    client = GH_Client(input())
-    print(client.reload_repo_tree())
-    print(client.get_api_rate())
