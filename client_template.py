@@ -79,7 +79,7 @@ class Client:
             res = self.__r__.headers
         return res
 
-    def lr_response(self, json: bool = False) -> str | dict | None :
+    def lr_response(self, json: bool = True) -> str | dict | None :
         res = None
         if self.__r__ != None:
             if json :

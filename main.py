@@ -7,7 +7,7 @@ import re
 from queue import PriorityQueue as PQ
 
 from codeforces_client import get_fut_cont_events
-from github_client import search_correction
+from github_client import search_correction, reload_repo_tree
 from event import Event, msg_to_event, save_events, load_events, remove_passed_events
 from reminder import Reminder, generate_queue
 
@@ -15,6 +15,7 @@ from reminder import Reminder, generate_queue
 intents = discord.Intents.all()
 client = discord.Client(intents=intents)
 notif_channel: discord.TextChannel = None
+debug_channel: discord.TextChannel = None
 
 events: set[Event] = set()
 reminders: PQ[Reminder] = PQ()
@@ -69,6 +70,8 @@ async def on_ready() :
 
     global notif_channel
     notif_channel = discord.utils.get(client.get_all_channels(), name="annonces-automatiques")
+    global debug_channel
+    debug_channel = discord.utils.get(client.get_all_channels(), name="dijkstra-chan-debug")
 
     global cur_rem
     if cur_rem is not None :
@@ -77,6 +80,9 @@ async def on_ready() :
         cur_rem = None
     else :
         cur_rem = asyncio.ensure_future(wait_reminder())
+    
+    err_code, msg = reload_repo_tree()
+    await debug_channel.send(msg)
 
 
 #=================================================================================================================================================================
@@ -157,12 +163,17 @@ async def on_message(message: discord.Message):
             else :
                 cur_rem = asyncio.ensure_future(wait_reminder())
     
+    # Command to reload solutions repo tree cache :
+    elif message.content == "reload solutions tree" :
+        _, msg = reload_repo_tree()
+        await message.channel.send(msg)
+
     # Command to get the solution of an exercise :
     elif re.fullmatch("^get solution [A-Z]{2} .*", message.content) is not None :
         webs = message.content.split(" ")[2]
         file_name = " ".join(message.content.split(" ")[3:])
 
-        err_code, raw_message = search_correction(webs, file_name)
+        _, raw_message = search_correction(webs, file_name)
         await message.channel.send(raw_message)
 
 

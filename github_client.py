@@ -1,34 +1,86 @@
+from base64 import standard_b64decode as b64dcd
+from datetime import datetime
+
 from client_template import Client
 from levenshtein import dist
-from base64 import standard_b64decode as b64dcd
 
-GH_client = Client("api.github.com/repos/")
+
+GH_client = Client("api.github.com/")
 files: dict[str, list[str]] = {}
 languages = {"py": "python", "cpp": "C++", "c": "C", "jar": "java", "js": "javascript"}
 
-def reload_repo_tree() :
+
+def reload_repo_tree() -> tuple[int, str] :
     global files
 
     # Getting the first layer (a file per website) :
-    if not GH_client.get(route="INSAlgo/Corrections/contents/") :
-        return False
-    resp = GH_client.lr_response(json=True)
-    if "message" in resp :
-        print("GitHub message :", resp["message"])
-        sites = set()
-    else :
-        sites = {dir_["name"] for dir_ in GH_client.lr_response(json=True)}.difference({"README.md"})
+    if not GH_client.get(route="repos/INSAlgo/Corrections/contents/") :
+        return 3, "cannot connect to GitHub API"
+    
+    resp = GH_client.lr_response()
+
+    if GH_client.lr_status_code() == 403 :
+        err_code, msg = get_api_rate()
+
+        if err_code == 1 :
+            return 2, msg
+        
+        if err_code in {0, 2} :
+            return 3, msg
+    
+    if GH_client.lr_status_code() != 200 :
+        return 3, f"response status code not OK : {GH_client.lr_status_code()}"
+    
+    sites = {dir_["name"] for dir_ in GH_client.lr_response(json=True)}.difference({"README.md"})
 
     # Getting the second layer (the actual solution files) :
+    errors = []
+
     for site in sites :
-        if not GH_client.get(route=f"INSAlgo/Corrections/contents/{site}") :
-            print("error with folder for", site)
-        resp = GH_client.lr_response(json=True)
-        if "message" in resp :
-            print(resp["message"])
-            break
-        files[site] = [sol["name"] for sol in GH_client.lr_response(json=True)]
-    return True
+
+        if not GH_client.get(route=f"repos/INSAlgo/Corrections/contents/{site}") :
+            errors.append(f"client error with folder for {site} : {GH_client.lr_error()}")
+            continue
+        
+        resp = GH_client.lr_response()
+
+        if GH_client.lr_status_code() == 403 :
+            errors.append(get_api_rate()[1])
+            continue
+        
+        if GH_client.lr_status_code() != 200 :
+            errors.append(f"status code not OK for site {site} : {GH_client.lr_status_code()}")
+            continue
+        
+        files[site] = [sol["name"] for sol in resp]
+    
+    err_code = 0
+    msg = "reloaded solution repo structure cache"
+    if errors != [] :
+        err_code = 1
+        msg += "\n" + '\n'.join(errors)
+    else :
+        msg += " without errors"
+    return err_code, msg
+
+
+def get_api_rate() -> tuple[int, str]:
+    if not GH_client.get(route="rate_limit") :
+        return 2, f"client get error : {GH_client.lr_error()}"
+    
+    if GH_client.lr_status_code() != 200 :
+        return 2, f"response status code not OK : {GH_client.lr_status_code()}"
+
+    data = GH_client.lr_response()
+    info = data["resources"]["core"]
+    used_prct = 100*info["used"]/info["limit"]
+
+    if used_prct == 100 :
+        date_time = datetime.fromtimestamp(info["reset"]).strftime("%d/%m/%Y at %H:%M:%S")
+        return 1, "API rate overused, retry on " + date_time
+    
+    return 0, f"used {used_prct}% of API rate"
+
 
 def search_correction(website: str, to_search: str) -> tuple[int, str] :
     
@@ -40,18 +92,27 @@ def search_correction(website: str, to_search: str) -> tuple[int, str] :
         close_files = '\n'.join(files[website][:10])
         return 1, "file not found, similar files are :\n" + close_files
 
-    if not GH_client.get(route=f"INSAlgo/Corrections/contents/{website}/{to_search}") :
+    if not GH_client.get(route=f"repos/INSAlgo/Corrections/contents/{website}/{to_search}") :
         return 3, GH_client.lr_error()
     
+    if GH_client.lr_status_code() != 200 :
+        return 3, f"response status code not OK : {GH_client.lr_status_code()}"
+
     data = GH_client.lr_response(json=True)
-    raw_text = b64dcd(data["content"]).decode("ascii")
 
-    language = languages[to_search.split('.')[-1]]
+    if "message" in data :
+        return 4, get_api_rate()[1]
 
-    return 0, f"**Solution file found** :\n```{language}\n{raw_text}```"
+    try :
+        raw_text = b64dcd(data["content"]).decode("ascii")
+
+        ext = to_search.split('.')[-1]
+        if ext in languages :
+            language = languages[ext]
+        else :
+            language = ""
+
+        return 0, f"**Solution file found** :\n```{language}\n{raw_text}```"
     
-assert reload_repo_tree()
-
-if __name__ == "__main__" :
-    err_code, message = search_correction("CF", "test.py")
-    print(message)
+    except :
+        return 5, "could not decode file"
