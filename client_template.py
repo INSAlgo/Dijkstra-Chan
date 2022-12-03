@@ -22,10 +22,10 @@ class Client:
         return protocol + "://" + urljoin(self.__baseUrl__, route)
 
     #issues an http get request
-    def get(self, route: str = "", protocol: str | None = None, payload: dict[str, str] = {}) -> bool :
+    def get(self, route: str = "", protocol: str | None = None, payload: dict[str, str] = {}, headers: dict[str, str] = {}) -> bool :
         res = True
         try :
-            self.__r__ = r.get(self.make_url(route, protocol), params=payload)
+            self.__r__ = r.get(self.make_url(route, protocol), params=payload, headers=headers)
             self.__error__ = None
         #possible errors
         except HTTPError as http_err:
@@ -40,13 +40,13 @@ class Client:
     
 
     #issues an http post request
-    def post(self, route: str = "", protocol: str | None = None, data: str | None = None) -> bool :
+    def post(self, route: str = "", protocol: str | None = None, data: str | None = None, headers: dict[str, str] = {}) -> bool :
         res = True
         try :
             if data is None :
                 self.__r__ = r.post(self.make_url(route, protocol))
             else :
-                self.__r__ = r.post(self.make_url(route, protocol), data=data)
+                self.__r__ = r.post(self.make_url(route, protocol), data=data, headers=headers)
             self.__error__ = None
         #possible errors
         except HTTPError as http_err:

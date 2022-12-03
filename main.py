@@ -7,6 +7,7 @@ import re
 from queue import PriorityQueue as PQ
 
 from codeforces_client import get_fut_cont_events
+from github_client import search_correction
 from event import Event, msg_to_event, save_events, load_events, remove_passed_events
 from reminder import Reminder, generate_queue
 
@@ -23,6 +24,7 @@ File = open("help.txt")
 help_txt = File.read()
 File.close()
 
+rec = 1
 
 #=================================================================================================================================================================
 
@@ -84,6 +86,19 @@ async def on_message(message: discord.Message):
     global events
     global reminders
     global cur_rem
+    global rec
+
+    if re.fullmatch("^factorial [0-9]+$", message.content) is not None :
+        nb = int(message.content.split(' ')[-1])
+        if nb < 0 :
+            await message.channel.send(f"number cannot be negative !")
+        elif nb <= 1 :
+            await message.channel.send(f"result : {rec}")
+            rec = 1
+        else :
+            rec *= nb
+            await message.channel.send(f"factorial {nb-1}")
+        return
 
     if message.author == client.user:
         return
@@ -141,6 +156,15 @@ async def on_message(message: discord.Message):
                 cur_rem = None
             else :
                 cur_rem = asyncio.ensure_future(wait_reminder())
+    
+    # Command to get the solution of an exercise :
+    elif re.fullmatch("^get solution [A-Z]{2} .*", message.content) is not None :
+        print("got here")
+        webs = message.content.split(" ")[2]
+        file_name = " ".join(message.content.split(" ")[3:])
+
+        err_code, raw_message = search_correction(webs, file_name)
+        await message.channel.send(raw_message)
 
 
 #=================================================================================================================================================================
