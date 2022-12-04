@@ -1,6 +1,6 @@
-import discord
+import os
 import asyncio
-from argparse import ArgumentParser
+import discord
 from datetime import datetime
 
 import re
@@ -129,7 +129,7 @@ async def on_message(message: discord.Message):
     if re.fullmatch("^factorial [0-9]+$", message.content) is not None :
         nb = int(message.content.split(' ')[-1])
         if nb < 0 :
-            await message.channel.send(f"number cannot be negative !")
+            await message.channel.send("number cannot be negative !")
         elif nb > 20 :
             await message.channel.send(f"factorial {nb-1}\njust joking, I'm not doing that")
         elif nb <= 1 :
@@ -237,55 +237,8 @@ async def on_message(message: discord.Message):
 
 if __name__ == "__main__" :
 
-    parser = ArgumentParser(description="")
-
-    parser.add_argument(
-        '-t', '--token',
-        help="The file to read the token from, or the token itself if -nf. Default : \"fixed_data/token\"",
-        action="store",
-        default="fixed_data/token",
-        required=False
-    )
-
-    parser.add_argument(
-        '-nf', '--is_not_file',
-        help="If active, reads the file given in -t, else takes -t as the token.",
-        action="store_true",
-        required=False
-    )
-
-    parser.add_argument(
-        '-ght', '--github_token',
-        help="The file to read the github token from, or the token itself if -ghnf. Default : \"fixed_data/github_token\"",
-        action="store",
-        default="fixed_data/github_token",
-        required=False
-    )
-
-    parser.add_argument(
-        '-ghnf', '--gh_is_not_file',
-        help="If active, reads the file given in -ght, else takes -ght as the github token.",
-        action="store_true",
-        required=False
-    )
-
-    args = parser.parse_args()
-
-    if args.is_not_file :
-        token = args.token
-    
-    else :
-        File = open(args.token)
-        token = File.readline().strip('\n')
-        File.close()
-
-    if args.gh_is_not_file :
-        gh_token = args.github_token
-    
-    else :
-        File = open(args.github_token)
-        gh_token = File.readline().strip('\n')
-        File.close()
+    token = os.environ["TOKEN"]
+    gh_token = os.environ["GH_TOKEN"]
 
     client.run(token)
     save_events(events)
