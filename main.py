@@ -1,10 +1,10 @@
 import os
 import asyncio
-import discord
 from datetime import datetime
-
 import re
 from queue import PriorityQueue as PQ
+
+import discord
 
 from classes.token_error import TokenError
 from classes.codeforces_client import CF_Client
@@ -54,17 +54,23 @@ def update_events() -> int :
     return len(events) - prev_N
 
 async def connect_gh_client() :
+    """
+    Reconnects to the github API
+    """
     global gh_client
     try :
         gh_client = GH_Client(gh_token)
-    except TokenError :
+    except TokenError as tkerr:
         await debug_channel.send("The github token is wrong or has expired, please generate a new one. See README for more info.")
-        raise TokenError
+        raise TokenError from tkerr
     except Exception as err :
         await debug_channel.send(err)
-        raise Exception
+        raise Exception from err
 
 async def wait_reminder() :
+    """
+    Waits for reminders in the background of the bot
+    """
     global reminders
 
     time = (reminders.queue[0].time - datetime.now()).total_seconds()
@@ -84,9 +90,12 @@ async def wait_reminder() :
 
 @client.event
 async def on_ready() :
+    """
+    Executes necessary setup on bot startup
+    """
     global events
     events = load_events()
-    
+
     global reminders
     reminders = generate_queue(events)
 
@@ -120,6 +129,9 @@ async def on_ready() :
 
 @client.event
 async def on_message(message: discord.Message):
+    """
+    Executes commands depending on message received
+    """
     global events
     global reminders
     global cur_rem
@@ -155,12 +167,12 @@ async def on_message(message: discord.Message):
     elif message.content.startswith("add event") :
         if admin_role not in message.author.roles :
             return
-        
+
         event = msg_to_event(message.content)
 
         if event is None :
             await message.channel.send("please format the date as YYYY/MM/DD HH:MM")
-        
+
         else :
 
             events.add(event)
@@ -174,26 +186,26 @@ async def on_message(message: discord.Message):
                 cur_rem = None
             else :
                 cur_rem = asyncio.ensure_future(wait_reminder())
-    
+
     # Command to display events :
     elif re.fullmatch("^get events( [0-9]+)?$", message.content) is not None :
         events = remove_passed_events(events)
         list_events = list(events)
         list_events.sort()
-        
+
         # Parsing the number of events wanted :
         if message.content[-1].isnumeric() :
             nb = int(message.content.split(' ')[-1])
         else :
             nb = len(list_events)
-        
+
         await message.channel.send('\n\n'.join([ev.msg() for ev in list_events[:nb]]))
-    
+
     # (admin) Command to fetch events from websites :
     elif message.content == "update events" :
         if admin_role not in message.author.roles :
             return
-        
+
         events = remove_passed_events(events)
         N = update_events()
         await message.channel.send(f"{N} new event(s) found!")
@@ -207,12 +219,12 @@ async def on_message(message: discord.Message):
                 cur_rem = None
             else :
                 cur_rem = asyncio.ensure_future(wait_reminder())
-    
+
     # (admin) Command to reload solutions repo tree cache :
     elif message.content == "reload solutions tree" :
         if admin_role not in message.author.roles :
             return
-        
+
         _, msg = gh_client.reload_repo_tree()
         await message.channel.send(msg)
 
@@ -223,12 +235,13 @@ async def on_message(message: discord.Message):
 
         _, raw_message = gh_client.search_correction(webs, file_name)
         await message.channel.send(raw_message)
-    
+
     # (admin) Command to change github token :
     elif message.content.startswith("update github token ") :
         if bureau_role not in message.author.roles :
             return
-        
+
+        global gh_token
         gh_token = message.content.split(' ')[-1]
         await connect_gh_client()
 
