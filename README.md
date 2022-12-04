@@ -1,6 +1,6 @@
 # Setup info
 
-To run the bot, just use github's codespace on dijkstra-chan's repo :</br>
+To test the bot, just use github's codespace on dijkstra-chan's repo :</br>
 ![](README_images/codespace.png)</br>
 Since the tokens are stored in github's codespace secrets, running the script this way does not require to store them locally.</br>
 Whenever you need to reset a token, make sure to update it in the codespace's secrets for the bot to run properly. It's in the repo's Settings -> Security -> Secrets -> Codespaces.
