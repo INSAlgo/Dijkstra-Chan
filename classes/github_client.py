@@ -1,8 +1,8 @@
 from base64 import standard_b64decode as b64dcd
 from datetime import datetime
 
-from token_error import TokenError
-from client_template import Client
+from classes.token_error import TokenError
+from classes.client_template import Client
 from levenshtein import dist
 
 languages = {"py": "python", "cpp": "C++", "c": "C", "jar": "java", "js": "javascript"}

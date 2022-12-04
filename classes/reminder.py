@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from queue import PriorityQueue as PQ
 
-from event import Event
+from classes.event import Event
 
 # For message formating :
 delays = {

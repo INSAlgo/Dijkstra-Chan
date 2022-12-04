@@ -6,16 +6,17 @@ from datetime import datetime
 import re
 from queue import PriorityQueue as PQ
 
-from token_error import TokenError
-from codeforces_client import get_fut_cont_events
-from github_client import GH_Client
-from event import Event, msg_to_event, save_events, load_events, remove_passed_events
-from reminder import Reminder, generate_queue
+from classes.token_error import TokenError
+from classes.codeforces_client import CF_Client
+from classes.github_client import GH_Client
+from classes.event import Event, msg_to_event, save_events, load_events, remove_passed_events
+from classes.reminder import Reminder, generate_queue
 
 
 intents = discord.Intents.all()
 client = discord.Client(intents=intents)
 gh_client: GH_Client = None
+cf_client = CF_Client()
 server: discord.Guild = None
 
 notif_channel: discord.TextChannel = None
@@ -28,14 +29,14 @@ events: set[Event] = set()
 reminders: PQ[Reminder] = PQ()
 cur_rem: asyncio.Task[None] | None = None
 
-File = open("help.txt")
+File = open("fixed_data/help.txt")
 help_txt = File.read()
 File.close()
-File = open("admin_help.txt")
+File = open("fixed_data/admin_help.txt")
 admin_help_txt = File.read()
 File.close()
 
-rec = 1
+fact = 1
 
 #=================================================================================================================================================================
 
@@ -43,7 +44,7 @@ def update_events() -> int :
     global events
     prev_N = len(events)
 
-    err_code, CF_events = get_fut_cont_events()
+    err_code, CF_events = cf_client.get_fut_cont_events()
     if err_code == 1 :
         print(CF_events)
     
@@ -122,7 +123,7 @@ async def on_message(message: discord.Message):
     global events
     global reminders
     global cur_rem
-    global rec
+    global fact
 
     # Silly recursive function
     if re.fullmatch("^factorial [0-9]+$", message.content) is not None :
@@ -132,10 +133,10 @@ async def on_message(message: discord.Message):
         elif nb > 20 :
             await message.channel.send(f"factorial {nb-1}\njust joking, I'm not doing that")
         elif nb <= 1 :
-            await message.channel.send(f"result : {rec}")
-            rec = 1
+            await message.channel.send(f"result : {fact}")
+            fact = 1
         else :
-            rec *= nb
+            fact *= nb
             await message.channel.send(f"factorial {nb-1}")
         return
 
@@ -240,30 +241,30 @@ if __name__ == "__main__" :
 
     parser.add_argument(
         '-t', '--token',
-        help="The file to read the token from, or the token itself if -nf.",
+        help="The file to read the token from, or the token itself if -nf. Default : \"fixed_data/token\"",
         action="store",
-        default="token",
+        default="fixed_data/token",
         required=False
     )
 
     parser.add_argument(
         '-nf', '--is_not_file',
-        help="If given, reads the file given in -t, else takes -t as the token.",
+        help="If active, reads the file given in -t, else takes -t as the token.",
         action="store_true",
         required=False
     )
 
     parser.add_argument(
         '-ght', '--github_token',
-        help="The file to read the github token from, or the token itself if -nf.",
+        help="The file to read the github token from, or the token itself if -ghnf. Default : \"fixed_data/github_token\"",
         action="store",
-        default="github_token",
+        default="fixed_data/github_token",
         required=False
     )
 
     parser.add_argument(
         '-ghnf', '--gh_is_not_file',
-        help="If given, reads the file given in -ght, else takes -ght as the github token.",
+        help="If active, reads the file given in -ght, else takes -ght as the github token.",
         action="store_true",
         required=False
     )

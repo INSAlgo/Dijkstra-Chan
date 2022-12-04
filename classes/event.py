@@ -111,12 +111,12 @@ def remove_passed_events(events: set[Event]) -> set[Event] :
     
     return new_events
 
-def save_events(events: set[Event], file: str = "events.json") :
+def save_events(events: set[Event], file: str = "saved_data/events.json") :
     File = open(file, 'w')
     json.dump(list(map(Event.to_dict, events)), File)
     File.close()
 
-def load_events(file: str = "events.json") -> set[Event] :
+def load_events(file: str = "saved_data/events.json") -> set[Event] :
     File = open(file)
     events = set(map(Event, json.load(File)))
     File.close()
