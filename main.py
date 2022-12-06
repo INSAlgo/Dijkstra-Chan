@@ -149,6 +149,7 @@ async def on_message(message: discord.Message):
             fact = 1
         else :
             fact *= nb
+            await asyncio.sleep(1)
             await message.channel.send(f"factorial {nb-1}")
         return
 
@@ -157,7 +158,7 @@ async def on_message(message: discord.Message):
         return
 
     # Help message :
-    if message.content.lower() == "help me dijkstra-chan!" :
+    if message.content.lower() in {"help me dijkstra-chan!", "!help"} :
         if admin_role in message.author.roles and message.channel == debug_channel :
             await debug_channel.send(admin_help_txt)
         else :
@@ -244,6 +245,17 @@ async def on_message(message: discord.Message):
         global gh_token
         gh_token = message.content.split(' ')[-1]
         await connect_gh_client()
+    
+    # (admin) Command to get README of a repo :
+    elif message.content.startswith("get readme ") :
+        print("got here")
+        if admin_role not in message.author.roles :
+            return
+        
+        repo = message.content.split(' ')[2]
+        course = ' '.join(message.content.split(' ')[3:])
+        err_code, raw_message = gh_client.get_readme(repo, course)
+        await debug_channel.send(raw_message)
 
 
 #=================================================================================================================================================================

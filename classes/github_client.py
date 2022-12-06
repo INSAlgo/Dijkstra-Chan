@@ -16,7 +16,7 @@ class GH_Client (Client) :
             "Authorization": "Bearer " + token
         }
 
-        if not self.get(route="rate_limit") :
+        if not self.get_w_token(route="rate_limit") :
             raise Exception(self.lr_error())
         if self.lr_status_code() == 401 :
             raise TokenError
@@ -25,11 +25,13 @@ class GH_Client (Client) :
 
         self.files: dict[str, list[str]] = {}
     
-    def get(self, route: str = "", protocol: str | None = None, payload: dict[str, str] = {}) -> bool:
-        return super().get(route, protocol=protocol, payload=payload, headers=self.headers)
+
+    def get_w_token(self, route: str = "", protocol: str | None = None, payload: dict[str, str] = {}) -> bool:
+        return self.get(route, protocol=protocol, payload=payload, headers=self.headers)
+
 
     def get_api_rate(self) -> tuple[int, str]:
-        if not self.get(route="rate_limit") :
+        if not self.get_w_token(route="rate_limit") :
             return 2, f"client get error for API rate : {self.lr_error()}"
         
         if self.lr_status_code() != 200 :
@@ -48,7 +50,7 @@ class GH_Client (Client) :
     
     def reload_repo_tree(self) -> tuple[int, str] :
         # Getting the first layer (a file per website) :
-        if not self.get(route="repos/INSAlgo/Corrections/contents/") :
+        if not self.get_w_token(route="repos/INSAlgo/Corrections/contents/") :
             return 3, "cannot connect to GitHub API"
         
         resp = self.lr_response()
@@ -66,7 +68,7 @@ class GH_Client (Client) :
 
         for site in sites :
 
-            if not self.get(route=f"repos/INSAlgo/Corrections/contents/{site}") :
+            if not self.get_w_token(route=f"repos/INSAlgo/Corrections/contents/{site}") :
                 errors.append(f"client error with folder for {site} : {self.lr_error()}")
                 continue
             
@@ -102,7 +104,7 @@ class GH_Client (Client) :
             close_files = '\n'.join(self.files[website][:10])
             return 1, "file not found, similar files are :\n" + close_files
 
-        if not self.get(route=f"repos/INSAlgo/Corrections/contents/{website}/{to_search}") :
+        if not self.get_w_token(route=f"repos/INSAlgo/Corrections/contents/{website}/{to_search}") :
             return 3, self.lr_error()
         
         if self.lr_status_code() != 200 :
@@ -110,8 +112,11 @@ class GH_Client (Client) :
 
         data = self.lr_response(json=True)
 
-        if "message" in data :
-            return 4, self.get_api_rate()[1]
+        if self.lr_status_code() == 403 :
+            return 3, self.get_api_rate()[1]
+        
+        if self.lr_status_code() != 200 :
+            return 3, f"response status code not OK : {self.lr_status_code()}"
 
         try :
             raw_text = b64dcd(data["content"]).decode("ascii")
@@ -126,3 +131,24 @@ class GH_Client (Client) :
         
         except :
             return 5, "could not decode file"
+
+
+    def get_readme(self, repo: str, course: str) -> str :
+        if not self.get(f"repos/INSAlgo/{repo}/contents/{course}/README.md") :
+            return 3, "cannot connect to GitHub API"
+        
+        resp = self.lr_response()
+
+        if self.lr_status_code() == 403 :
+            return 2, self.get_api_rate()[1]
+        
+        if self.lr_status_code() != 200 :
+            return 3, f"response status code not OK : {self.lr_status_code()}"
+
+        try :
+            raw_text = b64dcd(resp["content"]).decode("utf-8")
+
+            return 0, f"**Solution file found** :\n||```Markdown\n{raw_text}```||"
+        
+        except Exception as err:
+            return 5, f"could not decode file : {err}"
