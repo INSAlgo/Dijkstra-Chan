@@ -5,6 +5,14 @@ To test the bot, just use github's codespace on dijkstra-chan's repo :</br>
 Since the tokens are stored in github's codespace secrets, running the script this way does not require to store them locally.</br>
 Whenever you need to reset a token, make sure to update it in the codespace's secrets for the bot to run properly. It's in the repo's Settings -> Security -> Secrets -> Codespaces.
 
+If you want to run it locally, first get your hand on the tokens (ask the current admin) to add them to your environment variables.</br>
+Then you can do :
+- `git clone https://github.com/INSAlgo/Dijkstra-Chan.git`,
+- `python -m venv env`,
+- `env/Scripts/activate`,
+- `pip install -r requirements.txt`,
+- and finally : `python main.py`
+
 ## Discord Token
 If the token was reset, you can generate a new token in the [discord developer portal](https://discord.com/developers), but someone will need to give you authorizations, so ask for the previous head of INSAlgo on the discord server (they should still be "ancients").</br>
 To give authorization to a new bureau, select the team "Dijkstra-Chan administrators" in the "Teams" tab, then invite new members. You can also transfer team ownership to the new head of INSAlgo.
