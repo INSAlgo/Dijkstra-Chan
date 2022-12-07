@@ -12,7 +12,7 @@ def embed(markdown: str) -> discord.Embed :
             if line.startswith("# ") :
                 title = line[2:]
             elif line.lower().startswith("[slides]") :
-                link = line[9:-6]
+                link = line[9:-1].removesuffix("</br>")
             elif line == "## Exercices" :
                 step = "exercises"
                 level = []
@@ -20,12 +20,12 @@ def embed(markdown: str) -> discord.Embed :
                 levels.append(line)
 
         elif step == "exercises" :
-            if line.startswith("### Level") :
+            if line.startswith("### L") :
                 levels.append(level)
                 level = []
             elif line == "### Commentaires" :
                 step = "coms"
-            else :
+            elif line not in {"", " ", "\n"} :
                 level.append(line)
         
         elif step == "coms" :
