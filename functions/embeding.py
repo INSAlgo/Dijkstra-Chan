@@ -47,10 +47,11 @@ def embed(markdown: str) -> discord.Embed :
             inline=False
         )
     
-    embed.add_field(
-        name="Commentaires",
-        value="\n".join(coms),
-        inline=False
-    )
+    if len(coms) > 0 :
+        embed.add_field(
+            name="Commentaires",
+            value="\n".join(coms),
+            inline=False
+        )
     
     return embed
