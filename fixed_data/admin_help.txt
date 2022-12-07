@@ -1,34 +1,41 @@
 **COMMANDS** :
 
 > Help me Dijkstra-Chan!
-    *Shows this message (and learn to write Dijkstra properly)*
+    *Shows this message (and learn to write Dijkstra properly).*
 
 > factorial {N}
-    *Computes the factorial of N by sending "factorial N-1", or 1 if N is 0 or 1*
+    *Computes the factorial of N by sending "factorial N-1", or 1 if N is 0 or 1.*
 
 > get events {N}
-    *Shows a list of the next N events to come*
+    *Shows a list of the next N events to come.*
 
 > add event
 > {name}
 > {link}
-> {website where the event is hosted}
+> {origin/host of the event}
+> {date and time format YYYY/MM/DD HH:MM}
 > {description (can be 1 to 6 lines)}
-    *Adds an event to the list and adds its reminders to the queue*
+    **Admin** *Adds an event to the list and adds its reminders to the queue.*
 
 > update events
-    *Search for new events in linked websites (see at the end) and add their reminders*
+    **Admin** *Search for new events in linked websites (see at the end) and add their reminders.*
 
 > get solution {website} {exercise name}
-    *Searches a repo (INSAlgo/Corrections) for a solution to the exercise you enter*
+    *Searches a repo (INSAlgo/Corrections) for a solution to the exercise you enter.*
     *The website parameter is one of the website we use : CF for CodeForces, HR for HackerRank, ...*
     *You can add a new solution yourself by pushing to the repo,*
     *please add a link to the exercise at the start of your solution file.*
 
+> reload solutions tree
+    **Admin** *reloads the cache of the corrections repo content (for get solution).*
+
 > update github token {new token}
     ***exclusive to Bureau***
-    *Changes the token used by the bot to access github.*
+    *Changes the token used by the bot to access the corrections repo more than once a minute.*
     *Should only be used once a year for passation.*
+
+> embed course {repo} {course name}
+    **Admin** *sends an embeded message translating the README.md from the given repo/course given.*
 
 **REMINDERS**
 Dijkstra-Chan will send 3 reminders for each dated event : a day, an hour and 5 minutes before the event. 

@@ -12,6 +12,8 @@ from classes.github_client import GH_Client
 from classes.event import Event, msg_to_event, save_events, load_events, remove_passed_events
 from classes.reminder import Reminder, generate_queue
 
+from functions.embeding import embed
+
 
 intents = discord.Intents.all()
 client = discord.Client(intents=intents)
@@ -230,7 +232,7 @@ async def on_message(message: discord.Message):
         await message.channel.send(msg)
 
     # Command to get the solution of an exercise :
-    elif re.fullmatch("^get solution [A-Z]{2} .*", message.content) is not None :
+    elif re.fullmatch("^get solution [A-Z]{2,3} .*", message.content) is not None :
         webs = message.content.split(" ")[2]
         file_name = " ".join(message.content.split(" ")[3:])
 
@@ -247,15 +249,18 @@ async def on_message(message: discord.Message):
         await connect_gh_client()
     
     # (admin) Command to get README of a repo :
-    elif message.content.startswith("get readme ") :
-        print("got here")
+    elif message.content.startswith("embed course ") :
         if admin_role not in message.author.roles :
             return
         
         repo = message.content.split(' ')[2]
         course = ' '.join(message.content.split(' ')[3:])
         err_code, raw_message = gh_client.get_readme(repo, course)
-        await debug_channel.send(raw_message)
+
+        if err_code == 0 :
+            await debug_channel.send(embed=embed(raw_message))
+        else :
+            await debug_channel.send(raw_message)
 
 
 #=================================================================================================================================================================

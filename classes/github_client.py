@@ -3,7 +3,7 @@ from datetime import datetime
 
 from classes.token_error import TokenError
 from classes.client_template import Client
-from levenshtein import dist
+from functions.levenshtein import dist
 
 languages = {"py": "python", "cpp": "C++", "c": "C", "jar": "java", "js": "javascript"}
 
@@ -148,7 +148,7 @@ class GH_Client (Client) :
         try :
             raw_text = b64dcd(resp["content"]).decode("utf-8")
 
-            return 0, f"**Solution file found** :\n||```Markdown\n{raw_text}```||"
+            return 0, raw_text
         
         except Exception as err:
             return 5, f"could not decode file : {err}"
