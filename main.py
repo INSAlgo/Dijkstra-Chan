@@ -38,6 +38,8 @@ File = open("fixed_data/admin_help.txt")
 admin_help_txt = File.read()
 File.close()
 
+logo = discord.File("fixed_data/INSAlgo.png", filename="INSAlgo.png")
+
 fact = 1
 
 #=================================================================================================================================================================
@@ -255,12 +257,13 @@ async def on_message(message: discord.Message):
         
         repo = message.content.split(' ')[2]
         course = ' '.join(message.content.split(' ')[3:])
-        err_code, raw_message = gh_client.get_readme(repo, course)
+        err_code, res = gh_client.get_readme(repo, course)
 
         if err_code == 0 :
-            await debug_channel.send(embed=embed(raw_message))
+            emb = embed(res).set_thumbnail(url="attachment://INSAlgo.png")
+            await debug_channel.send(file=logo, embed=emb)
         else :
-            await debug_channel.send(raw_message)
+            await debug_channel.send(res)
 
 
 #=================================================================================================================================================================
