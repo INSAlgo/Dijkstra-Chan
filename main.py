@@ -105,7 +105,6 @@ async def on_ready() :
 
     global notif_channel
     notif_channel = discord.utils.get(client.get_all_channels(), name="annonces-automatiques")
-    print(notif_channel)
     global debug_channel
     debug_channel = discord.utils.get(client.get_all_channels(), name="dijkstra-chan-debug")
 
