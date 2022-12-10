@@ -105,6 +105,7 @@ async def on_ready() :
 
     global notif_channel
     notif_channel = discord.utils.get(client.get_all_channels(), name="annonces-automatiques")
+    print(notif_channel)
     global debug_channel
     debug_channel = discord.utils.get(client.get_all_channels(), name="dijkstra-chan-debug")
 
@@ -125,8 +126,9 @@ async def on_ready() :
         cur_rem = asyncio.ensure_future(wait_reminder())
 
     await connect_gh_client()
-    _, msg = gh_client.reload_repo_tree()
-    await debug_channel.send(msg)
+    err_code, msg = gh_client.reload_repo_tree()
+    if err_code > 0 :
+        await debug_channel.send(msg)
 
 
 #=================================================================================================================================================================
