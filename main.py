@@ -17,15 +17,18 @@ from functions.embeding import embed
 
 intents = discord.Intents.all()
 client = discord.Client(intents=intents)
-gh_client: GH_Client = None
+gh_client: GH_Client
 cf_client = CF_Client()
-server: discord.Guild = None
+server: discord.Guild
 
-notif_channel: discord.TextChannel = None
-debug_channel: discord.TextChannel = None
+notif_channel: discord.TextChannel
+debug_channel: discord.TextChannel
+command_channels: set[discord.TextChannel]
 
-admin_role: discord.Role = None
-bureau_role: discord.Role = None
+member_role: discord.Role
+admin_role: discord.Role
+bureau_role: discord.Role
+event_role: discord.Role
 
 events: set[Event] = set()
 reminders: PQ[Reminder] = PQ()
@@ -80,7 +83,7 @@ async def wait_reminder() :
     time = (reminders.queue[0].time - datetime.now()).total_seconds()
     print("waiting for a reminder...")
     await asyncio.sleep(time)
-    await notif_channel.send(reminders.get().msg())
+    await notif_channel.send(event_role.mention + '\n' + reminders.get().msg())
 
     # Loops to wait for the next reminder
     global cur_rem
@@ -103,18 +106,24 @@ async def on_ready() :
     global reminders
     reminders = generate_queue(events)
 
-    global notif_channel
-    notif_channel = discord.utils.get(client.get_all_channels(), name="annonces-automatiques")
-    global debug_channel
-    debug_channel = discord.utils.get(client.get_all_channels(), name="dijkstra-chan-debug")
-
     global server
-    server = notif_channel.guild
+    server = client.get_guild(716736874797858957)
 
+    global notif_channel
+    notif_channel = server.get_channel(1047462537463091212)
+    global debug_channel
+    debug_channel = server.get_channel(1048584804301537310)
+    global command_channels
+    command_channels = {debug_channel, server.get_channel(1051626187421650954)}
+
+    global member_role
+    member_role = server.get_role(716737589205270559)
     global admin_role
-    admin_role = discord.utils.get(server.roles, name="Admin bot")
+    admin_role = server.get_role(737790034270355488)
     global bureau_role
-    admin_role = discord.utils.get(server.roles, name="Bureau")
+    bureau_role = server.get_role(716737513535963180)
+    global event_role
+    event_role = server.get_role(1051629248139505715)
 
     global cur_rem
     if cur_rem is not None :
@@ -133,7 +142,17 @@ async def on_ready() :
 #=================================================================================================================================================================
 
 @client.event
-async def on_message(message: discord.Message):
+async def on_member_join(member: discord.Member) :
+    """
+    Automatically gives member role to newcommers
+    """
+    member.add_roles(member_role)
+
+
+#=================================================================================================================================================================
+
+@client.event
+async def on_message(message: discord.Message) :
     """
     Executes commands depending on message received
     """
@@ -144,6 +163,9 @@ async def on_message(message: discord.Message):
 
     # Silly recursive function
     if re.fullmatch("^factorial [0-9]+$", message.content) is not None :
+        if message.channel not in command_channels :
+            return
+
         nb = int(message.content.split(' ')[-1])
         if nb < 0 :
             await message.channel.send("number cannot be negative !")
@@ -159,7 +181,7 @@ async def on_message(message: discord.Message):
         return
 
     # Avoid answering itself
-    if message.author == client.user:
+    if message.author == client.user :
         return
 
     # Help message :
@@ -168,6 +190,20 @@ async def on_message(message: discord.Message):
             await debug_channel.send(admin_help_txt)
         else :
             await message.channel.send(help_txt)
+    
+    # Command to enable/disable event notifications :
+    elif message.content == "toggle events pings" :
+        if message.channel not in command_channels :
+            return
+
+        msg = "Role successfully "
+        if event_role in message.author.roles :
+            await message.author.remove_roles(event_role)
+            msg += "removed."
+        else :
+            await message.author.add_roles(event_role)
+            msg += "given."
+        await message.channel.send(msg)
 
     # (admin) Command to add an event :
     elif message.content.startswith("add event") :
@@ -180,7 +216,6 @@ async def on_message(message: discord.Message):
             await message.channel.send("please format the date as YYYY/MM/DD HH:MM")
 
         else :
-
             events.add(event)
             await message.channel.send(f"event {event.name} succesfully added to the list!")
             reminders = generate_queue(events)
@@ -195,6 +230,9 @@ async def on_message(message: discord.Message):
 
     # Command to display events :
     elif re.fullmatch("^get events( [0-9]+)?$", message.content) is not None :
+        if message.channel not in command_channels :
+            return
+        
         events = remove_passed_events(events)
         list_events = list(events)
         list_events.sort()
@@ -203,7 +241,7 @@ async def on_message(message: discord.Message):
         if message.content[-1].isnumeric() :
             nb = int(message.content.split(' ')[-1])
         else :
-            nb = len(list_events)
+            nb = 10
 
         await message.channel.send('\n\n'.join([ev.msg() for ev in list_events[:nb]]))
 
@@ -236,6 +274,9 @@ async def on_message(message: discord.Message):
 
     # Command to get the solution of an exercise :
     elif re.fullmatch("^get solution [A-Z]{2,3} .*", message.content) is not None :
+        if message.channel not in command_channels :
+            return
+        
         webs = message.content.split(" ")[2]
         file_name = " ".join(message.content.split(" ")[3:])
 
