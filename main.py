@@ -307,11 +307,17 @@ async def on_message(message: discord.Message) :
         else :
             await debug_channel.send(res)
 
-    # Di- words silly answer
-    words = message.content.split()
-    for i in range(len(words)) :
-        if words[i].startswith("di") :
-            await message.channel.send(' '.join([words[i][2:]] + words[i+1:]))
+    # Di-/Cri- words silly answer
+    elif "di" in message.content or "cri" in message.content :
+        words = message.content.split()
+        for i in range(len(words)) :
+            if words[i].startswith("di") :
+                await message.channel.send(words[i][2:])
+                break
+            
+            if words[i].startswith("cri") :
+                await message.channel.send(words[i][3:].upper())
+                break
 
 
 #=================================================================================================================================================================
