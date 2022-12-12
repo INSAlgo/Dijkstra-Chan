@@ -311,11 +311,11 @@ async def on_message(message: discord.Message) :
     elif "di" in message.content or "cri" in message.content :
         words = message.content.split()
         for i in range(len(words)) :
-            if words[i].lower().startswith("di") :
+            if words[i].lower().startswith("di") and len(words[i]>2) :
                 await message.channel.send(words[i][2:])
                 break
             
-            if words[i].lower().startswith("cri") :
+            if words[i].lower().startswith("cri") and len(words[i]>3) :
                 await message.channel.send(words[i][3:].upper())
                 break
 
