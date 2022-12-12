@@ -6,6 +6,9 @@
 > factorial {N}
     *Computes the factorial of N by sending "factorial N-1", or 1 if N is 0 or 1.*
 
+> toggle events pings
+    *Enables/disables pings for events notifications (add/remove role).*
+
 > get events {N}
     *Shows a list of the next N events to come.*
 
