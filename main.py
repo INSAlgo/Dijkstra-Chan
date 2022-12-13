@@ -9,6 +9,7 @@ import discord
 from classes.token_error import TokenError
 from classes.codeforces_client import CF_Client
 from classes.github_client import GH_Client
+from classes.openai_client import OPENAI_Client
 from classes.event import Event, msg_to_event, save_events, load_events, remove_passed_events
 from classes.reminder import Reminder, generate_queue
 
@@ -18,6 +19,7 @@ from functions.embeding import embed
 intents = discord.Intents.all()
 client = discord.Client(intents=intents)
 gh_client: GH_Client
+oai_client: OPENAI_Client
 cf_client = CF_Client()
 server: discord.Guild
 
@@ -62,11 +64,25 @@ def update_events() -> int :
 
 async def connect_gh_client() :
     """
-    Reconnects to the github API
+    Connects to the github API
     """
     global gh_client
     try :
         gh_client = GH_Client(gh_token)
+    except TokenError as tkerr:
+        await debug_channel.send("The github token is wrong or has expired, please generate a new one. See README for more info.")
+        raise TokenError from tkerr
+    except Exception as err :
+        await debug_channel.send(err)
+        raise Exception from err
+
+async def connect_openai_client() :
+    """
+    Connects to the Open AI API
+    """
+    global oai_client
+    try :
+        oai_client = OPENAI_Client(openai_token)
     except TokenError as tkerr:
         await debug_channel.send("The github token is wrong or has expired, please generate a new one. See README for more info.")
         raise TokenError from tkerr
@@ -326,6 +342,7 @@ if __name__ == "__main__" :
 
     token = os.environ["TOKEN"]
     gh_token = os.environ["GH_TOKEN"]
+    openai_token = os.environ["OPENAI_TOKEN"]
 
     client.run(token)
     save_events(events)
