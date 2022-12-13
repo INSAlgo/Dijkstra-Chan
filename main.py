@@ -26,6 +26,7 @@ server: discord.Guild
 notif_channel: discord.TextChannel
 debug_channel: discord.TextChannel
 command_channels: set[discord.TextChannel]
+ressources_channel: discord.TextChannel
 
 member_role: discord.Role
 admin_role: discord.Role
@@ -42,8 +43,6 @@ File.close()
 File = open("fixed_data/admin_help.txt")
 admin_help_txt = File.read()
 File.close()
-
-logo = discord.File("fixed_data/INSAlgo.png", filename="INSAlgo.png")
 
 fact = 1
 
@@ -131,6 +130,8 @@ async def on_ready() :
     debug_channel = server.get_channel(1048584804301537310)
     global command_channels
     command_channels = {debug_channel, server.get_channel(1051626187421650954)}
+    global ressources_channel
+    ressources_channel = server.get_channel(762706892652675122)
 
     global member_role
     member_role = server.get_role(716737589205270559)
@@ -319,7 +320,8 @@ async def on_message(message: discord.Message) :
 
         if err_code == 0 :
             emb = embed(res).set_thumbnail(url="attachment://INSAlgo.png")
-            await debug_channel.send(file=logo, embed=emb)
+            logo = discord.File("fixed_data/INSAlgo.png", filename="INSAlgo.png")
+            await ressources_channel.send(file=logo, embed=emb)
         else :
             await debug_channel.send(res)
 
