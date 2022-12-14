@@ -4,3 +4,5 @@ __pycache__/
 !*error*
 test*
 *.bat
+temp.png
+legacy geometry bot.py

@@ -5,6 +5,7 @@ import re
 from queue import PriorityQueue as PQ
 
 import discord
+from discord.ext import commands
 
 from classes.token_error import TokenError
 from classes.codeforces_client import CF_Client
@@ -17,7 +18,7 @@ from functions.embeding import embed
 
 
 intents = discord.Intents.all()
-client = discord.Client(intents=intents)
+bot = commands.Bot(intents=intents, command_prefix='!')
 gh_client: GH_Client
 oai_client: OPENAI_Client
 cf_client = CF_Client()
@@ -110,7 +111,7 @@ async def wait_reminder() :
 
 #=================================================================================================================================================================
 
-@client.event
+@bot.event
 async def on_ready() :
     """
     Executes necessary setup on bot startup
@@ -122,7 +123,7 @@ async def on_ready() :
     reminders = generate_queue(events)
 
     global server
-    server = client.get_guild(716736874797858957)
+    server = bot.get_guild(716736874797858957)
 
     global notif_channel
     notif_channel = server.get_channel(1047462537463091212)
@@ -158,7 +159,7 @@ async def on_ready() :
 
 #=================================================================================================================================================================
 
-@client.event
+@bot.event
 async def on_member_join(member: discord.Member) :
     """
     Automatically gives member role to newcommers
@@ -168,7 +169,7 @@ async def on_member_join(member: discord.Member) :
 
 #=================================================================================================================================================================
 
-@client.event
+@bot.event
 async def on_message(message: discord.Message) :
     """
     Executes commands depending on message received
@@ -198,7 +199,7 @@ async def on_message(message: discord.Message) :
         return
 
     # Avoid answering itself
-    if message.author == client.user :
+    if message.author == bot.user :
         return
 
     # Help message :
@@ -346,6 +347,6 @@ if __name__ == "__main__" :
     gh_token = os.environ["GH_TOKEN"]
     openai_token = os.environ["OPENAI_TOKEN"]
 
-    client.run(token)
+    bot.run(token)
     save_events(events)
     print("saved", len(events), "events to json.")
