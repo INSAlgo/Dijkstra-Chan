@@ -19,6 +19,7 @@ from functions.embeding import embed
 
 intents = discord.Intents.all()
 bot = commands.Bot(intents=intents, command_prefix='!')
+bot.remove_command('help')
 gh_client: GH_Client
 oai_client: OPENAI_Client
 cf_client = CF_Client()
@@ -108,6 +109,12 @@ async def wait_reminder() :
     else :
         cur_rem = asyncio.ensure_future(wait_reminder())
 
+async def help_func(auth: discord.Member, channel: discord.TextChannel) :
+        if admin_role in auth.roles and channel == debug_channel :
+            await debug_channel.send(admin_help_txt)
+        else :
+            await channel.send(help_txt)
+
 
 #=================================================================================================================================================================
 
@@ -172,7 +179,7 @@ async def on_member_join(member: discord.Member) :
 @bot.event
 async def on_message(message: discord.Message) :
     """
-    Executes commands depending on message received
+    Executes commands depending on message received (without command prefix)
     """
     global events
     global reminders
@@ -203,11 +210,9 @@ async def on_message(message: discord.Message) :
         return
 
     # Help message :
-    if message.content.lower() in {"help me dijkstra-chan!", "!help"} :
-        if admin_role in message.author.roles and message.channel == debug_channel :
-            await debug_channel.send(admin_help_txt)
-        else :
-            await message.channel.send(help_txt)
+    if message.content.lower() == "help me dijkstra-chan!" :
+        await help_func(message.author, message.channel)
+        return
     
     # Command to enable/disable event notifications :
     elif message.content == "toggle events pings" :
@@ -337,6 +342,23 @@ async def on_message(message: discord.Message) :
             if words[i].lower().startswith("cri") and len(words[i]) > 3 :
                 await message.channel.send(words[i][3:].upper())
                 break
+    
+    await bot.process_commands(message)
+
+
+#=================================================================================================================================================================
+
+@bot.command()
+async def e(ctx: commands.Context, func: str, *args: str) :
+    print(func)
+    print(args)
+
+
+#=================================================================================================================================================================
+
+@bot.command()
+async def help(ctx: commands.Context) :
+    await help_func(ctx.author, ctx.channel)
 
 
 #=================================================================================================================================================================
