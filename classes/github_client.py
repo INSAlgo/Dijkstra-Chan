@@ -94,11 +94,13 @@ class GH_Client (Client) :
         return err_code, msg
 
 
-    def search_correction(self, website: str, to_search: str) -> tuple[int, str] :
-        
+    def search_correction(self, website: str, to_search: str) -> tuple[int, str] :        
         if website not in self.files.keys() :
             return 2, f"websites available are : {', '.join(self.files.keys())}"
         
+        if to_search == "" :
+            return 1, "files are :\n" + '\n'.join(self.files[website][:10])
+
         if to_search not in self.files[website] :
             self.files[website].sort(key=lambda s: dist(s, to_search))
             close_files = '\n'.join(self.files[website][:10])

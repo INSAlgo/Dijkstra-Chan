@@ -55,3 +55,33 @@ def embed(markdown: str) -> discord.Embed :
         )
     
     return embed
+
+def embed_help(dir_: str) -> discord.Embed :
+    File = open("fixed_data/" + dir_)
+    lines = File.read().split('\n')
+    File.close()
+    
+    title = "Dijkstra-Chan's Commands :"
+
+    categories: dict[str, list[str]] = {}
+    cat = ""
+
+    for line in lines :
+        if line.startswith("# ") :
+            cat = line[2:]
+            categories[cat] = []
+        else :
+            categories[cat].append(line)
+    
+    embed = discord.Embed(title=title)
+
+    for cat_name, cat_lines in categories.items() :
+        while cat_lines[-1] == "" :
+            cat_lines.pop()
+        embed.add_field(
+            name=cat_name,
+            value='\n'.join(cat_lines),
+            inline=False
+        )
+    
+    return embed

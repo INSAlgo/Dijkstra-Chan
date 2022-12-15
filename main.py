@@ -1,3 +1,6 @@
+#=================================================================================================================================================================
+# IMPORTS
+
 import os
 import asyncio
 from datetime import datetime
@@ -14,8 +17,11 @@ from classes.openai_client import OPENAI_Client
 from classes.event import Event, msg_to_event, save_events, load_events, remove_passed_events
 from classes.reminder import Reminder, generate_queue
 
-from functions.embeding import embed
+from functions.embeding import embed, embed_help
 
+
+#=================================================================================================================================================================
+# GLOBALS
 
 intents = discord.Intents.all()
 bot = commands.Bot(intents=intents, command_prefix='!')
@@ -48,7 +54,9 @@ File.close()
 
 fact = 1
 
+
 #=================================================================================================================================================================
+# FUNCTIONS
 
 def update_events() -> int :
     global events
@@ -69,7 +77,7 @@ async def connect_gh_client() :
     """
     global gh_client
     try :
-        gh_client = GH_Client(gh_token)
+        gh_client = GH_Client(sol_token)
     except TokenError as tkerr:
         await debug_channel.send("The github token is wrong or has expired, please generate a new one. See README for more info.")
         raise TokenError from tkerr
@@ -111,12 +119,13 @@ async def wait_reminder() :
 
 async def help_func(auth: discord.Member, channel: discord.TextChannel) :
         if admin_role in auth.roles and channel == debug_channel :
-            await debug_channel.send(admin_help_txt)
+            await debug_channel.send(embed=embed_help("admin_help.txt"))
         else :
-            await channel.send(help_txt)
+            await channel.send(embed=embed_help("help.txt"))
 
 
 #=================================================================================================================================================================
+# ON_READY
 
 @bot.event
 async def on_ready() :
@@ -165,6 +174,7 @@ async def on_ready() :
 
 
 #=================================================================================================================================================================
+# ON_MEMBER_JOIN
 
 @bot.event
 async def on_member_join(member: discord.Member) :
@@ -175,6 +185,7 @@ async def on_member_join(member: discord.Member) :
 
 
 #=================================================================================================================================================================
+# ON_MESSAGE
 
 @bot.event
 async def on_message(message: discord.Message) :
@@ -214,107 +225,6 @@ async def on_message(message: discord.Message) :
         await help_func(message.author, message.channel)
         return
     
-    # Command to enable/disable event notifications :
-    elif message.content == "toggle events pings" :
-        if message.channel not in command_channels :
-            return
-
-        msg = "Role successfully "
-        if event_role in message.author.roles :
-            await message.author.remove_roles(event_role)
-            msg += "removed."
-        else :
-            await message.author.add_roles(event_role)
-            msg += "given."
-        await message.channel.send(msg)
-
-    # (admin) Command to add an event :
-    elif message.content.startswith("add event") :
-        if admin_role not in message.author.roles :
-            return
-
-        event = msg_to_event(message.content)
-
-        if event is None :
-            await message.channel.send("please format the date as YYYY/MM/DD HH:MM")
-
-        else :
-            events.add(event)
-            await message.channel.send(f"event {event.name} succesfully added to the list!")
-            reminders = generate_queue(events)
-            await message.channel.send("succesfully generated new reminders!")
-
-            if cur_rem is not None :
-                cur_rem.cancel()
-            if reminders.empty() :
-                cur_rem = None
-            else :
-                cur_rem = asyncio.ensure_future(wait_reminder())
-
-    # Command to display events :
-    elif re.fullmatch("^get events( [0-9]+)?$", message.content) is not None :
-        if message.channel not in command_channels :
-            return
-        
-        events = remove_passed_events(events)
-        list_events = list(events)
-        list_events.sort()
-
-        # Parsing the number of events wanted :
-        if message.content[-1].isnumeric() :
-            nb = int(message.content.split(' ')[-1])
-        else :
-            nb = 10
-
-        await message.channel.send('\n\n'.join([ev.msg() for ev in list_events[:nb]]))
-
-    # (admin) Command to fetch events from websites :
-    elif message.content == "update events" :
-        if admin_role not in message.author.roles :
-            return
-
-        events = remove_passed_events(events)
-        N = update_events()
-        await message.channel.send(f"{N} new event(s) found!")
-
-        if N > 0 :
-            reminders = generate_queue(events)
-
-            if cur_rem is not None :
-                cur_rem.cancel()
-            if reminders.empty() :
-                cur_rem = None
-            else :
-                cur_rem = asyncio.ensure_future(wait_reminder())
-
-    # (admin) Command to reload solutions repo tree cache :
-    elif message.content == "reload solutions tree" :
-        if admin_role not in message.author.roles :
-            return
-
-        _, msg = gh_client.reload_repo_tree()
-        await message.channel.send(msg)
-
-    # Command to get the solution of an exercise :
-    elif re.fullmatch("^get solution [A-Z]{2,3} .*", message.content) is not None :
-        if message.channel not in command_channels :
-            return
-        
-        webs = message.content.split(" ")[2]
-        file_name = " ".join(message.content.split(" ")[3:])
-
-        _, raw_message = gh_client.search_correction(webs, file_name)
-        await message.channel.send(raw_message)
-
-    # (admin) Command to change github token :
-    elif message.content.startswith("update github token ") :
-        if bureau_role not in message.author.roles :
-            return
-
-        global gh_token
-        gh_token = message.content.split(' ')[-1]
-        await connect_gh_client()
-    
     # (admin) Command to get README of a repo :
     elif message.content.startswith("embed course ") :
         if admin_role not in message.author.roles :
@@ -347,14 +257,155 @@ async def on_message(message: discord.Message) :
 
 
 #=================================================================================================================================================================
+# EVT COMMAND
 
 @bot.command()
-async def e(ctx: commands.Context, func: str, *args: str) :
-    print(func)
-    print(args)
+async def evt(ctx: commands.Context, func: str = "get", *args: str) :
+    """
+    General command prefix for any event related command
+    """
+    global events
+    global reminders
+    global cur_rem
+    n_args = len(args)
+    
+    # Command to get/remove the role for events pings :
+    if func == "toggle" :
+        if ctx.channel not in command_channels :
+            return
+
+        if n_args > 0 :
+            await ctx.channel.send("toggle does not have parameters")
+
+        msg = "Role successfully "
+        if event_role in ctx.author.roles :
+            await ctx.author.remove_roles(event_role)
+            msg += "removed."
+        else :
+            await ctx.author.add_roles(event_role)
+            msg += "given."
+        await ctx.channel.send(msg)
+
+    # Command to display events :
+    elif func == "get" :
+        if ctx.channel not in command_channels :
+            return
+        
+        if n_args == 0 :
+            nb = 3
+        elif n_args == 1 :
+            nb = int(args[0])
+        else :
+            nb = int(args[0])
+            await ctx.channel.send("get has at most 1 parameter : the number of events to show")
+        
+        events = remove_passed_events(events)
+        list_events = list(events)
+        list_events.sort()
+
+        await ctx.channel.send('\n\n'.join([ev.msg() for ev in list_events[:nb]]))
+    
+    # (admin) Command to update the list events :
+    elif func == "update" :
+        if admin_role not in ctx.author.roles or ctx.channel != debug_channel :
+            return
+
+        if n_args > 0 :
+            await ctx.channel.send("update does not have parameters")
+
+        events = remove_passed_events(events)
+        N = update_events()
+        await ctx.channel.send(f"{N} new event(s) found!")
+
+        if N > 0 :
+            reminders = generate_queue(events)
+
+            if cur_rem is not None :
+                cur_rem.cancel()
+            if reminders.empty() :
+                cur_rem = None
+            else :
+                cur_rem = asyncio.ensure_future(wait_reminder())
+    
+    # (admin) Command to add an event :
+    elif func == "add" :
+        if admin_role not in ctx.author.roles or ctx.channel != debug_channel :
+            return
+
+        event = msg_to_event(ctx.message.content)
+
+        if event is None :
+            await ctx.channel.send("please format the date as YYYY/MM/DD HH:MM")
+
+        else :
+            events.add(event)
+            await ctx.channel.send(f"event {event.name} succesfully added to the list!")
+            reminders = generate_queue(events)
+            await ctx.channel.send("succesfully generated new reminders!")
+
+            if cur_rem is not None :
+                cur_rem.cancel()
+            if reminders.empty() :
+                cur_rem = None
+            else :
+                cur_rem = asyncio.ensure_future(wait_reminder())
 
 
 #=================================================================================================================================================================
+# SOL COMMAND
+
+@bot.command()
+async def sol(ctx: commands.Context, func: str = "get", *args: str) :
+    """
+    General command prefix for any solution related command
+    """
+    n_args = len(args)
+
+    # Command to get the solution of an exercise from a website :
+    if func == "get" :
+        if ctx.channel not in command_channels :
+            return
+        
+        if n_args == 0 :
+            site = ""
+            file = ""
+        elif n_args == 1 :
+            site = args[0]
+            file = ""
+        else :
+            site = args[0]
+            file = ' '.join(args[1:])
+
+        _, raw_message = gh_client.search_correction(site, file)
+        await ctx.channel.send(raw_message)
+    
+    # (admin) Command to reload the cache of the Corrections repo tree :
+    elif func == "tree" :
+        if admin_role not in ctx.author.roles :
+            return
+        
+        if n_args > 0 :
+            await ctx.channel.send("tree command does not have parameters")
+
+        _, msg = gh_client.reload_repo_tree()
+        await ctx.channel.send(msg)
+    
+    # (bureau) Command to change the token to access the Corrections repo :
+    elif func == "token" :
+        if bureau_role not in ctx.author.roles or ctx.channel != debug_channel :
+            return
+        
+        if n_args != 1 :
+            await ctx.channel.send("token command has exactly one parameter : the new token")
+            return
+
+        global sol_token
+        sol_token = args[0]
+        await connect_gh_client()
+
+
+#=================================================================================================================================================================
+# HELP COMMAND
 
 @bot.command()
 async def help(ctx: commands.Context) :
@@ -362,13 +413,15 @@ async def help(ctx: commands.Context) :
 
 
 #=================================================================================================================================================================
+# MAIN "LOOP"
 
 if __name__ == "__main__" :
 
     token = os.environ["TOKEN"]
-    gh_token = os.environ["GH_TOKEN"]
+    sol_token = os.environ["GH_TOKEN"]
     openai_token = os.environ["OPENAI_TOKEN"]
 
     bot.run(token)
     save_events(events)
+    os.environ["GH_TOKEN"] = sol_token
     print("saved", len(events), "events to json.")
