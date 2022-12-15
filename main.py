@@ -108,7 +108,8 @@ async def wait_reminder() :
     time = (reminders.queue[0].time - datetime.now()).total_seconds()
     print("waiting for a reminder...")
     await asyncio.sleep(time)
-    await notif_channel.send(event_role.mention + '\n' + reminders.get().msg())
+    await notif_channel.send(event_role.mention)
+    await notif_channel.send(embed=reminders.get().embed())
 
     # Loops to wait for the next reminder
     global cur_rem
@@ -192,9 +193,6 @@ async def on_message(message: discord.Message) :
     """
     Executes commands depending on message received (without command prefix)
     """
-    global events
-    global reminders
-    global cur_rem
     global fact
 
     # Silly recursive function
@@ -303,7 +301,8 @@ async def evt(ctx: commands.Context, func: str = "get", *args: str) :
         list_events = list(events)
         list_events.sort()
 
-        await ctx.channel.send('\n\n'.join([ev.msg() for ev in list_events[:nb]]))
+        for event in list_events[:nb] :
+            await ctx.channel.send(embed=event.embed())
     
     # (admin) Command to update the list events :
     elif func == "update" :

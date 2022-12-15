@@ -2,6 +2,8 @@ from __future__ import annotations
 from datetime import datetime
 import json
 
+from discord import Embed
+
 # As a format help (possibility to add more) :
 websites = {"CodeForces"}
 
@@ -70,6 +72,7 @@ class Event :
         return self.name.__hash__()
 
     def msg(self) -> str :
+        # Unused
         """
         A method returning a representation of the event as a formated discord message.
         """
@@ -82,6 +85,19 @@ class Event :
         lines.append(self.desc)
 
         return '\n'.join(lines)
+    
+    def embed(self) -> Embed :
+        desc = f"*From {self.webs}*\n" + self.desc
+
+        if self.link == "" :
+            res = Embed(title=self.name, description=desc)
+        else :
+            res = Embed(title=self.name, description=desc, url=self.link)
+        
+        res.add_field(name="To happen on :", value=self.time.strftime('%B %d, %Y, %H:%M'))
+
+        return res
+ 
 
 def msg_to_event(message: str) -> Event | None :
     lines = message.split('\n')[1:] # the first line is the command keyword
