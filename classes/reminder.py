@@ -46,7 +46,7 @@ class Reminder :
     
     def embed(self) -> Embed  :    
         if self.event.link != "" :
-            desc = f"[**{self.event.name}**]({self.event.link})"
+            desc = f"**[{self.event.name}]({self.event.link})**"
         else :
             desc = f"**{self.event.name}**"
         
