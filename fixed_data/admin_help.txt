@@ -39,6 +39,12 @@ Grouped under the `!sol` command.
 *Changes the token used by the bot to access the corrections repo more than once a minute.*
 *Should only be used once a year for passation.*
 
+# Geometry :
+Grouped under the `!g` command.
+
+`CH {type}`
+*Use `!g CH help` for more info on this command*
+
 # Others :
 
 `Help me Dijkstra-Chan!`

@@ -19,6 +19,12 @@ Grouped under the `!sol` command.
 *You can add a new solution yourself by pushing to the repo,*
 *please add a link to the exercise at the start of your solution file.*
 
+# Geometry :
+Grouped under the `!g` command.
+
+`CH {type}`
+*Use `!g CH help` for more info on this command*
+
 # Others :
 
 `Help me Dijkstra-Chan!`

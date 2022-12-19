@@ -431,6 +431,9 @@ async def g(ctx: commands.Context, course: str = "", *args: str) :
             await ctx.channel.send("Only one argument required.")
         
         type_ = args[0]
+        if type_ == "help" :
+            await ctx.channel.send(embed=embed_help("CH_help.txt"))
+            return
         if type_ not in {"points", "polygon"} :
             await ctx.channel.send(f"Type of input cannot be '{type_}'. Available types are 'points' and 'polygon'.")
             return

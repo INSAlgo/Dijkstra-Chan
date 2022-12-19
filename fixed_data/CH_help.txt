@@ -1,0 +1,8 @@
+# Verifying Convex Hull
+The function `!g CH {type}` tells you if the file you joined to the message is a convex hull.
+The type is either 'points' or 'polygon' depending on which exercise you're verifying.
+Your file must be formatted this way :
+- the number of points (an integer)
+- points as '{x} {y}' (in the order if it's a polygon)
+- the number of points of the hull (an integer)
+- points of the hull as '{x} {y}'
