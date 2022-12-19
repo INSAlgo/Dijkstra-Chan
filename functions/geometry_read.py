@@ -46,16 +46,16 @@ def draw_submission(raw_submission: str, ex_type: str = "points") -> tuple[int, 
     if N-2 < n:
         return 1, f"not enough lines to read {ex_type} : expected {n}, found only {N-2}"
     
-    S = []
+    P = []
     for i in range(n):
         if lengths[i+1] != 2:
             return 1, f"line {i+1} is invalid"
         x, y = map(int, lines[i+1].split(' '))
-        S.append((x, y))
+        P.append((x, y))
         if ex_type == "points" :
             plot_point(x, y)
     if ex_type == "polygon" :
-        plot_polygon(S)
+        plot_polygon(P)
     
     
     # Reading the hull
@@ -79,4 +79,4 @@ def draw_submission(raw_submission: str, ex_type: str = "points") -> tuple[int, 
     plt.savefig("temp.png")
     plt.clf()
     
-    return 0, (S, CH)
+    return 0, (P, CH)

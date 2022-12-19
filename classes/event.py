@@ -54,6 +54,12 @@ class Event :
                 print(f"Parameter time should be datetime object, instead it's {type(time)}")
         else :
             print(f"No datetime or timestamp provided for this event")
+        
+        if self.webs == "CodeForces" :
+            self.id = "CF" + self.link.split("/")[-1]
+        
+        else :
+            self.id = self.name
     
     def to_dict(self) :
         return {
@@ -65,7 +71,7 @@ class Event :
         return self.time < other.time
     
     def __eq__(self, other: Event) :
-        return (self.webs, self.name, self.time.timestamp()) == (other.webs, other.name, other.time.timestamp())
+        return self.id == self.id
     
     def __hash__(self) :
         # For identification, to avoid duplicate events
