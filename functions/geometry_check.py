@@ -45,31 +45,31 @@ def check(S: list[tuple[int]], CH: list[tuple[int]], ex_type: str = "points") ->
     else :
         mistake = True
         if ex_type == "points" :
-            message.append("The hull is made of points that were not given! :ah: :x:")
+            message.append("The hull is made of points that were not given! <:ah:737340475866087526> :x:")
         else :
-            message.append("The hull is made of points that are not part of the polygon! :ah: :x:")
+            message.append("The hull is made of points that are not part of the polygon! <:ah:737340475866087526> :x:")
     
-    if is_convex(CH) :
+    if is_convex(CH) and not mistake :
         message.append("The hull is convex. :white_check_mark:")
-    else :
+    elif not mistake :
         mistake = True
-        message.append("The hull is not convex! :oof: :x:")
+        message.append("The hull is not convex! <:oof:762676683546689556> :x:")
     
-    if is_hull(S, CH) :
+    if is_hull(S, CH) and not mistake :
         if ex_type == "points" :
             message.append("The hull contains all the points. :white_check_mark:")
         else :
             message.append("The hull contains all the polygon's points. :white_check_mark:")
-    else :
+    elif not mistake :
         mistake = True
         if ex_type == "points" :
-            message.append("The hull does not contains all the points! :chonteux: :x:")
+            message.append("The hull does not contains all the points! <:chonteux:722130313979101314> :x:")
         else :
-            message.append("The hull does not contains all the polygon's points! :chonteux: :x:")
+            message.append("The hull does not contains all the polygon's points! <:chonteux:722130313979101314> :x:")
 
     if mistake :
-        message.append("Incorrect solution. :sad_cat: :x:")
+        message.append("Incorrect solution. <:sad_cat:737953393816895549> :x:")
     else :
-        message.append("Perfect solution! :feelsgood: :white_check_mark:")
+        message.append("Perfect solution! <:feelsgood:737960024390762568> :white_check_mark:")
     
     return '\n'.join(message)
