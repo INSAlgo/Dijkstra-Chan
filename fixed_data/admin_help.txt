@@ -1,5 +1,5 @@
 # Events :
-Grouped under the `!e` command.
+Grouped under the `!evt` command.
 Dijkstra-Chan will send 3 reminders for each dated event : a day, an hour and 5 minutes before the event.
 Linked websites : CodeForces
 There is a lack of APIs for other sites :(
