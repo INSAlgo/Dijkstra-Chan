@@ -318,6 +318,7 @@ async def evt(ctx: commands.Context, func: str = "get", *args: str) :
         events = remove_passed_events(events)
         N = update_events()
         await ctx.channel.send(f"{N} new event(s) found!")
+        save_events(events)
 
         if N > 0 :
             reminders = generate_queue(events)
@@ -344,6 +345,7 @@ async def evt(ctx: commands.Context, func: str = "get", *args: str) :
             await ctx.channel.send(f"event {event.name} succesfully added to the list!")
             reminders = generate_queue(events)
             await ctx.channel.send("succesfully generated new reminders!")
+            save_events(events)
 
             if cur_rem is not None :
                 cur_rem.cancel()
