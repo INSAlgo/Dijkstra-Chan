@@ -185,7 +185,7 @@ async def on_member_join(member: discord.Member) :
     """
     Automatically gives member role to newcommers
     """
-    member.add_roles(member_role)
+    await member.add_roles(member_role)
 
 
 #=================================================================================================================================================================
