@@ -477,6 +477,7 @@ if __name__ == "__main__" :
     openai_token = os.environ["OPENAI_TOKEN"]
 
     bot.run(token)
+    print("Saving events, DO NOT CLOSE APP!")
     save_events(events)
     os.environ["GH_TOKEN"] = sol_token
     print("saved", len(events), "events to json.")
