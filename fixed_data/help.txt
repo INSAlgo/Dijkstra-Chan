@@ -32,7 +32,7 @@ Grouped under the `!p4` command.
 
 `challenge`
 
-*Use `!p4 help` for more info on these commands.
+*Use `!p4 help` for more info on these commands.*
 
 # Others :
 
