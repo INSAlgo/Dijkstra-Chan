@@ -25,6 +25,15 @@ Grouped under the `!g` command.
 `CH {type}`
 *Use `!g CH help` for more info on this command*
 
+# Connect 4 AI :
+Grouped under the `!p4` command.
+
+`submit`
+
+`challenge`
+
+*Use `!p4 help` for more info on these commands.
+
 # Others :
 
 `Help me Dijkstra-Chan!`

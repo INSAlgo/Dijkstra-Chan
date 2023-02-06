@@ -469,6 +469,10 @@ async def p4(ctx: commands.Context, *args: str) :
         ctx.channel.send("Missing argument")
         return
     
+    if args[0] == "help" :
+        await ctx.channel.send(embed=embed_help("p4_help.txt"))
+        return
+    
     if args[0] == "submit" :
 
         if ctx.guild :
