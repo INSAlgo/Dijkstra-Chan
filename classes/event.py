@@ -55,7 +55,10 @@ class Event :
         else :
             print(f"No datetime or timestamp provided for this event")
         
-        if self.webs == "CodeForces" :
+        if "id" in attrs.keys() :
+            self.id = attrs["id"]
+
+        elif self.webs == "CodeForces" :
             self.id = "CF" + self.link.split("/")[-1]
         
         else :
@@ -64,18 +67,24 @@ class Event :
     def to_dict(self) :
         return {
             "name" : self.name, "link" : self.link, "webs" : self.webs,
-            "time" : int(self.time.timestamp()), "desc" : self.desc
+            "time" : int(self.time.timestamp()), "desc" : self.desc,
+            "id" : self.id
         }
     
     def __lt__(self, other: Event) :
         return self.time < other.time
     
     def __eq__(self, other: Event) :
-        return self.id == self.id
+        return self.id == other.id
     
     def __hash__(self) :
         # For identification, to avoid duplicate events
+        if type(self.id) == int :
+            return self.id
+        if type(self.id) == str :
+            return sum(ord(char) for char in self.id)
         return self.name.__hash__()
+        
 
     def msg(self) -> str :
         # Unused

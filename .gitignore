@@ -6,3 +6,4 @@ test*
 *.bat
 temp.png
 legacy geometry bot.py
+nohup.out
