@@ -7,6 +7,7 @@ from datetime import datetime
 import re
 from queue import PriorityQueue as PQ
 from requests import get as rqget
+from requests import post
 
 import discord
 from discord.ext import commands
@@ -175,6 +176,8 @@ async def on_ready() :
     err_code, msg = gh_client.reload_repo_tree()
     if err_code > 0 :
         await debug_channel.send(msg)
+    
+    await debug_channel.send("Up")
 
 
 #=================================================================================================================================================================
@@ -526,16 +529,34 @@ async def help(ctx: commands.Context) :
 
 
 #=================================================================================================================================================================
+# SHUTDOWN COMMAND
+
+@bot.command()
+@commands.is_owner()
+async def shutdown(ctx):
+    await debug_channel.send("shutting down...")
+    await bot.close()
+
+
+#=================================================================================================================================================================
 # MAIN "LOOP"
 
 if __name__ == "__main__" :
 
+    # Grabing tokens from environment
     token = os.environ["TOKEN"]
     sol_token = os.environ["GH_TOKEN"]
     openai_token = os.environ["OPENAI_TOKEN"]
 
+    # Running bot
     bot.run(token)
+
+    # Saving stuff after closing
     print("Saving events, DO NOT CLOSE APP!")
     save_events(events)
     os.environ["GH_TOKEN"] = sol_token
     print("saved", len(events), "events to json.")
+
+    # Sending a message to confirm shutdown :
+    headers = {'Authorization': 'Bot %s' % token }
+    post(f"https://discord.com/api/v6/channels/1048584804301537310/messages", headers=headers, json={"content": "Down"})

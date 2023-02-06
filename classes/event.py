@@ -149,8 +149,16 @@ def save_events(events: set[Event], file: str = "saved_data/events.json") :
     File.close()
 
 def load_events(file: str = "saved_data/events.json") -> set[Event] :
-    if not os.path.exists("saved_data/") :
-        os.mkdir("saved_data/")
+    for i in range(1, len(file.split('/'))) :
+        sub_path = '/'.join(file.split('/')[:i])
+        if not os.path.exists(sub_path) :
+            os.mkdir(sub_path)
+    
+    if not os.path.exists(file) :
+        File = open(file, 'x')
+        File.write("[]")
+        File.close()
+    
     File = open(file)
     events = set(map(Event, json.load(File)))
     File.close()

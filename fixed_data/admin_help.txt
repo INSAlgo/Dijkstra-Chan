@@ -61,5 +61,8 @@ Grouped under the `!p4` command.
 `factorial {N}`
 *Computes the factorial of N by sending "factorial N-1", or 1 if N is 0 or 1.*
 
+`!shutdown`
+*Terminates the bot's process*
+
 `embed course {repo} {course name}`
 *(Admin) Sends an embeded message translating the README.md from the given repo/course given.*
