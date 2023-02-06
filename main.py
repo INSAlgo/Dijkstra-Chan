@@ -354,7 +354,7 @@ async def evt(ctx: commands.Context, func: str = "get", *args: str) :
 
 
 #=================================================================================================================================================================
-# SOL COMMAND
+# SOL(utions) COMMAND
 
 @bot.command()
 async def sol(ctx: commands.Context, func: str = "get", *args: str) :
@@ -455,6 +455,21 @@ async def g(ctx: commands.Context, course: str = "", *args: str) :
         message = check(*res, type_)
         await ctx.channel.send(message, file=discord.File("temp.png"))
         return
+
+
+#=================================================================================================================================================================
+# P4 (connect 4) COMMAND
+
+@bot.command()
+async def p4(ctx: commands.Context, *args: str) :
+    files = ctx.message.attachments
+    if not files:
+        await ctx.channel.send("Missing attachment. :poop:")
+        return
+
+    attached_file_url = ctx.message.attachments[0].url
+
+    await ctx.channel.send("not yet implemented :(")
 
 
 #=================================================================================================================================================================

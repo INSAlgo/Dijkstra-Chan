@@ -1,0 +1,1 @@
+This is the folder where AI are stored for the connect 4 AI tournament
