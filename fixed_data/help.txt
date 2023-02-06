@@ -29,9 +29,8 @@ Grouped under the `!g` command.
 Grouped under the `!p4` command.
 
 `submit`
-
 `challenge`
-
+`tournament`
 *Use `!p4 help` for more info on these commands.*
 
 # Others :
