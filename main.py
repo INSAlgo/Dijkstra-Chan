@@ -444,8 +444,7 @@ async def g(ctx: commands.Context, course: str = "", *args: str) :
         if not files:
             await ctx.channel.send("Missing attachment. :poop:")
             return
-
-        attached_file_url = ctx.message.attachments[0].url
+        attached_file_url = files[0].url
         raw_submission = rqget(attached_file_url).text
 
         err_code, res = draw_submission(raw_submission, type_)
@@ -464,14 +463,54 @@ async def g(ctx: commands.Context, course: str = "", *args: str) :
 
 @bot.command()
 async def p4(ctx: commands.Context, *args: str) :
-    files = ctx.message.attachments
-    if not files:
-        await ctx.channel.send("Missing attachment. :poop:")
+    n_args = len(args)
+
+    if n_args == 0 :
+        ctx.channel.send("Missing argument")
         return
+    
+    if args[0] == "submit" :
 
-    attached_file_url = ctx.message.attachments[0].url
+        if ctx.guild :
+            await ctx.channel.send("You need to send this as a DM :wink:")
+            return
 
-    await ctx.channel.send("not yet implemented :(")
+        files = ctx.message.attachments
+        if not files:
+            await ctx.channel.send("Missing attachment. :poop:")
+            return
+        attached_file_url = files[0].url
+        raw_submission = rqget(attached_file_url).text
+
+        ext = files[0].filename.split('.')[-1]
+        name = ctx.message.author.name + '.' + ext
+
+        replace = True
+
+        if not os.path.exists("C4_AIs/") :
+            os.mkdir("C4_AIs")
+
+        if os.path.exists(f"C4_AIs/{name}") :
+            await ctx.channel.send("You already have a submission, do you want to replace it? (Y/N)")
+
+            while True :
+                resp: discord.Message = await bot.wait_for("message", check=lambda m: m.channel == ctx.channel)
+                if resp.content.upper()[0] == "Y" :
+                    replace = True
+                    break
+                elif resp.content.upper()[0] == "N" :
+                    replace = False
+                    break
+            
+        if replace :
+            File = open(f"C4_AIs/{name}", 'w')
+            File.write(raw_submission)
+            File.close()
+
+            await ctx.channel.send("AI submitted ! <:feelsgood:737960024390762568>")
+        
+        else :
+            await ctx.channel.send("Okie Dokie !")
 
 
 #=================================================================================================================================================================

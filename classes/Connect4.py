@@ -74,7 +74,7 @@ class AI(Player):
         self.prog.delaybeforesend = None
         self.prog.setecho(False)
         start = 2 - self.no
-        self.prog.sendline(f"{size} {start}")
+        self.prog.sendline(f"{size[0]} {size[1]} {start}")
 
     def askMove(self, verbose):
         if verbose:
@@ -100,6 +100,7 @@ class Game :
         self.verbose = verbose
         self.size = (width, height)
         self.players = [Player(), Player()]
+        self.logs = []
     
     def checkWin(self, no):
         for x in range(WIDTH):
@@ -118,6 +119,13 @@ class Game :
                         if streak >= 4:
                             return True
         return False
+
+    def log(self, player_name: str, move: int) :
+        self.logs.append(f"player {player_name} played on column {move}")
+        self.logs.append()
+
+    def display(self) :
+        pass
 
     def play(self) :
         self.players[0].startGame(1, self.size)
