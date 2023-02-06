@@ -1,10 +1,11 @@
 env/
 __pycache__/
-*token*
-!*error*
-test*
-*.bat
-temp.png
-legacy geometry bot.py
-nohup.out
+
+saved_data/
 C4_AIs/
+
+test*
+temp*
+
+*.bat
+nohup.out

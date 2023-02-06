@@ -1,4 +1,5 @@
 from __future__ import annotations
+import os
 from datetime import datetime
 import json
 
@@ -148,6 +149,8 @@ def save_events(events: set[Event], file: str = "saved_data/events.json") :
     File.close()
 
 def load_events(file: str = "saved_data/events.json") -> set[Event] :
+    if not os.path.exists("saved_data/") :
+        os.mkdir("saved_data/")
     File = open(file)
     events = set(map(Event, json.load(File)))
     File.close()
