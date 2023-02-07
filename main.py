@@ -370,7 +370,7 @@ async def sol(ctx: commands.Context, func: str = "get", *args: str) :
 
     # Command to get the solution of an exercise from a website :
     if func == "get" :
-        if ctx.channel not in command_channels :
+        if ctx.guild and (ctx.channel not in command_channels) :
             return
         
         if n_args == 0 :
