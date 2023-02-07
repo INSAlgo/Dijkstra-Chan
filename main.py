@@ -532,7 +532,6 @@ async def help(ctx: commands.Context) :
 # SHUTDOWN COMMAND
 
 @bot.command()
-@commands.is_owner()
 async def shutdown(ctx: commands.Context) :
     if ctx.channel != debug_channel or admin_role not in ctx.author.roles :
         return
