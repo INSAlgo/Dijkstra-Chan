@@ -2,7 +2,7 @@
 insert reamde here please ^^
 
 # Save an AI on your name
-To submit an AI, you must send the command `!p4 submit` with your file attached in a private message to 1048680176118136942.
+To submit an AI, you must send the command `!p4 submit` with your file attached in a private message to <@1048680176118136942>.
 Authorized languages :
  - python (.py)
  - javascript (.js)
