@@ -1,0 +1,3 @@
+[submodule "puissance4"]
+	path = puissance4
+	url = https://github.com/INSAlgo/Concours-Puissance4.git
