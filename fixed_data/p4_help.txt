@@ -1,5 +1,6 @@
 # How to play
-insert reamde here please ^^
+The rules of the game are (here)[https://github.com/INSAlgo/Concours-Puissance4/blob/6744ea0048b1145cb9d98b8c95a0c8e1bd6ad790/README.md].
+You can pull and run the code that the bot uses to test your AI (here)[https://github.com/INSAlgo/Concours-Puissance4]
 
 # Save an AI on your name
 To submit an AI, you must send the command `!p4 submit` with your file attached in a private message to 1048680176118136942.
