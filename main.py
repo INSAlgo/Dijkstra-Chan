@@ -13,26 +13,22 @@ import discord
 from discord.ext.commands import Context, Bot
 
 from classes.token_error import TokenError
-from classes.codeforces_client import CF_Client
 from classes.github_client import GH_Client
 from classes.openai_client import OPENAI_Client
-from classes.event import Event, msg_to_event, save_events, load_events, remove_passed_events
-from classes.reminder import Reminder, generate_queue
 
 from functions.embeding import embed, embed_help
 from functions.geometry_read import draw_submission
 from functions.geometry_check import check
 
+from commands.evt import command_ as evt_com, save_events, fetch_notif_channel
+
 
 #=================================================================================================================================================================
 # GLOBALS
 
-intents = discord.Intents.all()
-bot = Bot(intents=intents, command_prefix='!')
+bot = Bot(intents=discord.Intents.all(), command_prefix='!')
 bot.remove_command('help')
-gh_client: GH_Client
-oai_client: OPENAI_Client
-cf_client = CF_Client()
+
 server: discord.Guild
 
 notif_channel: discord.TextChannel
@@ -45,9 +41,8 @@ admin_role: discord.Role
 bureau_role: discord.Role
 event_role: discord.Role
 
-events: set[Event] = set()
-reminders: PQ[Reminder] = PQ()
-cur_rem: asyncio.Task[None] | None = None
+gh_client: GH_Client
+oai_client: OPENAI_Client
 
 File = open("fixed_data/help.txt")
 help_txt = File.read()
@@ -61,19 +56,6 @@ fact = 1
 
 #=================================================================================================================================================================
 # FUNCTIONS
-
-def update_events() -> int :
-    global events
-    prev_N = len(events)
-
-    err_code, CF_events = cf_client.get_fut_cont_events()
-    if err_code == 1 :
-        print(CF_events)
-    
-    else :
-        events |= CF_events
-
-    return len(events) - prev_N
 
 async def connect_gh_client() :
     """
@@ -103,29 +85,6 @@ async def connect_openai_client() :
         await debug_channel.send(err)
         raise Exception from err
 
-async def wait_reminder() :
-    """
-    Waits for reminders in the background of the bot
-    """
-    global reminders
-
-    time = (reminders.queue[0].time - datetime.now()).total_seconds()
-    print("waiting for a reminder...")
-    await asyncio.sleep(time)
-    await notif_channel.send(event_role.mention)
-    await notif_channel.send(embed=reminders.get().embed())
-
-    launch_reminder()
-
-def launch_reminder() :
-    global cur_rem
-    if cur_rem is not None :
-        cur_rem.cancel()
-    if reminders.empty() :
-        cur_rem = None
-    else :
-        cur_rem = asyncio.ensure_future(wait_reminder())
-
 async def help_func(auth: discord.Member, channel: discord.TextChannel) :
         if admin_role in auth.roles and channel == debug_channel :
             await debug_channel.send(embed=embed_help("admin_help.txt"))
@@ -141,12 +100,6 @@ async def on_ready() :
     """
     Executes necessary setup on bot startup
     """
-    global events
-    events = load_events()
-
-    global reminders
-    reminders = generate_queue(events)
-
     global server
     server = bot.get_guild(716736874797858957)
 
@@ -168,7 +121,7 @@ async def on_ready() :
     global event_role
     event_role = server.get_role(1051629248139505715)
 
-    launch_reminder()
+    fetch_notif_channel(notif_channel)
 
     await connect_gh_client()
     err_code, msg = gh_client.reload_repo_tree()
@@ -266,84 +219,11 @@ async def evt(ctx: Context, func: str = "get", *args: str) :
     """
     General command prefix for any event related command
     """
-    global events
-    global reminders
-    global cur_rem
-    n_args = len(args)
-    
-    # Command to get/remove the role for events pings :
-    if func == "toggle" :
-        if ctx.channel not in command_channels :
-            return
-
-        if n_args > 0 :
-            await ctx.channel.send("toggle does not have parameters")
-
-        msg = "Role successfully "
-        if event_role in ctx.author.roles :
-            await ctx.author.remove_roles(event_role)
-            msg += "removed."
-        else :
-            await ctx.author.add_roles(event_role)
-            msg += "given."
-        await ctx.channel.send(msg)
-
-    # Command to display events :
-    elif func == "get" :
-        if ctx.channel not in command_channels :
-            return
-        
-        if n_args == 0 :
-            nb = 3
-        elif n_args == 1 :
-            nb = int(args[0])
-        else :
-            nb = int(args[0])
-            await ctx.channel.send("get has at most 1 parameter : the number of events to show")
-        
-        events = remove_passed_events(events)
-        list_events = list(events)
-        list_events.sort()
-
-        for event in list_events[:nb] :
-            await ctx.channel.send(embed=event.embed())
-    
-    # (admin) Command to update the list events :
-    elif func == "update" :
-        if admin_role not in ctx.author.roles or ctx.channel != debug_channel :
-            return
-
-        if n_args > 0 :
-            await ctx.channel.send("update does not have parameters")
-
-        events = remove_passed_events(events)
-        N = update_events()
-        await ctx.channel.send(f"{N} new event(s) found!")
-        save_events(events)
-
-        if N > 0 :
-            reminders = generate_queue(events)
-
-            launch_reminder()
-    
-    # (admin) Command to add an event :
-    elif func == "add" :
-        if admin_role not in ctx.author.roles or ctx.channel != debug_channel :
-            return
-
-        event = msg_to_event(ctx.message.content)
-
-        if event is None :
-            await ctx.channel.send("please format the date as YYYY/MM/DD HH:MM")
-
-        else :
-            events.add(event)
-            await ctx.channel.send(f"event {event.name} succesfully added to the list!")
-            reminders = generate_queue(events)
-            await ctx.channel.send("succesfully generated new reminders!")
-            save_events(events)
-
-            launch_reminder()
+    await evt_com(
+        admin_role, event_role,
+        debug_channel, command_channels,
+        ctx, func, *args
+    )   # Using keywords arguments (like ctx = ctx) breaks everything for some reason
 
 
 #=================================================================================================================================================================
@@ -543,9 +423,8 @@ if __name__ == "__main__" :
 
     # Saving stuff after closing
     print("Saving events, DO NOT CLOSE APP!")
-    save_events(events)
+    save_events()
     os.environ["GH_TOKEN"] = sol_token
-    print("saved", len(events), "events to json.")
 
     # Sending a message to confirm shutdown :
     headers = {'Authorization': 'Bot %s' % token }

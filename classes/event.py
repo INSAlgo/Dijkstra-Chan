@@ -1,12 +1,22 @@
 from __future__ import annotations
-import os
 from datetime import datetime
-import json
+import re
 
 from discord import Embed
 
 # As a format help (possibility to add more) :
 websites = {"CodeForces"}
+
+# regex to check link validity :
+regex = re.compile(
+    r'^(?:http|ftp)s?://' # http:// or https://
+    r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' #domain...
+    r'localhost|' #localhost...
+    r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' # ...or ip
+    r'(?::\d+)?' # optional port
+    r'(?:/?|[/?]\S+)$',
+    re.IGNORECASE
+)
 
 class Event :
     def __init__(self, attrs: dict[str, str | int], time: datetime | None = None) :
@@ -105,7 +115,7 @@ class Event :
     def embed(self) -> Embed :
         desc = f"*From {self.webs}*\n" + self.desc
 
-        if self.link == "" :
+        if re.match(regex, self.link) is None :
             res = Embed(title=self.name, description=desc)
         else :
             res = Embed(title=self.name, description=desc, url=self.link)
@@ -113,53 +123,3 @@ class Event :
         res.add_field(name="To happen on :", value=self.time.strftime('%B %d, %Y, %H:%M'))
 
         return res
- 
-
-def msg_to_event(message: str) -> Event | None :
-    lines = message.split('\n')[1:] # the first line is the command keyword
-
-    attrs = {}
-
-    attrs["name"] = lines[0]
-    attrs["link"] = lines[1]
-    attrs["webs"] = lines[2]
-    attrs["desc"] = '\n'.join(lines[4:10])
-
-    time = lines[3]
-    try :
-        data = map(int, (time[:4], time[5:7], time[8:10], time[11:13], time[14:16]))
-        time = datetime(*data)
-    except ValueError :
-        return None
-    
-    return Event(attrs, time=time)
-
-def remove_passed_events(events: set[Event]) -> set[Event] :
-    new_events = set()
-
-    for event in events :
-        if event.time > datetime.now() :
-            new_events.add(event)
-    
-    return new_events
-
-def save_events(events: set[Event], file: str = "saved_data/events.json") :
-    File = open(file, 'w')
-    json.dump(list(map(Event.to_dict, events)), File)
-    File.close()
-
-def load_events(file: str = "saved_data/events.json") -> set[Event] :
-    for i in range(1, len(file.split('/'))) :
-        sub_path = '/'.join(file.split('/')[:i])
-        if not os.path.exists(sub_path) :
-            os.mkdir(sub_path)
-    
-    if not os.path.exists(file) :
-        File = open(file, 'x')
-        File.write("[]")
-        File.close()
-    
-    File = open(file)
-    events = set(map(Event, json.load(File)))
-    File.close()
-    return events

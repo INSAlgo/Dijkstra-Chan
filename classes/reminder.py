@@ -59,14 +59,3 @@ class Reminder :
         res.add_field(name="To happen on :", value=self.event.time.strftime('%B %d, %Y, %H:%M'), inline=False)
 
         return res
-
-def generate_queue(events: set[Event]) -> PQ[Reminder] :
-    reminders = PQ()
-
-    for event in events :
-        for delay in delays.keys() :
-            rem = Reminder(event, delay)
-            if rem.future :
-                reminders.put(rem)
-
-    return reminders
