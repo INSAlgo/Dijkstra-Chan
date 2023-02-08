@@ -10,7 +10,7 @@ from requests import get as rqget
 from requests import post
 
 import discord
-from discord.ext import commands
+from discord.ext.commands import Context, Bot
 
 from classes.token_error import TokenError
 from classes.codeforces_client import CF_Client
@@ -28,7 +28,7 @@ from functions.geometry_check import check
 # GLOBALS
 
 intents = discord.Intents.all()
-bot = commands.Bot(intents=intents, command_prefix='!')
+bot = Bot(intents=intents, command_prefix='!')
 bot.remove_command('help')
 gh_client: GH_Client
 oai_client: OPENAI_Client
@@ -115,8 +115,12 @@ async def wait_reminder() :
     await notif_channel.send(event_role.mention)
     await notif_channel.send(embed=reminders.get().embed())
 
-    # Loops to wait for the next reminder
+    launch_reminder()
+
+def launch_reminder() :
     global cur_rem
+    if cur_rem is not None :
+        cur_rem.cancel()
     if reminders.empty() :
         cur_rem = None
     else :
@@ -164,13 +168,7 @@ async def on_ready() :
     global event_role
     event_role = server.get_role(1051629248139505715)
 
-    global cur_rem
-    if cur_rem is not None :
-        cur_rem.cancel()
-    if reminders.empty() :
-        cur_rem = None
-    else :
-        cur_rem = asyncio.ensure_future(wait_reminder())
+    launch_reminder()
 
     await connect_gh_client()
     err_code, msg = gh_client.reload_repo_tree()
@@ -264,7 +262,7 @@ async def on_message(message: discord.Message) :
 # EVT COMMAND
 
 @bot.command()
-async def evt(ctx: commands.Context, func: str = "get", *args: str) :
+async def evt(ctx: Context, func: str = "get", *args: str) :
     """
     General command prefix for any event related command
     """
@@ -326,12 +324,7 @@ async def evt(ctx: commands.Context, func: str = "get", *args: str) :
         if N > 0 :
             reminders = generate_queue(events)
 
-            if cur_rem is not None :
-                cur_rem.cancel()
-            if reminders.empty() :
-                cur_rem = None
-            else :
-                cur_rem = asyncio.ensure_future(wait_reminder())
+            launch_reminder()
     
     # (admin) Command to add an event :
     elif func == "add" :
@@ -350,19 +343,14 @@ async def evt(ctx: commands.Context, func: str = "get", *args: str) :
             await ctx.channel.send("succesfully generated new reminders!")
             save_events(events)
 
-            if cur_rem is not None :
-                cur_rem.cancel()
-            if reminders.empty() :
-                cur_rem = None
-            else :
-                cur_rem = asyncio.ensure_future(wait_reminder())
+            launch_reminder()
 
 
 #=================================================================================================================================================================
 # SOL(utions) COMMAND
 
 @bot.command()
-async def sol(ctx: commands.Context, func: str = "get", *args: str) :
+async def sol(ctx: Context, func: str = "get", *args: str) :
     """
     General command prefix for any solution related command
     """
@@ -415,7 +403,7 @@ async def sol(ctx: commands.Context, func: str = "get", *args: str) :
 # G(eometry) COMMAND 
 
 @bot.command()
-async def g(ctx: commands.Context, course: str = "", *args: str) :
+async def g(ctx: Context, course: str = "", *args: str) :
     """
     General command prefix for any geometry related command
     """
@@ -465,7 +453,7 @@ async def g(ctx: commands.Context, course: str = "", *args: str) :
 # P4 (connect 4) COMMAND
 
 @bot.command()
-async def p4(ctx: commands.Context, *args: str) :
+async def p4(ctx: Context, *args: str) :
     n_args = len(args)
 
     if n_args == 0 :
@@ -524,7 +512,7 @@ async def p4(ctx: commands.Context, *args: str) :
 # HELP COMMAND
 
 @bot.command()
-async def help(ctx: commands.Context) :
+async def help(ctx: Context) :
     await help_func(ctx.author, ctx.channel)
 
 
@@ -532,7 +520,7 @@ async def help(ctx: commands.Context) :
 # SHUTDOWN COMMAND
 
 @bot.command()
-async def shutdown(ctx: commands.Context) :
+async def shutdown(ctx: Context) :
     if ctx.channel != debug_channel or admin_role not in ctx.author.roles :
         return
     
