@@ -3,9 +3,7 @@
 
 import os
 import asyncio
-from datetime import datetime
 import re
-from queue import PriorityQueue as PQ
 from requests import get as rqget
 from requests import post
 
@@ -21,6 +19,7 @@ from functions.geometry_read import draw_submission
 from functions.geometry_check import check
 
 from commands.evt import command_ as evt_com, save_events, fetch_notif_channel
+from commands.sol import command_ as sol_com
 
 
 #=================================================================================================================================================================
@@ -57,13 +56,13 @@ fact = 1
 #=================================================================================================================================================================
 # FUNCTIONS
 
-async def connect_gh_client() :
+async def connect_gh_client(token) :
     """
     Connects to the github API
     """
     global gh_client
     try :
-        gh_client = GH_Client(sol_token)
+        gh_client = GH_Client(token)
     except TokenError as tkerr:
         await debug_channel.send("The github token is wrong or has expired, please generate a new one. See README for more info.")
         raise TokenError from tkerr
@@ -123,7 +122,7 @@ async def on_ready() :
 
     fetch_notif_channel(notif_channel)
 
-    await connect_gh_client()
+    await connect_gh_client(os.environ["GH_TOKEN"])
     err_code, msg = gh_client.reload_repo_tree()
     if err_code > 0 :
         await debug_channel.send(msg)
@@ -141,6 +140,14 @@ async def on_member_join(member: discord.Member) :
     """
     await member.add_roles(member_role)
 
+
+#=================================================================================================================================================================
+# ON_MEMBER_JOIN
+
+@bot.event
+async def on_reaction_add(reaction: discord.Reaction, user: discord.User) :
+    # This might be usefull
+    pass
 
 #=================================================================================================================================================================
 # ON_MESSAGE
@@ -234,49 +241,15 @@ async def sol(ctx: Context, func: str = "get", *args: str) :
     """
     General command prefix for any solution related command
     """
-    n_args = len(args)
+    new_token = await sol_com(
+        gh_client,
+        admin_role, event_role,
+        debug_channel, command_channels,
+        ctx, func, *args
+    )
 
-    # Command to get the solution of an exercise from a website :
-    if func == "get" :
-        if ctx.guild and (ctx.channel not in command_channels) :
-            return
-        
-        if n_args == 0 :
-            site = ""
-            file = ""
-        elif n_args == 1 :
-            site = args[0]
-            file = ""
-        else :
-            site = args[0]
-            file = ' '.join(args[1:])
-
-        _, raw_message = gh_client.search_correction(site, file)
-        await ctx.channel.send(raw_message)
-    
-    # (admin) Command to reload the cache of the Corrections repo tree :
-    elif func == "tree" :
-        if admin_role not in ctx.author.roles :
-            return
-        
-        if n_args > 0 :
-            await ctx.channel.send("tree command does not have parameters")
-
-        _, msg = gh_client.reload_repo_tree()
-        await ctx.channel.send(msg)
-    
-    # (bureau) Command to change the token to access the Corrections repo :
-    elif func == "token" :
-        if bureau_role not in ctx.author.roles or ctx.channel != debug_channel :
-            return
-        
-        if n_args != 1 :
-            await ctx.channel.send("token command has exactly one parameter : the new token")
-            return
-
-        global sol_token
-        sol_token = args[0]
-        await connect_gh_client()
+    if new_token is not None :
+        connect_gh_client(new_token)
 
 
 #=================================================================================================================================================================
@@ -415,7 +388,6 @@ if __name__ == "__main__" :
 
     # Grabing tokens from environment
     token = os.environ["TOKEN"]
-    sol_token = os.environ["GH_TOKEN"]
     openai_token = os.environ["OPENAI_TOKEN"]
 
     # Running bot
@@ -424,7 +396,6 @@ if __name__ == "__main__" :
     # Saving stuff after closing
     print("Saving events, DO NOT CLOSE APP!")
     save_events()
-    os.environ["GH_TOKEN"] = sol_token
 
     # Sending a message to confirm shutdown :
     headers = {'Authorization': 'Bot %s' % token }
