@@ -237,7 +237,7 @@ async def evt(ctx: Context, func: str = "get", *args: str) :
 # SOL(utions) COMMAND
 
 @bot.command()
-async def sol(ctx: Context, func: str = "get", *args: str) :
+async def sol(ctx: Context, func: str = None, *args: str) :
     """
     General command prefix for any solution related command
     """

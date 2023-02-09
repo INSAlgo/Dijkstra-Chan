@@ -1,5 +1,6 @@
 from base64 import standard_b64decode as b64dcd
 from datetime import datetime
+from random import choices
 
 import discord
 
@@ -116,7 +117,7 @@ class GH_Client (Client) :
             return 2, f"websites available are : {', '.join(self.files.keys())}"
         
         if to_search == "" :
-            return 1, "files are :\n" + '\n'.join(self.files[website][:10])
+            return 1, "10 random files are :\n" + '\n'.join(choices(self.files[website], k=10))
 
         if to_search not in self.files[website] :
             self.files[website].sort(key=lambda s: dist(s, to_search))

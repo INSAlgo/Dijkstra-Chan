@@ -7,9 +7,15 @@ async def command_(
         gh_client: GH_Client,
         bureau_role: discord.Role, admin_role: discord.Role,
         debug_channel: discord.TextChannel, command_channels: set[discord.TextChannel], 
-        ctx: Context, func: str = "get", *args: str
+        ctx: Context, func: str, *args: str
     ) :
     n_args = len(args)
+
+    if func is None :
+        if ctx.guild and (ctx.channel not in command_channels) :
+            return
+        ctx.channel.send("This command needs arguments, see help command for more info")
+        return
 
     # Command to get the solution of an exercise from a website :
     if func == "get" :
@@ -28,6 +34,7 @@ async def command_(
 
         _, raw_message = gh_client.search_correction(site, file)
         await ctx.channel.send(raw_message)
+        return
     
     # (admin) Command to reload the cache of the Corrections repo tree :
     elif func == "tree" :
@@ -39,6 +46,7 @@ async def command_(
 
         _, msg = gh_client.reload_repo_tree()
         await ctx.channel.send(msg)
+        return
     
     # (bureau) Command to change the token to access the Corrections repo :
     elif func == "token" :
