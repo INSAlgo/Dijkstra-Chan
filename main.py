@@ -15,11 +15,10 @@ from classes.github_client import GH_Client
 from classes.openai_client import OPENAI_Client
 
 from functions.embeding import embed, embed_help
-from functions.geometry_read import draw_submission
-from functions.geometry_check import check
 
-from commands.evt import command_ as evt_com, save_events, fetch_notif_channel
-from commands.sol import command_ as sol_com
+from commands.evt   import command_ as evt_com, save_events, fetch_notif_channel
+from commands.sol   import command_ as sol_com
+from commands.g     import command_ as g_com
 
 
 #=================================================================================================================================================================
@@ -54,7 +53,7 @@ fact = 1
 
 
 #=================================================================================================================================================================
-# FUNCTIONS
+# CLIENTS CONNECTION FUNCTIONS
 
 async def connect_gh_client(token) :
     """
@@ -84,8 +83,12 @@ async def connect_openai_client() :
         await debug_channel.send(err)
         raise Exception from err
 
+
+#=================================================================================================================================================================
+# FUNCTION TO SEND HELP
+
 async def help_func(auth: discord.Member, channel: discord.TextChannel) :
-        if admin_role in auth.roles and channel == debug_channel :
+        if channel == debug_channel :
             await debug_channel.send(embed=embed_help("admin_help.txt"))
         else :
             await channel.send(embed=embed_help("help.txt"))
@@ -142,7 +145,7 @@ async def on_member_join(member: discord.Member) :
 
 
 #=================================================================================================================================================================
-# ON_MEMBER_JOIN
+# ON_REACTION_ADD
 
 @bot.event
 async def on_reaction_add(reaction: discord.Reaction, user: discord.User) :
@@ -260,46 +263,7 @@ async def g(ctx: Context, course: str = "", *args: str) :
     """
     General command prefix for any geometry related command
     """
-    courses = {"CH"}
-    n_args = len(args)
-    
-    if ctx.channel not in command_channels :
-        return
-
-    if course not in courses :
-        await ctx.channel.send(f"No command named '{course}'. Available commands are : {', '.join(courses)}.")
-
-    if course == "CH" :
-        if n_args == 0 :
-            await ctx.channel.send("Type of input to specify : points or polygon.")
-            return
-        if n_args > 1 :
-            await ctx.channel.send("Only one argument required.")
-        
-        type_ = args[0]
-        if type_ == "help" :
-            await ctx.channel.send(embed=embed_help("CH_help.txt"))
-            return
-        if type_ not in {"points", "polygon"} :
-            await ctx.channel.send(f"Type of input cannot be '{type_}'. Available types are 'points' and 'polygon'.")
-            return
-
-        files = ctx.message.attachments
-        if not files:
-            await ctx.channel.send("Missing attachment. :poop:")
-            return
-        attached_file_url = files[0].url
-        raw_submission = rqget(attached_file_url).text
-
-        err_code, res = draw_submission(raw_submission, type_)
-
-        if err_code > 1 :
-            await ctx.channel.send(res)
-            return
-        
-        message = check(*res, type_)
-        await ctx.channel.send(message, file=discord.File("temp.png"))
-        return
+    await g_com(command_channels, ctx, course, *args)
 
 
 #=================================================================================================================================================================
