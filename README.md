@@ -7,7 +7,7 @@ Whenever you need to reset a token, make sure to update it in the codespace's se
 
 If you want to run it locally, first get your hand on the tokens (ask the current admin) to add them to your environment variables.</br>
 Then you can do :
-- `git clone https://github.com/INSAlgo/Dijkstra-Chan.git`,
+- `git clone --recurse-submodule https://github.com/INSAlgo/Dijkstra-Chan.git`,
 - `python -m venv env`,
 - `env/Scripts/activate`,
 - `pip install -r requirements.txt`,
