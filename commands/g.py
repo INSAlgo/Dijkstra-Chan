@@ -1,4 +1,4 @@
-from requests import get as rqget
+from requests import get
 
 import discord
 from discord.ext.commands import Context
@@ -40,7 +40,7 @@ async def command_(
             await ctx.channel.send("Missing attachment. :poop:")
             return
         attached_file_url = files[0].url
-        raw_submission = rqget(attached_file_url).text
+        raw_submission = get(attached_file_url).text
 
         err_code, res = draw_submission(raw_submission, type_)
 

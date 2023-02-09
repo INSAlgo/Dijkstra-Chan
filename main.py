@@ -4,7 +4,6 @@
 import os
 import asyncio
 import re
-from requests import get as rqget
 from requests import post
 
 import discord
@@ -19,6 +18,7 @@ from functions.embeding import embed, embed_help
 from commands.evt   import command_ as evt_com, save_events, fetch_notif_channel
 from commands.sol   import command_ as sol_com
 from commands.g     import command_ as g_com
+from commands.p4    import command_ as p4_com
 
 
 #=================================================================================================================================================================
@@ -271,58 +271,10 @@ async def g(ctx: Context, course: str = "", *args: str) :
 
 @bot.command()
 async def p4(ctx: Context, *args: str) :
-    n_args = len(args)
-
-    if n_args == 0 :
-        ctx.channel.send("Missing argument")
-        return
-    
-    if args[0] == "help" :
-        await ctx.channel.send(embed=embed_help("p4_help.txt"))
-        return
-    
-    if args[0] == "submit" :
-
-        if ctx.guild :
-            await ctx.channel.send("You need to send this as a DM :wink:")
-            return
-
-        files = ctx.message.attachments
-        if not files:
-            await ctx.channel.send("Missing attachment. :poop:")
-            return
-        attached_file_url = files[0].url
-        raw_submission = rqget(attached_file_url).text
-
-        ext = files[0].filename.split('.')[-1]
-        name = ctx.message.author.name + '.' + ext
-
-        replace = True
-
-        if not os.path.exists("C4_AIs/") :
-            os.mkdir("C4_AIs")
-
-        if os.path.exists(f"C4_AIs/{name}") :
-            await ctx.channel.send("You already have a submission, do you want to replace it? (Y/N)")
-
-            while True :
-                resp: discord.Message = await bot.wait_for("message", check=lambda m: m.channel == ctx.channel)
-                if resp.content.upper()[0] == "Y" :
-                    replace = True
-                    break
-                elif resp.content.upper()[0] == "N" :
-                    replace = False
-                    break
-            
-        if replace :
-            File = open(f"C4_AIs/{name}", 'w')
-            File.write(raw_submission)
-            File.close()
-
-            await ctx.channel.send("AI submitted ! <:feelsgood:737960024390762568>")
-        
-        else :
-            await ctx.channel.send("Okie Dokie !")
+    """
+    General command prefix for any connect 4 AI related command
+    """
+    await p4_com(bot, ctx, *args)
 
 
 #=================================================================================================================================================================
