@@ -19,3 +19,6 @@ Logs of the game will be sent to you in a private message.
 
 # Test your AI against another AI
 Not yet implemented
+
+# Get the list of people who did submit an AI
+Not yet implemented

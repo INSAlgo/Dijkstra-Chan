@@ -18,7 +18,7 @@ from functions.embeding import embed, embed_help
 from commands.evt   import command_ as evt_com, save_events, fetch_notif_channel
 from commands.sol   import command_ as sol_com
 from commands.g     import command_ as g_com
-from commands.p4    import command_ as p4_com
+from commands.p4    import command_ as p4_com, fetch_bot
 
 
 #=================================================================================================================================================================
@@ -124,6 +124,8 @@ async def on_ready() :
     event_role = server.get_role(1051629248139505715)
 
     fetch_notif_channel(notif_channel)
+
+    fetch_bot(bot)
 
     await connect_gh_client(os.environ["GH_TOKEN"])
     err_code, msg = gh_client.reload_repo_tree()
@@ -274,7 +276,7 @@ async def p4(ctx: Context, *args: str) :
     """
     General command prefix for any connect 4 AI related command
     """
-    await p4_com(bot, ctx, *args)
+    await p4_com(ctx, *args)
 
 
 #=================================================================================================================================================================
