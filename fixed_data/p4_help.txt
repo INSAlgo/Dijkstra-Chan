@@ -15,6 +15,7 @@ The last AI you submitted will represent you at the tournament.
 To play test your AI on the testing system, use `!p4 test`.
 Add the flag `self` to play against the AI, otherwise it will play against itself.
 You can also add the flag `first` to play first.
+Logs of the game will be sent to you in a private message.
 
 # Test your AI against another AI
 Not yet implemented

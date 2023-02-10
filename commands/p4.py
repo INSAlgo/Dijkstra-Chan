@@ -87,15 +87,22 @@ async def command_(bot: Bot, ctx: Context, *args: str) :
         if name not in AIs :
             await ctx.channel.send("You don't have an AI! Upload one by messaging me `!p4 submit`.")
             return
-        
+
         dm = await ctx.message.author.create_dm()
 
         ext = AIs[name]
         if "self" in args :
             p1 = AI(f"puissance4/ai/{name}.{ext}")
-            p2 = User(ask_move, ctx.message.author, ctx.channel)
+            p2 = User(ask_move, ctx.message.author, dm)
             if "first" in args :
                 p1, p2 = p2, p1
         
-        
-        
+        _, _, logs = game([p1, p2], 7, 6, verbose=True, discord=True)
+
+        File = open("logs", 'w')
+        File.write(logs)
+        File.close()
+
+        await dm.send(content="logs :", file=discord.File("logs"))
+        return
+
