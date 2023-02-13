@@ -116,13 +116,12 @@ async def command_(ctx: Context, *args: str) :
             if replace :
                 os.remove(f"puissance4/ai/{name}.{AIs[name]}")
             
-        else :
-            AIs[name] = new_ext
-            
         if replace :
             File = open(f"puissance4/ai/{name}.{new_ext}", 'w')
             File.write(raw_submission)
             File.close()
+
+            AIs[name] = new_ext
 
             await ctx.channel.send("AI submitted ! <:feelsgood:737960024390762568>")
         
