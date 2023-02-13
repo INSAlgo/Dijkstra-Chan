@@ -66,6 +66,9 @@ async def ask_move(board: list[list[int]], user: discord.User, channel: discord.
         if move_txt in {str(i) for i in range(len(board))} :
             return move_txt
 
+
+# main command :
+
 async def command_(ctx: Context, *args: str) :
     n_args = len(args)
 
@@ -77,7 +80,7 @@ async def command_(ctx: Context, *args: str) :
         await ctx.channel.send(embed=embed_help("p4_help.txt"))
         return
     
-    if args[0] == "submit" :
+    elif args[0] == "submit" :
 
         if ctx.guild :
             await ctx.channel.send("You need to send this as a DM :wink:")
@@ -125,7 +128,7 @@ async def command_(ctx: Context, *args: str) :
 
         return
 
-    if args[0] == "test" :
+    elif args[0] == "test" :
         name = str(ctx.message.author.id)
 
         if name not in AIs.keys() :
