@@ -93,7 +93,7 @@ async def command_(ctx: Context, *args: str) :
         attached_file_url = files[0].url
         raw_submission = get(attached_file_url).text
 
-        ext = files[0].filename.split('.')[-1]
+        new_ext = files[0].filename.split('.')[-1]
         name = str(ctx.message.author.id)
 
         replace = True
@@ -113,11 +113,14 @@ async def command_(ctx: Context, *args: str) :
                     replace = False
                     break
             
+            if replace :
+                os.remove(f"puissance4/ai/{name}.{AIs[name]}")
+            
         else :
-            AIs[name] = ext
+            AIs[name] = new_ext
             
         if replace :
-            File = open(f"puissance4/ai/{name}.{ext}", 'w')
+            File = open(f"puissance4/ai/{name}.{new_ext}", 'w')
             File.write(raw_submission)
             File.close()
 
