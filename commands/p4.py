@@ -4,11 +4,13 @@ from requests import get
 import discord
 from discord.ext.commands import Context, Bot
 
+from classes.p4Game import P4Game, Player
 from functions.embeding import embed_help
 from puissance4.puissance4 import User, AI, game, fallHeight
 
 from numpy import transpose
 
+# Connect 4 games setup :
 if not os.path.exists("puissance4/ai") :
     os.mkdir("puissance4/ai")
 
@@ -20,7 +22,7 @@ for file in os.listdir("puissance4/ai/") :
     if set(c for c in name).issubset({str(i) for i in range(10)}) :
         AIs[name] = ext
 
-numbers = [":zero:", ":one:", ":two:", ":three:", ":four:", ":five:", ":six:", ":seven:", ":eight:", ":nine:", ":keycap_ten:"]
+games: list[P4Game] = []
 
 # bot client from main script
 bot: Bot
@@ -32,39 +34,11 @@ def fetch_bot(main_bot: Bot) :
 
 # discord player functions :
 
-def draw_board(board: list[list[int]]) -> list[list[str]] :
-    help_line = ' '.join(numbers[:len(board[0])])
-    emoji_board = [help_line]
-    for line in board :
-        emoji_line = []
-        for cell in line :
-            if cell == 1 :
-                emoji = ":red_circle:"
-            elif cell == 2 :
-                emoji = ":yellow_circle:"
-            else :
-                emoji = ":black_large_square:"
-            emoji_line.append(emoji)
-        emoji_board.append(' '.join(emoji_line))
-    emoji_board.append(help_line)
-    return '\n'.join(emoji_board[::-1])
+async def tell_move(game_id: int, player: int, move: int, receiver: int) :
+    await games[game_id].tell_move(move, player, receiver)
 
-async def tell_move(move: int, channel: discord.TextChannel) :
-    await channel.send(f"Opponent played on column {move}.")
-
-async def ask_move(board: list[list[int]], user: discord.User, channel: discord.TextChannel) :
-    
-    await channel.send(draw_board(transpose(board)))
-    await channel.send("Your move (type `stop` to forfait) :")
-
-    while True :
-        resp: discord.Message = await bot.wait_for("message", check=lambda m: m.channel == channel)
-        move_txt = resp.content
-        if move_txt.lower() == "stop" :
-            await channel.send("Okie Dokie !")
-            return "stop"
-        if move_txt in {str(i) for i in range(len(board))} :
-            return move_txt
+async def ask_move(game_id: int, player: int) :
+    return await games[game_id].ask_move(player, bot)
 
 
 # main command :
@@ -139,17 +113,28 @@ async def command_(ctx: Context, *args: str) :
 
         dm = await ctx.message.author.create_dm()
 
+        game_id = len(games)
+
         ext = AIs[name]
         p1 = AI(f"puissance4/ai/{name}.{ext}")
+        players = [Player("AI", int(name), None)]
         if "self" in args :
-            p2 = User(ask_move, ctx.message.author, dm)
+            p2 = User(ask_move, tell_move, game_id)
+            players.append(Player("User", int(name), dm))
             if "first" in args :
                 p1, p2 = p2, p1
+                players.reverse()
         
         else :
             p2 = AI(f"puissance4/ai/{name}.{ext}")
+            players.append(Player("AI", int(name), None))
         
-        _, _, logs = await game([p1, p2], 7, 6, verbose=False, discord=True)
+        game_obj = P4Game(game_id, 2, 7, 6, players)
+        games.append(game_obj)
+        winner, errors, logs = await game([p1, p2], 7, 6, verbose=False, discord=True)
+
+        winner: Player = players[winner.no-1]
+        await game_obj.send_results(f"{winner.get_name()} won!")
 
         File = open("logs", 'w', encoding='utf-8')
         File.write('\n'.join(logs))
