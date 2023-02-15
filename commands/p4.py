@@ -54,6 +54,14 @@ async def command_(ctx: Context, *args: str) :
         await ctx.channel.send(embed=embed_help("p4_help.txt"))
         return
     
+    elif args[0] == "get" :
+        if ctx.channel != bot.get_channel(1072461314418548736) :
+            return
+        embed = discord.Embed(title="Connect 4 tournament participants")
+        desc = [f"<@{id_}>" for id_ in AIs.keys()]
+        embed.description = '\n'.join(desc)
+        await ctx.channel.send(embed=embed)
+    
     elif args[0] == "submit" :
 
         if ctx.guild :
