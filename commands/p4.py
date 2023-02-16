@@ -173,8 +173,6 @@ async def command_(admin_role: discord.Role, ctx: Context, *args: str) :
         p1 = ctx.message.author
         p1_id = p1.id
 
-        print(*ctx.message.raw_mentions)
-
         if re.match("^\<\@[0-9]{18}\>$", args[1]) is None :
             await ctx.send(f"{args[1]} is not a valid Discord tag/mention.")
             if not ctx.guild :
@@ -182,9 +180,8 @@ async def command_(admin_role: discord.Role, ctx: Context, *args: str) :
             return
         
         p2_id = int(args[1][2:-1])
-        try :
-            p2 = discord.User(id=p2_id)
-        except :
+        p2 = bot.get_user(p2_id)
+        if p2 is None :
             await ctx.send(f"User <@{p2_id}> not found.")
             return
 
@@ -219,11 +216,11 @@ async def command_(admin_role: discord.Role, ctx: Context, *args: str) :
             game_players.append(User(ask_move, tell_move, game_id))
             local_players.append(Player("User", p2_id, dm2))
 
-        game_obj = P4Game(game_id, 2, 7, 6, players)
+        game_obj = P4Game(game_id, 2, 7, 6, local_players)
         games.append(game_obj)
-        winner, errors, logs = await game([p1, p2], 7, 6, verbose=False, discord=True)
+        winner, errors, logs = await game(game_players, 7, 6, verbose=False, discord=True)
 
-        winner: Player = players[winner.no-1]
+        winner: Player = local_players[winner.no-1]
 
         File = open("logs", 'w', encoding='utf-8')
         File.write('\n'.join(logs))

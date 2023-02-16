@@ -70,7 +70,7 @@ class P4Game :
         
         await player.dm.send(self.draw_board() + f"\nYour turn {player.get_name()} (type `stop` to forfait) :")
 
-        player_user = discord.User(id=player.id)
+        player_user = bot.get_user(player.id)
         while True :
             resp: discord.Message = await bot.wait_for(
                 "message",
