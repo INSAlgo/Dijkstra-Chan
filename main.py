@@ -276,7 +276,7 @@ async def p4(ctx: Context, *args: str) :
     """
     General command prefix for any connect 4 AI related command
     """
-    await p4_com(ctx, *args)
+    await p4_com(admin_role, ctx, *args)
 
 
 #=================================================================================================================================================================

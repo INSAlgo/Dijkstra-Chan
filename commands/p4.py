@@ -7,6 +7,9 @@ from discord.ext.commands import Context, Bot
 from classes.p4Game import P4Game, Player
 from functions.embeding import embed_help
 from puissance4.puissance4 import User, AI, game, fallHeight
+from puissance4.tournoi import main as tournament
+
+import subprocess
 
 from numpy import transpose
 
@@ -43,7 +46,7 @@ async def ask_move(game_id: int, player: int) :
 
 # main command :
 
-async def command_(ctx: Context, *args: str) :
+async def command_(admin_role: discord.Role, ctx: Context, *args: str) :
     n_args = len(args)
 
     if n_args == 0 :
@@ -150,3 +153,19 @@ async def command_(ctx: Context, *args: str) :
 
         await dm.send(content="logs :", file=discord.File("logs"))
         return
+
+    elif args[0] == "tournament" :
+        if admin_role not in ctx.author.roles :
+            return
+        
+        os.chdir("./puissance4")
+
+        embed = discord.Embed(title= "Connect 4 Tournament results")
+        lines = []
+        for user_id, score in tournament() :
+            lines.append(f"<@{user_id}> with a score of {score}")
+        embed.description = '\n'.join(lines)
+
+        os.chdir("..")
+        
+        ctx.send(embed=embed)
