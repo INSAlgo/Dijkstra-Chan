@@ -139,7 +139,7 @@ async def command_(ctx: Context, *args: str) :
         
         game_obj = P4Game(game_id, 2, 7, 6, players)
         games.append(game_obj)
-        winner, errors, logs = await game([p1, p2], 7, 6, verbose=True, discord=True)
+        winner, errors, logs = await game([p1, p2], 7, 6, verbose=False, discord=True)
 
         winner: Player = players[winner.no-1]
         await game_obj.send_results(f"{winner.get_name()} won!")
