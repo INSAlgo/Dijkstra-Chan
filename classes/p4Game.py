@@ -68,11 +68,14 @@ class P4Game :
         if player.type != "User" :
             return "-1"
         
-        await player.dm.send(self.draw_board())
-        await player.dm.send("Your turn (type `stop` to forfait) :")
+        await player.dm.send(self.draw_board() + f"\nYour turn {player.get_name()} (type `stop` to forfait) :")
 
+        player_user = discord.User(id=player.id)
         while True :
-            resp: discord.Message = await bot.wait_for("message", check=lambda m: m.channel == player.dm)
+            resp: discord.Message = await bot.wait_for(
+                "message",
+                check=lambda m: (m.channel == player.dm) and (m.author == player_user)
+            )
             move_txt = resp.content
             if move_txt.lower() == "stop" :
                 await player.dm.send("Okie Dokie !")
