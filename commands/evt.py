@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from queue import PriorityQueue as PQ
 import os, json, asyncio
 
@@ -32,6 +32,19 @@ def update_events() -> int :
         events |= CF_events
 
     return len(events) - prev_N
+
+async def daily_update() :
+    global reminders
+    delay = timedelta(days=1).total_seconds()
+    while True :
+        N = update_events()
+        save_events()
+
+        if N > 0 :
+            reminders = generate_queue(events)
+            launch_reminder()
+    
+        await asyncio.sleep(delay)
 
 def msg_to_event(message: str) -> Event | None :
     lines = message.split('\n')[1:] # the first line is the command keyword
@@ -126,6 +139,7 @@ def launch_reminder() :
 events: set[Event] = load_events()
 reminders: PQ[Reminder] = generate_queue()
 cur_rem: asyncio.Task[None] | None = None
+next_update: asyncio.Task[None] = asyncio.ensure_future(daily_update())
 launch_reminder()
 
 cf_client = CF_Client()
