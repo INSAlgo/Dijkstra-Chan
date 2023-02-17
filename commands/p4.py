@@ -231,7 +231,7 @@ async def command_(admin_role: discord.Role, ctx: Context, *args: str) :
         File.close()
 
         if public :
-            await ctx.send(f"{winner.get_name()} won!")
+            await ctx.send(f"{game_obj.draw_board()}\n{winner.get_name()} won!")
             await ctx.send(content="logs :", file=discord.File("logs"))
         else :
             await game_obj.send_results(f"{winner.get_name()} won!")

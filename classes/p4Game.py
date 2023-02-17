@@ -54,6 +54,8 @@ class P4Game :
             return
         
         player = self.players[p_n-1]
+        if player.type == "User" :
+            return
 
         if move < 0 :
             if player.playing :
