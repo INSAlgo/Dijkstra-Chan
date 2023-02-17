@@ -147,7 +147,7 @@ async def command_(admin_role: discord.Role, ctx: Context, *args: str) :
         
         game_obj = P4Game(game_id, 2, 7, 6, players)
         games.append(game_obj)
-        winner, errors, logs = await game([p1, p2], 7, 6, verbose=False, discord=True)
+        _, winner, errors, logs = await game([p1, p2], 7, 6, verbose=False, discord=True)
 
         winner: Player = players[winner.no-1]
         await game_obj.send_results(f"{winner.get_name()} won!")
@@ -218,7 +218,7 @@ async def command_(admin_role: discord.Role, ctx: Context, *args: str) :
 
         game_obj = P4Game(game_id, 2, 7, 6, local_players)
         games.append(game_obj)
-        winner, errors, logs = await game(game_players, 7, 6, verbose=False, discord=True)
+        _, winner, errors, logs = await game(game_players, 7, 6, verbose=False, discord=True)
 
         winner: Player = local_players[winner.no-1]
 
