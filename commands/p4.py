@@ -88,31 +88,16 @@ async def command_(admin_role: discord.Role, ctx: Context, *args: str) :
             os.mkdir("puissance4/ai")
 
         if name in AIs.keys() :
-            await ctx.channel.send("You already have a submission, do you want to replace it? (Y/N)")
-
-            while True :
-                resp: discord.Message = await bot.wait_for("message", check=lambda m: m.channel == ctx.channel)
-                if resp.content.upper()[0] == "Y" :
-                    replace = True
-                    break
-                elif resp.content.upper()[0] == "N" :
-                    replace = False
-                    break
+            await ctx.channel.send("Your old submission will be replaced with this one.")
+            os.remove(f"puissance4/ai/{name}.{AIs[name]}")
             
-            if replace :
-                os.remove(f"puissance4/ai/{name}.{AIs[name]}")
-            
-        if replace :
-            File = open(f"puissance4/ai/{name}.{new_ext}", 'w')
-            File.write(raw_submission)
-            File.close()
+        File = open(f"puissance4/ai/{name}.{new_ext}", 'w')
+        File.write(raw_submission)
+        File.close()
 
-            AIs[name] = new_ext
+        AIs[name] = new_ext
 
-            await ctx.channel.send("AI submitted ! <:feelsgood:737960024390762568>")
-        
-        else :
-            await ctx.channel.send("Okie Dokie !")
+        await ctx.channel.send("AI submitted ! <:feelsgood:737960024390762568>")
 
         return
 
@@ -193,6 +178,25 @@ async def command_(admin_role: discord.Role, ctx: Context, *args: str) :
             dm1, dm2 = ctx.channel, ctx.channel
         else :
             dm1, dm2 = await p1.create_dm(), await p2.create_dm()
+        
+        # asking for player2 permission :
+
+        await ctx.channel.send(f"Hey <@{p2_id}>, <@{p1_id}> challenges you to a fight ({type1} vs {type2}), do you accept ? (Y/N, see `!p4 help` for details)")
+
+        for _ in range(10) :
+            resp: discord.Message = await bot.wait_for("message", check=lambda m: (m.channel == dm2) and (m.author == p2))
+            if resp.content.upper()[0] == "Y" :
+                break
+            elif resp.content.upper()[0] == "N" :
+                dm1.send(f"Connect 4 game challenge to <@{p1_id}> ({type1} vs {type2}) was refused.")
+                return
+        
+        else :
+            if public :
+                dm1.send(f"Connect 4 game between <@{p1_id}> and <@{p2_id}> ({type1} vs {type2}) was cancelled.")
+            else :
+                dm1.send(f"Connect 4 game challenge to <@{p2_id}> ({type1} vs {type2}) was cancelled.")
+                dm2.send(f"Connect 4 game challenge from <@{p1_id}> ({type1} vs {type2}) was cancelled.")
 
         game_players = []
         local_players = []
