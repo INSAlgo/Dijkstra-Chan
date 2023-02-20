@@ -9,6 +9,9 @@ Authorized languages :
  - javascript (.js)
  - C++ (.cpp)
  - C (.c)
+ - Java (.java)
+ - C# (.cs)
+ - Rust (.rs)
 The last AI you submitted will represent you at the tournament.
 
 # Get the list of people who did submit an AI
