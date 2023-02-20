@@ -8,7 +8,7 @@ from discord.ext.commands import Context, Bot
 from classes.p4Game import P4Game, Player
 from functions.embeding import embed_help
 from puissance4.puissance4 import User, AI, game
-# from puissance4.tournoi import main as tournament
+from puissance4.tournoi import tournament
 
 # Connect 4 games setup :
 if not os.path.exists("puissance4/ai") :
@@ -240,18 +240,43 @@ async def command_(admin_role: discord.Role, ctx: Context, *args: str) :
         return
 
     elif args[0] == "tournament" :
-        return
         if admin_role not in ctx.author.roles :
             return
+        
+        if len(args) == 1 :
+            r = 3
+        else :
+            r = int(args[1])
         
         os.chdir("./puissance4")
 
         embed = discord.Embed(title= "Connect 4 Tournament results")
         lines = []
-        for user_id, score in tournament() :
-            lines.append(f"<@{user_id}> with a score of {score}")
-        embed.description = '\n'.join(lines)
+        scoreboard, logs = await tournament(rematches=r)
+
+        i = 1
+        for AI, score in scoreboard :
+            lines.append(f"{i} : <@{int(AI)}> with a score of {score}")
+            i += 1
+
+        embed.add_field(name="Scoreboard :", value='\n'.join(lines), inline=False)
+
+        games = []
+
+        for players, winner, errors in logs :
+            line = " vs. ".join([f"<@{int(p)}>" for p in players]) + " --> "
+            if winner is None :
+                line += "Draw"
+            else :
+                line += f"<@{int(winner)}>"
+            
+            if len(errors) > 0 :
+                line += '\n'
+                line += '\n'.join(f"error with <@{int(players[p_n-1])}>'s AI : {e}" for p_n, e in errors.items())
+            games.append(line)
+        
+        embed.add_field(name="Games played :", value='\n'.join(games), inline=False)
 
         os.chdir("..")
         
-        ctx.send(embed=embed)
+        await ctx.send(embed=embed)
