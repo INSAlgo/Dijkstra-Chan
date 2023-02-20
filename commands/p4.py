@@ -261,21 +261,21 @@ async def command_(admin_role: discord.Role, ctx: Context, *args: str) :
 
         embed.add_field(name="Scoreboard :", value='\n'.join(lines), inline=False)
 
-        games = []
+        # games = []
 
-        for players, winner, errors in logs :
-            line = " vs. ".join([f"<@{int(p)}>" for p in players]) + " --> "
-            if winner is None :
-                line += "Draw"
-            else :
-                line += f"<@{int(winner)}>"
+        # for players, winner, errors in logs :
+        #     line = " vs. ".join([f"<@{int(p)}>" for p in players]) + " --> "
+        #     if winner is None :
+        #         line += "Draw"
+        #     else :
+        #         line += f"<@{int(winner)}>"
             
-            if len(errors) > 0 :
-                line += '\n'
-                line += '\n'.join(f"error with <@{int(players[p_n-1])}>'s AI : {e}" for p_n, e in errors.items())
-            games.append(line)
+        #     if len(errors) > 0 :
+        #         line += '\n'
+        #         line += '\n'.join(f"error with <@{int(players[p_n-1])}>'s AI : {e}" for p_n, e in errors.items())
+        #     games.append(line)
         
-        embed.add_field(name="Games played :", value='\n'.join(games), inline=False)
+        # embed.add_field(name="Games played :", value='\n'.join(games), inline=False)
 
         os.chdir("..")
         
