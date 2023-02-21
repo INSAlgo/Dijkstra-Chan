@@ -103,7 +103,7 @@ async def command_(admin_role: discord.Role, ctx: Context, *args: str) :
 
     elif args[0] == "test" :
         if ctx.guild and not (ctx.channel == bot.get_channel(games_channel_id) and "public" in args) :
-            ctx.send(f"You need to send this as a DM or in <#{games_channel_id}> with the flag `public`.")
+            await ctx.send(f"You need to send this as a DM or in <#{games_channel_id}> with the flag `public`.")
             return
         
         name = ctx.message.author.id
@@ -289,3 +289,16 @@ async def command_(admin_role: discord.Role, ctx: Context, *args: str) :
         await ctx.send(content="Games log :", file=discord.File("games"))
 
         os.remove("games")
+    
+    elif args[0] == "call" :
+        if admin_role not in ctx.author.roles :
+            return
+        
+        user_ids = {file_name.split()[0] for file_name in os.listdir("puissance4/ai")}
+
+        guild_users = {user.id for user in ctx.guild.members}
+
+        for user_id in user_ids.difference(guild_users) :
+            await bot.get_user(user_id).create_dm().send(f"Please join our server to take part in the connect4 AI tournament : {ctx.channel.create_invite(max_uses=1)}")
+        
+        return
