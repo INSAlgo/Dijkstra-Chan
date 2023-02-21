@@ -299,6 +299,7 @@ async def command_(admin_role: discord.Role, ctx: Context, *args: str) :
         guild_users = {user.id for user in ctx.guild.members}
 
         for user_id in user_ids.difference(guild_users) :
-            await bot.get_user(user_id).create_dm().send(f"Please join our server to take part in the connect4 AI tournament : {ctx.channel.create_invite(max_uses=1)}")
-        
+            user = bot.get_user(user_id)
+            await user.create_dm().send(f"Please join our server to take part in the connect4 AI tournament : {ctx.channel.create_invite(max_uses=1)}")
+            await ctx.send(f"sent message to {user.mention}")
         return
