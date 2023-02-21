@@ -268,7 +268,7 @@ async def command_(admin_role: discord.Role, ctx: Context, *args: str) :
         
         await ctx.send(embed=embed)
 
-        games = []
+        games_log = []
 
         for players, winner, errors in logs :
             line = " vs. ".join([f"<@{int(p)}>" for p in players]) + " --> "
@@ -280,10 +280,10 @@ async def command_(admin_role: discord.Role, ctx: Context, *args: str) :
             if len(errors) > 0 :
                 line += '\n'
                 line += '\n'.join(f"error with <@{int(players[p_n-1])}>'s AI : {e}" for p_n, e in errors.items())
-            games.append(line)
+            games_log.append(line)
         
         File = open("games", 'w', encoding='utf-8')
-        File.write('\n'.join(games))
+        File.write('\n'.join(games_log))
         File.close()
 
         await ctx.send(content="Games log :", file=discord.File("games"))
