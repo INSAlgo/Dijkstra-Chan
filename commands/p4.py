@@ -255,8 +255,8 @@ async def command_(admin_role: discord.Role, ctx: Context, *args: str) :
         scoreboard, logs = await tournament(rematches=r)
 
         i = 1
-        for AI, score in scoreboard :
-            lines.append(f"{i} : <@{int(AI)}> with a score of {score}")
+        for AI_, score in scoreboard :
+            lines.append(f"{i} : <@{int(AI_)}> with a score of {score}")
             i += 1
 
         embed.add_field(name="Scoreboard :", value='\n'.join(lines), inline=False)
