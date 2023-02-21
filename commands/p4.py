@@ -237,6 +237,9 @@ async def command_(admin_role: discord.Role, ctx: Context, *args: str) :
             await game_obj.send_results(f"{winner.get_name()} won!")
             await dm1.send(content="logs :", file=discord.File("logs"))
             await dm2.send(content="logs :", file=discord.File("logs"))
+
+        os.remove("logs")
+
         return
 
     elif args[0] == "tournament" :
@@ -248,11 +251,13 @@ async def command_(admin_role: discord.Role, ctx: Context, *args: str) :
         else :
             r = int(args[1])
         
-        os.chdir("./puissance4")
 
         embed = discord.Embed(title= "Connect 4 Tournament results")
         lines = []
+
+        os.chdir("./puissance4")
         scoreboard, logs = await tournament(rematches=r)
+        os.chdir("..")
 
         i = 1
         for AI_, score in scoreboard :
@@ -260,23 +265,27 @@ async def command_(admin_role: discord.Role, ctx: Context, *args: str) :
             i += 1
 
         embed.add_field(name="Scoreboard :", value='\n'.join(lines), inline=False)
-
-        # games = []
-
-        # for players, winner, errors in logs :
-        #     line = " vs. ".join([f"<@{int(p)}>" for p in players]) + " --> "
-        #     if winner is None :
-        #         line += "Draw"
-        #     else :
-        #         line += f"<@{int(winner)}>"
-            
-        #     if len(errors) > 0 :
-        #         line += '\n'
-        #         line += '\n'.join(f"error with <@{int(players[p_n-1])}>'s AI : {e}" for p_n, e in errors.items())
-        #     games.append(line)
-        
-        # embed.add_field(name="Games played :", value='\n'.join(games), inline=False)
-
-        os.chdir("..")
         
         await ctx.send(embed=embed)
+
+        games = []
+
+        for players, winner, errors in logs :
+            line = " vs. ".join([f"<@{int(p)}>" for p in players]) + " --> "
+            if winner is None :
+                line += "Draw"
+            else :
+                line += f"<@{int(winner)}>"
+            
+            if len(errors) > 0 :
+                line += '\n'
+                line += '\n'.join(f"error with <@{int(players[p_n-1])}>'s AI : {e}" for p_n, e in errors.items())
+            games.append(line)
+        
+        File = open("games", 'w', encoding='utf-8')
+        File.write('\n'.join(games))
+        File.close()
+
+        await ctx.send(content="Games log :", file=discord.File("games"))
+
+        os.remove("games")
