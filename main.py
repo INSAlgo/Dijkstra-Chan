@@ -15,7 +15,7 @@ from classes.openai_client import OPENAI_Client
 
 from functions.embeding import embed, embed_help
 
-from commands.evt   import command_ as evt_com, save_events, fetch_notif_channel
+from commands.evt   import command_ as evt_com, save_events, start_events
 from commands.sol   import command_ as sol_com
 from commands.g     import command_ as g_com
 from commands.p4    import command_ as p4_com, fetch_bot
@@ -123,7 +123,7 @@ async def on_ready() :
     global event_role
     event_role = server.get_role(1051629248139505715)
 
-    fetch_notif_channel(notif_channel)
+    start_events(notif_channel)
 
     fetch_bot(bot)
 

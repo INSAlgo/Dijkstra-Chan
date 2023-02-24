@@ -13,10 +13,14 @@ from classes.codeforces_client import CF_Client
 # notification channel from main script
 notif_channel: discord.TextChannel
 
-def fetch_notif_channel(channel: discord.TextChannel) :
+def start_events(channel: discord.TextChannel) :
     global notif_channel
     notif_channel = channel
 
+    global next_update
+    next_update = asyncio.ensure_future(daily_update())
+
+    launch_reminder()
 
 # Functions about events
 
@@ -41,9 +45,10 @@ async def daily_update() :
         save_events()
 
         if N > 0 :
-            reminders = generate_queue(events)
+            reminders = generate_queue()
             launch_reminder()
     
+        print("Waiting for next daily update at :", datetime.now()+timedelta(days=1))
         await asyncio.sleep(delay)
 
 def msg_to_event(message: str) -> Event | None :
@@ -117,15 +122,16 @@ async def wait_reminder() :
     global reminders
 
     time = (reminders.queue[0].time - datetime.now()).total_seconds()
-    print("waiting for a reminder...")
+    print("Waiting for a reminder at :", reminders.queue[0].time)
     await asyncio.sleep(time)
-    await notif_channel.send("<@1051629248139505715>")  # event role mention
+    await notif_channel.send("<@&1051629248139505715>")  # event role mention
     await notif_channel.send(embed=reminders.get().embed())
 
     launch_reminder()
 
 def launch_reminder() :
     global cur_rem
+
     if cur_rem is not None :
         cur_rem.cancel()
     if reminders.empty() :
@@ -139,8 +145,7 @@ def launch_reminder() :
 events: set[Event] = load_events()
 reminders: PQ[Reminder] = generate_queue()
 cur_rem: asyncio.Task[None] | None = None
-next_update: asyncio.Task[None] = asyncio.ensure_future(daily_update())
-launch_reminder()
+next_update: asyncio.Task[None]
 
 cf_client = CF_Client()
 
