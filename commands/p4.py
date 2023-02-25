@@ -75,15 +75,24 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
 
             pattern = re.compile(r"^\<\@[0-9]{18}\>$")
 
-            for user in parsed_args.users:
+            users = parsed_args.users
+            while len(users) < 2:
+                users.append(ctx.author.mention)
+
+            for user in users:
                 if pattern.match(user):
                     user_id = user[2:-1]
                     for ai_file in AI_DIR.glob(f"{user_id}.*"):
-                        remaining_args.append(str(ai_file))
+                        users.append(str(ai_file))
                         break
                     else:
                         await ctx.channel.send(f"{user} has not submitted any AI :cry:")
                         return
+                else:
+                    await ctx.channel.send(f"{user} is not a valid user")
+                    return
+
+            remaining_args.append(users)
 
             with LOG_FILE.open("w") as file:
                 with redirect_stdout(file):
