@@ -224,17 +224,21 @@ async def command_(admin_role: discord.Role, ctx: Context, *args: str) :
         games.append(game_obj)
         _, winner, errors, logs = await game(game_players, 7, 6, verbose=False, discord=True)
 
-        winner: Player = local_players[winner.no-1]
+        if winner is None :
+            win_txt = "Draw."
+        
+        else :
+            win_txt: str = local_players[winner.no-1].get_name() + " won!"
 
         File = open("logs", 'w', encoding='utf-8')
         File.write('\n'.join(logs))
         File.close()
 
         if public :
-            await ctx.send(f"{game_obj.draw_board()}\n{winner.get_name()} won!")
+            await ctx.send(f"{game_obj.draw_board()}\n{win_txt}")
             await ctx.send(content="logs :", file=discord.File("logs"))
         else :
-            await game_obj.send_results(f"{winner.get_name()} won!")
+            await game_obj.send_results(f"{win_txt}")
             await dm1.send(content="logs :", file=discord.File("logs"))
             await dm2.send(content="logs :", file=discord.File("logs"))
 
