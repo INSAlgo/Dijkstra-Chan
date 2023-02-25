@@ -272,11 +272,11 @@ async def g(ctx: Context, course: str = "", *args: str) :
 # P4 (connect 4) COMMAND
 
 @bot.command()
-async def p4(ctx: Context, *args: str) :
+async def game(ctx: Context, game: str, action: str, *args: str) :
     """
     General command prefix for any connect 4 AI related command
     """
-    await p4_com(admin_role, ctx, *args)
+    await p4_com(admin_role, ctx, game, action, *args)
 
 
 #=================================================================================================================================================================
