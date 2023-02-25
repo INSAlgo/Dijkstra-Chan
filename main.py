@@ -7,7 +7,11 @@ import re
 from requests import post
 
 import discord
-from discord.ext.commands import Context, Bot
+from discord.ext.commands import Context
+
+from bot import bot
+
+from functions.events   import evt_launch, save_events
 
 from classes.token_error import TokenError
 from classes.github_client import GH_Client
@@ -15,29 +19,13 @@ from classes.openai_client import OPENAI_Client
 
 from functions.embeding import embed, embed_help
 
-from commands.evt   import command_ as evt_com, save_events, start_events
 from commands.sol   import command_ as sol_com
 from commands.g     import command_ as g_com
-from commands.p4    import command_ as p4_com, fetch_bot
+from commands.p4    import command_ as p4_com
 
 
 #=================================================================================================================================================================
 # GLOBALS
-
-bot = Bot(intents=discord.Intents.all(), command_prefix='!')
-bot.remove_command('help')
-
-server: discord.Guild
-
-notif_channel: discord.TextChannel
-debug_channel: discord.TextChannel
-command_channels: set[discord.TextChannel]
-ressources_channel: discord.TextChannel
-
-member_role: discord.Role
-admin_role: discord.Role
-bureau_role: discord.Role
-event_role: discord.Role
 
 gh_client: GH_Client
 oai_client: OPENAI_Client
@@ -62,11 +50,11 @@ async def connect_gh_client(token) :
     global gh_client
     try :
         gh_client = GH_Client(token)
-    except TokenError as tkerr:
-        await debug_channel.send("The github token is wrong or has expired, please generate a new one. See README for more info.")
+    except TokenError as tkerr :
+        await bot.channels["debug"].send("The github token is wrong or has expired, please generate a new one. See README for more info.")
         raise TokenError from tkerr
     except Exception as err :
-        await debug_channel.send(err)
+        await bot.channels["debug"].send(err)
         raise Exception from err
 
 async def connect_openai_client() :
@@ -76,20 +64,20 @@ async def connect_openai_client() :
     global oai_client
     try :
         oai_client = OPENAI_Client(openai_token)
-    except TokenError as tkerr:
-        await debug_channel.send("The github token is wrong or has expired, please generate a new one. See README for more info.")
+    except TokenError as tkerr :
+        await bot.channels["debug"].send("The openai token is wrong or has expired, please generate a new one. See README for more info.")
         raise TokenError from tkerr
     except Exception as err :
-        await debug_channel.send(err)
+        await bot.channels["debug"].send(err)
         raise Exception from err
 
 
 #=================================================================================================================================================================
 # FUNCTION TO SEND HELP
 
-async def help_func(auth: discord.Member, channel: discord.TextChannel) :
-        if channel == debug_channel :
-            await debug_channel.send(embed=embed_help("admin_help.txt"))
+async def help_func(channel: discord.TextChannel) :
+        if channel == bot.channels["debug"] :
+            await bot.channels["debug"].send(embed=embed_help("admin_help.txt"))
         else :
             await channel.send(embed=embed_help("help.txt"))
 
@@ -97,59 +85,31 @@ async def help_func(auth: discord.Member, channel: discord.TextChannel) :
 #=================================================================================================================================================================
 # ON_READY
 
-@bot.event
-async def on_ready() :
-    """
-    Executes necessary setup on bot startup
-    """
-    global server
-    server = bot.get_guild(716736874797858957)
 
-    global notif_channel
-    notif_channel = server.get_channel(1047462537463091212)
-    global debug_channel
-    debug_channel = server.get_channel(1048584804301537310)
-    global command_channels
-    command_channels = {debug_channel, server.get_channel(1051626187421650954)}
-    global ressources_channel
-    ressources_channel = server.get_channel(762706892652675122)
 
-    global member_role
-    member_role = server.get_role(716737589205270559)
-    global admin_role
-    admin_role = server.get_role(737790034270355488)
-    global bureau_role
-    bureau_role = server.get_role(716737513535963180)
-    global event_role
-    event_role = server.get_role(1051629248139505715)
-
-    start_events(notif_channel)
-
-    fetch_bot(bot)
-
-    await connect_gh_client(os.environ["GH_TOKEN"])
-    err_code, msg = gh_client.reload_repo_tree()
-    if err_code > 0 :
-        await debug_channel.send(msg)
+    # await connect_gh_client(os.environ["GH_TOKEN"])
+    # err_code, msg = gh_client.reload_repo_tree()
+    # if err_code > 0 :
+    #     await debug_channel.send(msg)
     
-    await debug_channel.send("Up")
+    # await debug_channel.send("Up")
 
 
 #=================================================================================================================================================================
 # ON_MEMBER_JOIN
 
-@bot.event
+@bot.client.event
 async def on_member_join(member: discord.Member) :
     """
     Automatically gives member role to newcommers
     """
-    await member.add_roles(member_role)
+    await member.add_roles(bot.roles["member"])
 
 
 #=================================================================================================================================================================
 # ON_REACTION_ADD
 
-@bot.event
+@bot.client.event
 async def on_reaction_add(reaction: discord.Reaction, user: discord.User) :
     # This might be usefull
     pass
@@ -157,7 +117,7 @@ async def on_reaction_add(reaction: discord.Reaction, user: discord.User) :
 #=================================================================================================================================================================
 # ON_MESSAGE
 
-@bot.event
+@bot.client.event
 async def on_message(message: discord.Message) :
     """
     Executes commands depending on message received (without command prefix)
@@ -166,7 +126,7 @@ async def on_message(message: discord.Message) :
 
     # Silly recursive function
     if re.fullmatch("^factorial [0-9]+$", message.content) is not None :
-        if message.channel not in command_channels :
+        if message.channel not in {bot.channels["debug"], bot.channels["command"]} :
             return
 
         nb = int(message.content.split(' ')[-1])
@@ -184,7 +144,7 @@ async def on_message(message: discord.Message) :
         return
 
     # Avoid answering itself
-    if message.author == bot.user :
+    if message.author == bot.client.user :
         return
 
     # Help message :
@@ -194,7 +154,7 @@ async def on_message(message: discord.Message) :
     
     # (admin) Command to get README of a repo :
     elif message.content.startswith("embed course ") :
-        if admin_role not in message.author.roles :
+        if bot.roles["admin"] not in message.author.roles :
             return
         
         repo = message.content.split(' ')[2]
@@ -204,9 +164,9 @@ async def on_message(message: discord.Message) :
         if err_code == 0 :
             emb = embed(res).set_thumbnail(url="attachment://INSAlgo.png")
             logo = discord.File("fixed_data/INSAlgo.png", filename="INSAlgo.png")
-            await ressources_channel.send(file=logo, embed=emb)
+            await bot.channels["ressources"].send(file=logo, embed=emb)
         else :
-            await debug_channel.send(res)
+            await bot.channels["debug"].send(res)
 
     # Di-/Cri- words silly answer
     elif "di" in message.content or "cri" in message.content :
@@ -220,36 +180,21 @@ async def on_message(message: discord.Message) :
                 await message.channel.send(words[i][3:].upper())
                 break
     
-    await bot.process_commands(message)
-
-
-#=================================================================================================================================================================
-# EVT COMMAND
-
-@bot.command()
-async def evt(ctx: Context, func: str = "get", *args: str) :
-    """
-    General command prefix for any event related command
-    """
-    await evt_com(
-        admin_role, event_role,
-        debug_channel, command_channels,
-        ctx, func, *args
-    )   # Using keywords arguments (like ctx = ctx) breaks everything for some reason
+    await bot.client.process_commands(message)
 
 
 #=================================================================================================================================================================
 # SOL(utions) COMMAND
 
-@bot.command()
+@bot.client.command()
 async def sol(ctx: Context, func: str = None, *args: str) :
     """
     General command prefix for any solution related command
     """
     new_token = await sol_com(
         gh_client,
-        admin_role, event_role,
-        debug_channel, command_channels,
+        bot.roles["bureau"], bot.roles["admin"],
+        bot.channels["debug"], {bot.channels["debug"], bot.channels["command"]},
         ctx, func, *args
     )
 
@@ -260,29 +205,29 @@ async def sol(ctx: Context, func: str = None, *args: str) :
 #=================================================================================================================================================================
 # G(eometry) COMMAND 
 
-@bot.command()
+@bot.client.command()
 async def g(ctx: Context, course: str = "", *args: str) :
     """
     General command prefix for any geometry related command
     """
-    await g_com(command_channels, ctx, course, *args)
+    await g_com({bot.channels["debug"], bot.channels["command"]}, ctx, course, *args)
 
 
 #=================================================================================================================================================================
 # P4 (connect 4) COMMAND
 
-@bot.command()
+@bot.client.command()
 async def game(ctx: Context, game: str, action: str, *args: str) :
     """
     General command prefix for any connect 4 AI related command
     """
-    await p4_com(admin_role, ctx, game, action, *args)
+    await p4_com(bot.roles["admin"], ctx, game, action, *args)
 
 
 #=================================================================================================================================================================
 # HELP COMMAND
 
-@bot.command()
+@bot.client.command()
 async def help(ctx: Context) :
     await help_func(ctx.author, ctx.channel)
 
@@ -290,13 +235,13 @@ async def help(ctx: Context) :
 #=================================================================================================================================================================
 # SHUTDOWN COMMAND
 
-@bot.command()
+@bot.client.command()
 async def shutdown(ctx: Context) :
-    if ctx.channel != debug_channel or admin_role not in ctx.author.roles :
+    if ctx.channel != bot.channels["debug"] or bot.roles["admin"] not in ctx.author.roles :
         return
     
-    await debug_channel.send("shutting down...")
-    await bot.close()
+    await bot.channels["debug"].send("shutting down...")
+    await bot.client.close()
 
 
 #=================================================================================================================================================================
@@ -305,16 +250,18 @@ async def shutdown(ctx: Context) :
 if __name__ == "__main__" :
 
     # Grabing tokens from environment
-    token = os.environ["TOKEN"]
     openai_token = os.environ["OPENAI_TOKEN"]
 
-    # Running bot
-    bot.run(token)
+    # Bot commands setup
+    bot.define_on_ready([evt_launch])
+    asyncio.run(bot.client.load_extension("commands.evt"))
+
+    bot.run()
 
     # Saving stuff after closing
     print("Saving events, DO NOT CLOSE APP!")
     save_events()
 
     # Sending a message to confirm shutdown :
-    headers = {'Authorization': 'Bot %s' % token }
+    headers = {'Authorization': 'Bot %s' % bot.token }
     post(f"https://discord.com/api/v6/channels/1048584804301537310/messages", headers=headers, json={"content": "Down"})
