@@ -19,7 +19,7 @@ import puissance4.puissance4
 BOT_DIR = pathlib.Path().cwd()
 GAME_DIR = BOT_DIR / "puissance4"
 AI_DIR = GAME_DIR / "ai"
-LOG_FILE = GAME_DIR / "log"
+LOG_FILE = GAME_DIR / "log.txt"
 
 games: list[P4Game] = []
 
@@ -78,12 +78,13 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
             users = parsed_args.users
             while len(users) < 2:
                 users.append(ctx.author.mention)
+            ai_files = []
 
             for user in users:
                 if pattern.match(user):
                     user_id = user[2:-1]
                     for ai_file in AI_DIR.glob(f"{user_id}.*"):
-                        users.append(str(ai_file))
+                        ai_files.append(str(ai_file))
                         break
                     else:
                         await ctx.channel.send(f"{user} has not submitted any AI :cry:")
@@ -92,7 +93,7 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
                     await ctx.channel.send(f"{user} is not a valid user")
                     return
 
-            remaining_args.append(users)
+            remaining_args.extend(ai_files)
 
             with LOG_FILE.open("w") as file:
                 with redirect_stdout(file):

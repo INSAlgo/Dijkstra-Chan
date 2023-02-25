@@ -127,11 +127,11 @@ async def on_ready() :
 
     fetch_bot(bot)
 
-    await connect_gh_client(os.environ["GH_TOKEN"])
-    err_code, msg = gh_client.reload_repo_tree()
-    if err_code > 0 :
-        await debug_channel.send(msg)
-    
+    # await connect_gh_client(os.environ["GH_TOKEN"])
+    # err_code, msg = gh_client.reload_repo_tree()
+    # if err_code > 0 :
+    #     await debug_channel.send(msg)
+
     await debug_channel.send("Up")
 
 
