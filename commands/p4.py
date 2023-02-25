@@ -112,7 +112,10 @@ async def command_(admin_role: discord.Role, ctx: Context, *args: str) :
             await ctx.channel.send("You don't have an AI! Upload one by messaging me `!p4 submit`.")
             return
 
-        dm = await ctx.message.author.create_dm()
+        if "public" in args :
+            dm = ctx.channel
+        else :
+            dm = await ctx.message.author.create_dm()
 
         game_id = len(games)
 
