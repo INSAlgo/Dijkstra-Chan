@@ -159,12 +159,13 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
             with game.log_file.open("w") as file:
                 with contextlib.redirect_stdout(file):
                     scoreboard = await tournoi.main(bot, ctx, game, args)
+            game.log_file.touch()
 
             embed = discord.Embed(title=f"{game.name} tournament results")
 
             lines = []
             for i, (ai, score) in enumerate(scoreboard) :
-                lines.append(f"{i+1}. {bot.get_user(int(ai)).mention}, score : {score}")
+                lines.append(f"{i+1}. {bot.get_user(int(ai)).mention} score : {score}")
 
             embed.add_field(name="Scoreboard", value='\n'.join(lines), inline=False)
             
