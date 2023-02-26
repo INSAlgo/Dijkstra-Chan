@@ -3,6 +3,7 @@ from contextlib import redirect_stdout
 import os
 import pathlib
 from matplotlib.rcsetup import validate_any
+import io
 from requests import get
 import re
 
@@ -37,12 +38,26 @@ GAMES_CHANNEL_ID = 1075844926237061180
 
 # discord player functions :
 
-async def tell_move(game_id: int, player: int, move: int, receiver: int) :
-    await games[game_id].tell_move(move, player, receiver)
+class Ifunc:
 
-async def ask_move(game_id: int, player: int) :
-    return await games[game_id].ask_move(player, bot)
+    def __init__(self, channel):
+        self.channel = channel
 
+    async def __call__(self, name):
+
+        def check(msg):
+            return msg.channel == self.channel and msg.author.mention == name
+
+        message: discord.Message = await bot.wait_for("message", check=check)
+        return message.content
+
+class Ofunc:
+
+    def __init__(self, channel):
+        self.channel = channel
+
+    async def __call__(self, output: io.StringIO):
+        await self.channel.send(output)
 
 # main command :
 
@@ -64,22 +79,19 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
 
             parser = argparse.ArgumentParser()
             parser.add_argument("users", nargs="*")
-            parser.add_argument("--public", action="store_true")
+            parser.add_argument("-d", "--discord", nargs=1, action="append")
             parsed_args, remaining_args = parser.parse_known_args(args)
-
-            public = parsed_args.public
 
             # if ctx.guild and not (ctx.channel == bot.get_channel(GAMES_CHANNEL_ID) and public) :
             #     await ctx.send(f"You need to send this as a DM or in <#{GAMES_CHANNEL_ID}> with the flag `public`.")
             #     return
 
-            pattern = re.compile(r"^\<\@[0-9]{18}\>$")
 
             users = parsed_args.users
-            while len(users) < 2:
-                users.append(ctx.author.mention)
+
             ai_files = []
 
+            pattern = re.compile(r"^\<\@[0-9]{18}\>$")
             for user in users:
                 if pattern.match(user):
                     user_id = user[2:-1]
@@ -93,30 +105,40 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
                     await ctx.channel.send(f"{user} is not a valid user")
                     return
 
+            if parsed_args.discord:
+                for discord_users in parsed_args.discord:
+                    discord_user = discord_users[0]
+                    if pattern.match(discord_user):
+                        ai_files.append(discord_user)
+                    else:
+                        await ctx.channel.send(f"{discord_user} is not a valid user")
+                        return
+            else:
+                remaining_args.append("--silent")
+
+            while len(ai_files) < 2:
+                await ctx.channel.send("Not enough players to start a game :grimacing:")
+                return
+
             remaining_args.extend(ai_files)
+            remaining_args.append("--emoji")
+
+            ofunc = Ofunc(ctx.channel)
+            ifunc = Ifunc(ctx.channel)
 
             with LOG_FILE.open("w") as file:
                 with redirect_stdout(file):
-                    playerss, winnerr, errors = await puissance4.puissance4.main(remaining_args)
+                    playerss, winnerr, errors = await puissance4.puissance4.main(remaining_args, ifunc, ofunc, discord=True)
 
-            line = []
-            if winnerr:
-                line.append(f"{bot.get_user(int(str(winnerr))).mention} won !")
-            else:
-                line.append("Draw")
-            if errors:
-                for player, error in errors.items():
-                    line.append(f"({bot.get_user(int(str(player))).mention} : {error})")
-
-            await ctx.channel.send("\n".join(line), file=discord.File(LOG_FILE))
-
+            await ctx.channel.send(file=discord.File(LOG_FILE))
+            LOG_FILE.unlink()
 
         case "tournament":
 
             if admin_role not in ctx.author.roles :
                 return
 
-            await ctx.channel.send(content="Running connect 4 tournament ...")
+            await ctx.channel.send(content="Running Connect 4 tournament ...")
 
             with LOG_FILE.open("w") as file:
                 with redirect_stdout(file):
@@ -131,7 +153,6 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
                 lines.append(f"{i+1}. {bot.get_user(int(ai)).mention}, score : {score}")
 
             embed.add_field(name="Scoreboard", value='\n'.join(lines), inline=False)
-            embed.add_field(name="Games log", value="", inline=True)
             
             await ctx.send(embed=embed)
 
@@ -189,154 +210,3 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
         case _:
             await ctx.channel.send("Unknown command")
 
-    return
-
-    if args[0] == "test" :
-
-        if ctx.guild and not (ctx.channel == bot.get_channel(GAMES_CHANNEL_ID) and "public" in args) :
-            await ctx.send(f"You need to send this as a DM or in <#{GAMES_CHANNEL_ID}> with the flag `public`.")
-            return
-        
-        name = ctx.message.author.id
-
-        if name not in ais.keys() :
-            await ctx.channel.send("You don't have an AI! Upload one by messaging me `!p4 submit`.")
-            return
-
-        if "public" in args :
-            dm = ctx.channel
-        else :
-            dm = await ctx.message.author.create_dm()
-
-        game_id = len(games)
-
-        ext = ais[name]
-        p1 = AI(f"puissance4/ai/{name}.{ext}")
-        players = [Player("AI", name, None)]
-        if "self" in args :
-            p2 = User(ask_move, tell_move, game_id)
-            players.append(Player("User", name, dm))
-            if "first" in args :
-                p1, p2 = p2, p1
-                players.reverse()
-        
-        else :
-            p2 = AI(f"puissance4/ai/{name}.{ext}")
-            players.append(Player("AI", name, None))
-        
-        game_obj = P4Game(game_id, 2, 7, 6, players)
-        games.append(game_obj)
-        _, winner, errors, logs = await game([p1, p2], 7, 6, verbose=False, discord=True)
-
-        winner: Player = players[winner.no-1]
-        await game_obj.send_results(f"{winner.get_name()} won!")
-
-        log_file = open("logs", 'w', encoding='utf-8')
-        log_file.write('\n'.join(logs))
-        log_file.close()
-
-        await dm.send(content="logs :", file=discord.File("logs"))
-        return
-
-    elif args[0] == "challenge" :
-        public = "public" in args
-
-        if ctx.guild and not (ctx.channel == bot.get_channel(GAMES_CHANNEL_ID) and public) :
-            await ctx.send(f"You need to send this as a DM or in <#{GAMES_CHANNEL_ID}> with the flag `public`.")
-            return
-
-        if len(args) < 3 :
-            ctx.send("not enough args, see `!p4 help` for more information")
-            return
-        
-        p1 = ctx.message.author
-        p1_id = p1.id
-
-        if re.match("^\<\@[0-9]{18}\>$", args[1]) is None :
-            await ctx.send(f"{args[1]} is not a valid Discord tag/mention.")
-            if not ctx.guild :
-                await ctx.send(f"You need to use `<@user_id>` to tag someone in DMs.")
-            return
-        
-        p2_id = int(args[1][2:-1])
-        p2 = bot.get_user(p2_id)
-        if p2 is None :
-            await ctx.send(f"User <@{p2_id}> not found.")
-            return
-
-        if args[2] not in {"User_User", "User_AI", "AI_User", "AI_AI"} :
-            await ctx.send("Invalid game type, see `!p4 help` for more info.")
-        type1, type2 = args[2].split('_')
-
-        if public :
-            dm1, dm2 = ctx.channel, ctx.channel
-        else :
-            dm1, dm2 = await p1.create_dm(), await p2.create_dm()
-        
-        # asking for player2 permission :
-
-        await ctx.channel.send(f"Hey <@{p2_id}>, <@{p1_id}> challenges you to a fight ({type1} vs {type2}), do you accept ? (Y/N, see `!p4 help` for details)")
-
-        for _ in range(10) :
-            resp: discord.Message = await bot.wait_for("message", check=lambda m: (m.channel == dm2) and (m.author == p2))
-            if resp.content.upper()[0] == "Y" :
-                break
-            elif resp.content.upper()[0] == "N" :
-                dm1.send(f"Connect 4 game challenge to <@{p1_id}> ({type1} vs {type2}) was refused.")
-                return
-        
-        else :
-            if public :
-                dm1.send(f"Connect 4 game between <@{p1_id}> and <@{p2_id}> ({type1} vs {type2}) was cancelled.")
-            else :
-                dm1.send(f"Connect 4 game challenge to <@{p2_id}> ({type1} vs {type2}) was cancelled.")
-                dm2.send(f"Connect 4 game challenge from <@{p1_id}> ({type1} vs {type2}) was cancelled.")
-
-        game_players = []
-        local_players = []
-        game_id = len(games)
-
-        if type1 == "AI" :
-            if p1_id not in ais :
-                await ctx.send("You don't have an AI! Upload one by messaging me `!p4 submit`.")
-            game_players.append(AI(f"puissance4/ai/{p1_id}.{ais[p1_id]}"))
-            local_players.append(Player("AI", p1_id, None))
-        else :
-            game_players.append(User(ask_move, tell_move, game_id))
-            local_players.append(Player("User", p1_id, dm1))
-
-        if type2 == "AI" :
-            if p2_id not in ais :
-                await ctx.send("This user has never submited any AI")
-            game_players.append(AI(f"puissance4/ai/{p2_id}.{ais[p2_id]}"))
-            local_players.append(Player("AI", p2_id, None))
-        else :
-            game_players.append(User(ask_move, tell_move, game_id))
-            local_players.append(Player("User", p2_id, dm2))
-
-        game_obj = P4Game(game_id, 2, 7, 6, local_players)
-        games.append(game_obj)
-        _, winner, errors, logs = await game(game_players, 7, 6, verbose=False, discord=True)
-
-        if winner is None :
-            win_txt = "Draw."
-        
-        else :
-            win_txt: str = local_players[winner.no-1].get_name() + " won!"
-
-        log_file = open("logs", 'w', encoding='utf-8')
-        log_file.write('\n'.join(logs))
-        log_file.close()
-
-        if public :
-            await ctx.send(f"{game_obj.draw_board()}\n{win_txt}")
-            await ctx.send(content="logs :", file=discord.File("logs"))
-        else :
-            await game_obj.send_results(f"{win_txt}")
-            await dm1.send(content="logs :", file=discord.File("logs"))
-            await dm2.send(content="logs :", file=discord.File("logs"))
-
-        os.remove("logs")
-
-        return
-    

@@ -11,3 +11,4 @@ temp*
 *.bat
 nohup.out
 logs
+token.*
