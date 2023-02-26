@@ -1,23 +1,35 @@
 import argparse
-from contextlib import redirect_stdout
-import os
+import contextlib
 import pathlib
-import io
-from requests import get
+import requests
 import re
 
 import discord
 from discord.ext.commands import Context, Bot
 
-from functions.embeding import embed_help
-import puissance4.tournoi
-import puissance4.puissance4
+from functions import embeding, tournoi
+from submodules.puissance4 import puissance4
 
-# Connect 4 games setup :
-BOT_DIR = pathlib.Path().cwd()
-GAME_DIR = BOT_DIR / "puissance4"
-AI_DIR = GAME_DIR / "ai"
-LOG_FILE = GAME_DIR / "log.txt"
+# Constants
+C4_CHANNEL_ID = 1072461314418548736
+GAMES_CHANNEL_ID = 1075844926237061180
+
+GAMES_DIR = pathlib.Path("submodules")
+AI_DIR_NAME = "ai"
+
+class Game():
+    
+    def __init__(self, name, directory, cmd, module) -> None:
+        self.name = name
+        self.directory = directory
+        self.cmd = cmd
+        self.module = module
+        self.game_dir = GAMES_DIR / self.directory
+        self.ai_dir = self.game_dir / AI_DIR_NAME
+        self.log_file = self.game_dir / "log.txt"
+
+GAMES = {"p4": Game("Connect 4", "puissance4", "p4", puissance4)}
+
 
 # bot client from main script
 bot: Bot
@@ -26,11 +38,6 @@ def fetch_bot(main_bot: Bot) :
     global bot
     bot = main_bot
 
-# constants
-
-C4_CHANNEL_ID = 1072461314418548736
-GAMES_CHANNEL_ID = 1075844926237061180
-
 # discord player functions :
 
 class Ifunc:
@@ -38,11 +45,9 @@ class Ifunc:
     def __init__(self, channel):
         self.channel = channel
 
-    async def __call__(self, name):
-
+    async def __call__(self, name: str):
         def check(msg):
             return msg.channel == self.channel and msg.author.mention == name
-
         message: discord.Message = await bot.wait_for("message", check=check)
         return message.content
 
@@ -51,23 +56,30 @@ class Ofunc:
     def __init__(self, channel):
         self.channel = channel
 
-    async def __call__(self, output: io.StringIO):
+    async def __call__(self, output: str):
         await self.channel.send(output)
 
 # main command :
 
 async def command_(admin_role: discord.Role, ctx: Context, game_name: str, action: str, *args: str) :
+    
+    if game_name not in GAMES:
+        await ctx.channel.send(f"Unknown game `{game_name}`. Here is what we have for now :\n`"
+                               + "`, `".join(GAMES) + "`")
+        return
+
+    game = GAMES[game_name]
 
     match action:
 
         case "help" :
-            await ctx.channel.send(embed=embed_help("p4_help.txt"))
+            await ctx.channel.send(embed=embeding.embed_help(f"{game.cmd}_help.txt"))
 
         case "participants":
             # if ctx.channel != bot.get_channel(C4_CHANNEL_ID):
             #     return
-            embed = discord.Embed(title="Connect 4 tournament participants")
-            embed.description = '\n'.join(f"<@{file.stem}>" for file in AI_DIR.iterdir())
+            embed = discord.Embed(title=f"{game.name} tournament participants")
+            embed.description = '\n'.join(f"<@{file.stem}>" for file in game.ai_dir.iterdir())
             await ctx.channel.send(embed=embed)
 
         case "play":
@@ -88,7 +100,7 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
             for ai in ais:
                 if pattern.match(ai):
                     user_id = ai[2:-1]
-                    for ai_file in AI_DIR.glob(f"{user_id}.*"):
+                    for ai_file in game.ai_dir.glob(f"{user_id}.*"):
                         index = 0
                         while True:
                             index = args.index(ai, index)
@@ -132,27 +144,23 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
             ofunc = Ofunc(ctx.channel)
             ifunc = Ifunc(ctx.channel)
 
-            with LOG_FILE.open("w") as file:
-                with redirect_stdout(file):
-                    await puissance4.puissance4.main(remaining_args, ifunc, ofunc, discord=True)
+            with game.log_file.open("w") as file:
+                with contextlib.redirect_stdout(file):
+                    await game.module.main(remaining_args, ifunc, ofunc, discord=True)
 
-            await ctx.channel.send(file=discord.File(LOG_FILE))
-            LOG_FILE.unlink()
+            await ctx.channel.send(file=discord.File(game.log_file))
+            game.log_file.unlink()
 
         case "tournament":
 
             if admin_role not in ctx.author.roles :
                 return
 
-            await ctx.channel.send(content="Running Connect 4 tournament ...")
+            with game.log_file.open("w") as file:
+                with contextlib.redirect_stdout(file):
+                    scoreboard = await tournoi.main(bot, ctx, game, args)
 
-            with LOG_FILE.open("w") as file:
-                with redirect_stdout(file):
-                    os.chdir("./puissance4")
-                    scoreboard = await puissance4.tournoi.main(args)
-                    os.chdir("..")
-
-            embed = discord.Embed(title="Connect 4 Tournament results")
+            embed = discord.Embed(title=f"{game.name} tournament results")
 
             lines = []
             for i, (ai, score) in enumerate(scoreboard) :
@@ -162,9 +170,9 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
             
             await ctx.send(embed=embed)
 
-            await ctx.send(file=discord.File(LOG_FILE))
+            await ctx.send(file=discord.File(game.log_file))
 
-            LOG_FILE.unlink()
+            game.log_file.unlink()
 
         
         case "submit":
@@ -181,18 +189,18 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
             attachment = attachments[0]
             new_ext = attachment.filename.split(".")[-1]
             name = str(ctx.message.author.id)
-            new_submission = AI_DIR / f"{name}.{new_ext}"
+            new_submission = game.ai_dir / f"{name}.{new_ext}"
 
-            if not AI_DIR.is_dir():
-                AI_DIR.mkdir()
+            if not game.ai_dir.is_dir():
+                game.ai_dir.mkdir()
 
-            for ai_file in AI_DIR.glob(f"{name}.*"):
+            for ai_file in game.ai_dir.glob(f"{name}.*"):
                 await ctx.channel.send("Your previous submission will be replaced")
                 ai_file.replace(new_submission)
                 break
             
             with new_submission.open("w") as file:
-                file.write(get(attachment.url).text)
+                file.write(requests.get(attachment.url).text)
 
             await ctx.channel.send("AI submitted ! <:feelsgood:737960024390762568>")
         
@@ -201,7 +209,7 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
             if admin_role not in ctx.author.roles:
                 return
             
-            user_ids = {int(file.stem) for file in AI_DIR.iterdir()}
+            user_ids = {int(file.stem) for file in game.ai_dir.iterdir()}
             guild_users = {user.id for user in ctx.guild.members}
             missing_users = user_ids.difference(guild_users)
 
