@@ -2,7 +2,6 @@ import argparse
 from contextlib import redirect_stdout
 import os
 import pathlib
-from matplotlib.rcsetup import validate_any
 import io
 from requests import get
 import re
@@ -10,9 +9,7 @@ import re
 import discord
 from discord.ext.commands import Context, Bot
 
-from classes.p4Game import P4Game, Player
 from functions.embeding import embed_help
-from puissance4.puissance4 import User, AI, game
 import puissance4.tournoi
 import puissance4.puissance4
 
@@ -21,8 +18,6 @@ BOT_DIR = pathlib.Path().cwd()
 GAME_DIR = BOT_DIR / "puissance4"
 AI_DIR = GAME_DIR / "ai"
 LOG_FILE = GAME_DIR / "log.txt"
-
-games: list[P4Game] = []
 
 # bot client from main script
 bot: Bot
@@ -78,7 +73,7 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
         case "play":
 
             parser = argparse.ArgumentParser()
-            parser.add_argument("users", nargs="*")
+            parser.add_argument("ais", nargs="*")
             parser.add_argument("-d", "--discord", nargs=1, action="append")
             parsed_args, remaining_args = parser.parse_known_args(args)
 
@@ -86,36 +81,47 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
             #     await ctx.send(f"You need to send this as a DM or in <#{GAMES_CHANNEL_ID}> with the flag `public`.")
             #     return
 
-
-            users = parsed_args.users
-
             ai_files = []
 
+            ais = parsed_args.ais
             pattern = re.compile(r"^\<\@[0-9]{18}\>$")
-            for user in users:
-                if pattern.match(user):
-                    user_id = user[2:-1]
+            for ai in ais:
+                if pattern.match(ai):
+                    user_id = ai[2:-1]
                     for ai_file in AI_DIR.glob(f"{user_id}.*"):
-                        ai_files.append(str(ai_file))
+                        index = 0
+                        while True:
+                            index = args.index(ai, index)
+                            if not "-d" in args[index - 1]:
+                                break
+                            index += 1
+                        ai_files.append((index, str(ai_file)))
                         break
                     else:
-                        await ctx.channel.send(f"{user} has not submitted any AI :cry:")
+                        await ctx.channel.send(f"{ai} has not submitted any AI :cry:")
                         return
                 else:
-                    await ctx.channel.send(f"{user} is not a valid user")
+                    await ctx.channel.send(f"{ai} is not a valid user :confused:")
                     return
 
             if parsed_args.discord:
-                for discord_users in parsed_args.discord:
-                    discord_user = discord_users[0]
-                    if pattern.match(discord_user):
-                        ai_files.append(discord_user)
+                for humans in parsed_args.discord:
+                    human = humans[0]
+                    if pattern.match(human):
+                        index = 0
+                        while True:
+                            index = args.index(human, index)
+                            if "-d" in args[index - 1]:
+                                break
+                            index += 1
+                        ai_files.append((index, human))
                     else:
-                        await ctx.channel.send(f"{discord_user} is not a valid user")
+                        await ctx.channel.send(f"{human} is not a valid user :confused:")
                         return
             else:
                 remaining_args.append("--silent")
 
+            ai_files = [ai_file for _, ai_file in sorted(ai_files)]
             while len(ai_files) < 2:
                 await ctx.channel.send("Not enough players to start a game :grimacing:")
                 return
@@ -128,7 +134,7 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
 
             with LOG_FILE.open("w") as file:
                 with redirect_stdout(file):
-                    playerss, winnerr, errors = await puissance4.puissance4.main(remaining_args, ifunc, ofunc, discord=True)
+                    await puissance4.puissance4.main(remaining_args, ifunc, ofunc, discord=True)
 
             await ctx.channel.send(file=discord.File(LOG_FILE))
             LOG_FILE.unlink()
@@ -201,9 +207,9 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
 
             if missing_users:
                 for user_id in missing_users:
-                    user = bot.get_user(user_id)
-                    await user.create_dm().send(f"Please join our server to take part in the connect4 AI tournament : {ctx.channel.create_invite(max_uses=1)}")
-                    await ctx.send(f"Sent invite to {user.mention}")
+                    ai = bot.get_user(user_id)
+                    await ai.create_dm().send(f"Please join our server to take part in the connect4 AI tournament : {ctx.channel.create_invite(max_uses=1)}")
+                    await ctx.send(f"Sent invite to {ai.mention}")
             else:
                 await ctx.send(f"No missing participants on the server :thumbsup:")
 
