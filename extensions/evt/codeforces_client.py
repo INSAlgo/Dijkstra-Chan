@@ -1,6 +1,6 @@
 from classes.client_template import Client
 
-from classes.event import Event
+from extensions.evt.event_class import Event
 
 class CF_Client(Client) :
     def __init__(self):

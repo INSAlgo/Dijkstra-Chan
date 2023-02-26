@@ -11,7 +11,7 @@ from discord.ext.commands import Context
 
 from bot import bot
 
-from functions.events   import evt_launch, save_events
+from extensions.evt.functions   import daily_update, save_events
 
 from classes.token_error import TokenError
 from classes.github_client import GH_Client
@@ -253,8 +253,8 @@ if __name__ == "__main__" :
     openai_token = os.environ["OPENAI_TOKEN"]
 
     # Bot commands setup
-    bot.define_on_ready([evt_launch])
-    asyncio.run(bot.client.load_extension("commands.evt"))
+    bot.define_on_ready([daily_update.start])
+    asyncio.run(bot.client.load_extension("extensions.evt.command"))
 
     bot.run()
 

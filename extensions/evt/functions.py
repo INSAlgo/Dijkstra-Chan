@@ -1,19 +1,21 @@
 from datetime import datetime, timedelta
 from queue import PriorityQueue as PQ
 import os, json, asyncio
+from traceback import format_exc
+
+from discord.ext.tasks import loop
 
 from bot import bot
 
-from classes.event import Event
-from classes.reminder import Reminder, delays
+from extensions.evt.event_class import Event
+from extensions.evt.reminder_class import Reminder, delays
 
-from classes.codeforces_client import CF_Client
+from extensions.evt.codeforces_client import CF_Client
 
 
 # Functions about events
 
 def update_events() -> int :
-    global events
     prev_N = len(events)
 
     err_code, CF_events = cf_client.get_fut_cont_events()
@@ -21,24 +23,9 @@ def update_events() -> int :
         print(CF_events)
     
     else :
-        events |= CF_events
+        events.update(CF_events)
 
     return len(events) - prev_N
-
-async def daily_update() :
-    global reminders
-    delay = timedelta(days=1).total_seconds()
-    while True :
-        N = update_events()
-        save_events()
-
-        if N > 0 :
-            reminders = generate_queue()
-            launch_reminder()
-    
-        print("Waiting for next daily update at :", datetime.now()+timedelta(days=1))
-        await asyncio.sleep(delay)
-        await bot.client.wait_until_ready()
 
 def msg_to_event(message: str) -> Event | None :
     lines = message.split('\n')[1:] # the first line is the command keyword
@@ -74,7 +61,7 @@ def save_events(file: str = "saved_data/events.json") :
     File.close()
     print("saved", len(events), "events to json.")
 
-def load_events(file: str = "saved_data/events.json") -> set[Event] :
+def load_events(file: str = "saved_data/events.json") :
     for i in range(1, len(file.split('/'))) :
         sub_path = '/'.join(file.split('/')[:i])
         if not os.path.exists(sub_path) :
@@ -86,17 +73,14 @@ def load_events(file: str = "saved_data/events.json") -> set[Event] :
         File.close()
     
     File = open(file)
-    events = set(map(Event, json.load(File)))
+    events.update(set(map(Event, json.load(File))))
     File.close()
-    return events
 
 
 # Functions about reminders
 
 def generate_queue() -> None :
-    global reminders
-
-    reminders = PQ()
+    reminders.queue.clear()
 
     for event in events :
         for delay in delays.keys() :
@@ -108,14 +92,17 @@ async def wait_reminder() :
     """
     Waits for reminders in the background of the bot
     """
-    global reminders
-
     time = (reminders.queue[0].time - datetime.now()).total_seconds()
     print("Waiting for a reminder at :", reminders.queue[0].time)
-    await asyncio.sleep(time)
+    try :
+        await asyncio.sleep(time)
+    except asyncio.CancelledError :
+        print("Wait reminders cancelled")
+        return
+    
     await bot.client.wait_until_ready()
-    await bot.channels["notif"].send(bot.roles["event"])  # event role mention
-    await bot.channels["notif"].send(embed=reminders.get().embed())
+    await bot.channels["notifs"].send(bot.roles["events"])  # event role mention
+    await bot.channels["notifs"].send(embed=reminders.get().embed())
 
     launch_reminder()
 
@@ -127,23 +114,31 @@ def launch_reminder() :
     if reminders.empty() :
         cur_rem = None
     else :
-        cur_rem = asyncio.ensure_future(wait_reminder())
+        cur_rem = asyncio.create_task(wait_reminder())
 
 
-# vars initialisation :
+# globals definition :
 
-events: set[Event] = load_events()
-reminders: PQ[Reminder]
-generate_queue()
+events: set[Event] = set()
+reminders: PQ[Reminder] = PQ()
 cur_rem: asyncio.Task[None] | None = None
-next_update: asyncio.Task[None]
-
-cf_client = CF_Client()
+cf_client: CF_Client = CF_Client()
 
 
-# extension launcher :
+# Discord task loop to update events and reminders daily :
 
-def evt_launch() :
-    global next_update
-    next_update = asyncio.ensure_future(daily_update())
+@loop(hours=24)
+async def daily_update() :
+    remove_passed_events()
+    update_events()
+    save_events()
+
+    generate_queue()
     launch_reminder()
+
+    print("Waiting for next daily update at :", datetime.now()+timedelta(days=1))
+
+@daily_update.before_loop
+async def before_loop() :
+    load_events()
+    await bot.client.wait_until_ready()
