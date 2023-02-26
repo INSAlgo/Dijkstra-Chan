@@ -13,22 +13,14 @@ from bot import bot
 
 from extensions.evt.functions   import daily_update, save_events
 
-from classes.token_error import TokenError
-from classes.github_client import GH_Client
-from classes.openai_client import OPENAI_Client
-
 from functions.embeding import embed, embed_help
 
-from commands.sol   import command_ as sol_com
 from commands.g     import command_ as g_com
 from commands.p4    import command_ as p4_com
 
 
 #=================================================================================================================================================================
 # GLOBALS
-
-gh_client: GH_Client
-oai_client: OPENAI_Client
 
 File = open("fixed_data/help.txt")
 help_txt = File.read()
@@ -41,38 +33,6 @@ fact = 1
 
 
 #=================================================================================================================================================================
-# CLIENTS CONNECTION FUNCTIONS
-
-async def connect_gh_client(token) :
-    """
-    Connects to the github API
-    """
-    global gh_client
-    try :
-        gh_client = GH_Client(token)
-    except TokenError as tkerr :
-        await bot.channels["debug"].send("The github token is wrong or has expired, please generate a new one. See README for more info.")
-        raise TokenError from tkerr
-    except Exception as err :
-        await bot.channels["debug"].send(err)
-        raise Exception from err
-
-async def connect_openai_client() :
-    """
-    Connects to the Open AI API
-    """
-    global oai_client
-    try :
-        oai_client = OPENAI_Client(openai_token)
-    except TokenError as tkerr :
-        await bot.channels["debug"].send("The openai token is wrong or has expired, please generate a new one. See README for more info.")
-        raise TokenError from tkerr
-    except Exception as err :
-        await bot.channels["debug"].send(err)
-        raise Exception from err
-
-
-#=================================================================================================================================================================
 # FUNCTION TO SEND HELP
 
 async def help_func(channel: discord.TextChannel) :
@@ -80,19 +40,6 @@ async def help_func(channel: discord.TextChannel) :
             await bot.channels["debug"].send(embed=embed_help("admin_help.txt"))
         else :
             await channel.send(embed=embed_help("help.txt"))
-
-
-#=================================================================================================================================================================
-# ON_READY
-
-
-
-    # await connect_gh_client(os.environ["GH_TOKEN"])
-    # err_code, msg = gh_client.reload_repo_tree()
-    # if err_code > 0 :
-    #     await debug_channel.send(msg)
-    
-    # await debug_channel.send("Up")
 
 
 #=================================================================================================================================================================
@@ -159,7 +106,7 @@ async def on_message(message: discord.Message) :
         
         repo = message.content.split(' ')[2]
         course = ' '.join(message.content.split(' ')[3:])
-        err_code, res = gh_client.get_readme(repo, course)
+        err_code, res = bot.clients["GitHub"].get_readme(repo, course)
 
         if err_code == 0 :
             emb = embed(res).set_thumbnail(url="attachment://INSAlgo.png")
@@ -181,25 +128,6 @@ async def on_message(message: discord.Message) :
                 break
     
     await bot.client.process_commands(message)
-
-
-#=================================================================================================================================================================
-# SOL(utions) COMMAND
-
-@bot.client.command()
-async def sol(ctx: Context, func: str = None, *args: str) :
-    """
-    General command prefix for any solution related command
-    """
-    new_token = await sol_com(
-        gh_client,
-        bot.roles["bureau"], bot.roles["admin"],
-        bot.channels["debug"], {bot.channels["debug"], bot.channels["command"]},
-        ctx, func, *args
-    )
-
-    if new_token is not None :
-        connect_gh_client(new_token)
 
 
 #=================================================================================================================================================================
@@ -255,6 +183,7 @@ if __name__ == "__main__" :
     # Bot commands setup
     bot.define_on_ready([daily_update.start])
     asyncio.run(bot.client.load_extension("extensions.evt.command"))
+    asyncio.run(bot.client.load_extension("extensions.sol.command"))
 
     bot.run()
 

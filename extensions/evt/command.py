@@ -1,7 +1,4 @@
-from datetime import datetime, timedelta
-
-from discord.ext.commands import Context, command, Bot
-from discord.ext.tasks import loop
+from discord.ext.commands import Bot, Context, command
 
 from bot import bot
 
