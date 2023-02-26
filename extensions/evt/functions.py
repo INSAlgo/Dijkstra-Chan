@@ -101,7 +101,7 @@ async def wait_reminder() :
         return
     
     await bot.client.wait_until_ready()
-    await bot.channels["notifs"].send(bot.roles["events"])  # event role mention
+    await bot.channels["notifs"].send(bot.roles["events"].mention)  # event role mention
     await bot.channels["notifs"].send(embed=reminders.get().embed())
 
     launch_reminder()
