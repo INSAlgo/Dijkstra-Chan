@@ -11,21 +11,11 @@ from classes.token_error import TokenError
 client_classes = {"GitHub": GH_Client, "OpenAI": OPENAI_Client}
 token_names = {"GitHub": "GH_TOKEN", "OpenAI": "OPENAI_TOKEN"}
 
-class SingletonMeta(type) :
-
-    _instances = {}
-
-    def __call__(cls, *args, **kwargs) :
-        if cls not in cls._instances :
-            instance = super().__call__(*args, **kwargs)
-            cls._instances[cls] = instance
-        return cls._instances[cls]
-
-class SingleBot(metaclass=SingletonMeta) :
+class BotObj() :
 
     def __init__(self) -> None :
 
-        self.client = Bot(intents=discord.Intents.all(), command_prefix='!')
+        self.client: Bot = Bot(intents=discord.Intents.all(), command_prefix='!')
         self.client.remove_command('help')
 
         try :
@@ -86,6 +76,10 @@ class SingleBot(metaclass=SingletonMeta) :
             await self.channels["debug"].send("Up")
             await self.connect_client("GitHub")
             await self.connect_client("OpenAI")
+            
+            err, msg = self.clients["GitHub"].reload_repo_tree()
+            if err :
+                self.channels["debug"].send(msg)
     
     def run(self) :
         self.client.run(self.token)
@@ -119,4 +113,4 @@ class SingleBot(metaclass=SingletonMeta) :
         return True
 
 
-bot = SingleBot()
+bot = BotObj()

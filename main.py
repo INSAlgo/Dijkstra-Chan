@@ -15,7 +15,6 @@ from extensions.evt.functions   import daily_update, save_events
 
 from functions.embeding import embed, embed_help
 
-from commands.g     import command_ as g_com
 from commands.p4    import command_ as p4_com
 
 
@@ -131,17 +130,6 @@ async def on_message(message: discord.Message) :
 
 
 #=================================================================================================================================================================
-# G(eometry) COMMAND 
-
-@bot.client.command()
-async def g(ctx: Context, course: str = "", *args: str) :
-    """
-    General command prefix for any geometry related command
-    """
-    await g_com({bot.channels["debug"], bot.channels["command"]}, ctx, course, *args)
-
-
-#=================================================================================================================================================================
 # P4 (connect 4) COMMAND
 
 @bot.client.command()
@@ -184,6 +172,7 @@ if __name__ == "__main__" :
     bot.define_on_ready([daily_update.start])
     asyncio.run(bot.client.load_extension("extensions.evt.command"))
     asyncio.run(bot.client.load_extension("extensions.sol.command"))
+    asyncio.run(bot.client.load_extension("extensions.g.command"))
 
     bot.run()
 
