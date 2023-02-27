@@ -91,69 +91,53 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
 
         case "play":
 
-            parser = argparse.ArgumentParser()
-            parser.add_argument("ais", nargs="*")
-            parser.add_argument("-d", "--discord", nargs=1, action="append")
-            parsed_args, remaining_args = parser.parse_known_args(args)
-
             if ctx.guild and ctx.channel not in (game_channel, debug_channel):
                 await ctx.send(f"You need to send this as a DM or in {game_channel.mention}")
                 return
+
+            game_args = []
             
-            ai_files = []
-
-            ais = parsed_args.ais
+            players = []
             pattern = re.compile(r"^\<\@[0-9]{18}\>$")
-            for ai in ais:
-                if pattern.match(ai):
-                    user_id = ai[2:-1]
-                    for ai_file in game.ai_dir.glob(f"{user_id}.*"):
-                        index = 0
-                        while True:
-                            index = args.index(ai, index)
-                            if not "-d" in args[index - 1]:
-                                break
-                            index += 1
-                        ai_files.append((index, str(ai_file)))
-                        break
-                    else:
-                        await ctx.send(f"{ai} has not submitted any AI :cry:")
-                        return
-                else:
-                    await ctx.send(f"{ai} is not a valid user :confused:")
-                    return
+            ai_only = True
+            is_human = False
 
-            if parsed_args.discord:
-                for humans in parsed_args.discord:
-                    human = humans[0]
-                    if pattern.match(human):
-                        index = 0
-                        while True:
-                            index = args.index(human, index)
-                            if "-d" in args[index - 1]:
-                                break
-                            index += 1
-                        ai_files.append((index, human))
+            for arg in args:
+                if arg == "-d" or arg == "--discord":
+                    is_human = True
+                    continue
+                if not arg.startswith("-"):
+                    if pattern.match(arg):
+                        user = bot.get_user(int(arg[2:-1]))
+                        if user:
+                            if is_human:
+                                players.append(arg)
+                                ai_only = False
+                            else:
+                                for ai_file in game.ai_dir.glob(f"{user.id}.*"):
+                                    players.append(str(ai_file))
+                                    break
+                                else:
+                                    await ctx.send(f"{user.mention} has not submitted any AI :cry:")
+                            is_human = False
                     else:
-                        await ctx.send(f"{human} is not a valid user :confused:")
-                        return
-            else:
-                remaining_args.append("--silent")
+                        await ctx.send(f"Invalid argument {arg} :face_with_raised_eyebrow:")
 
-            ai_files = [ai_file for _, ai_file in sorted(ai_files)]
-            while len(ai_files) < 2:
+            if len(players) < 2:
                 await ctx.send("Not enough players to start a game :grimacing:")
                 return
 
-            remaining_args.extend(ai_files)
-            remaining_args.append("--emoji")
+            game_args.extend(players)
+            game_args.extend(("--emoji", "--nodebug"))
+            if ai_only:
+                game_args.append("--silent")
 
             ofunc = Ofunc(ctx.channel)
             ifunc = Ifunc(ctx.channel)
 
             with game.log_file.open("w") as file:
                 with contextlib.redirect_stdout(file):
-                    await game.module.main(remaining_args, ifunc, ofunc, discord=True)
+                    await game.module.main(game_args, ifunc, ofunc, discord=True)
 
             await ctx.send(file=discord.File(game.log_file))
             game.log_file.unlink()
