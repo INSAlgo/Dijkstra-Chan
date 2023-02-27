@@ -13,51 +13,11 @@ from bot import bot
 from functions import embeding, tournoi
 from submodules.puissance4 import puissance4
 
-# Constants
-GAMES_DIR = pathlib.Path("submodules")
-AI_DIR_NAME = "ai"
 
 TOURNAMENT_CHANNEL_ID = 1072461314418548736
 GAMES_CHANNEL_ID = 1075844926237061180
 DEBUG_CHANNEL_ID = 1048584804301537310
 
-# bot client from main script
-
-class Game():
-    
-    def __init__(self, name, directory, cmd, module) -> None:
-        self.name = name
-        self.directory = directory
-        self.cmd = cmd
-        self.module = module
-        self.game_dir = GAMES_DIR / self.directory
-        self.ai_dir = self.game_dir / AI_DIR_NAME
-        self.log_file = self.game_dir / "log.txt"
-
-GAMES = {"p4": Game("Connect 4", "puissance4", "p4", puissance4, )}
-
-
-
-# discord player functions :
-
-class Ifunc:
-
-    def __init__(self, channel):
-        self.channel = channel
-
-    async def __call__(self, name: str):
-        def check(msg):
-            return msg.channel == self.channel and msg.author.mention == name
-        message: discord.Message = await bot.client.wait_for("message", check=check)
-        return message.content
-
-class Ofunc:
-
-    def __init__(self, channel):
-        self.channel = channel
-
-    async def __call__(self, output: str):
-        await self.channel.send(output)
 
 # main command :
 

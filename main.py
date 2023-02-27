@@ -11,7 +11,7 @@ from discord.ext.commands import Context
 
 from bot import bot
 
-from extensions.evt.functions   import daily_update, save_events
+from extensions.evt.utils   import daily_update, save_events
 
 from functions.embeding import embed, embed_help
 
@@ -133,7 +133,7 @@ async def on_message(message: discord.Message) :
 # P4 (connect 4) COMMAND
 
 @bot.client.command()
-async def game(ctx: Context, game: str, action: str, *args: str) :
+async def game(ctx: Context, game: str = "", action: str = "", *args: str) :
     """
     General command prefix for any connect 4 AI related command
     """

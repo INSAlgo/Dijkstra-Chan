@@ -2,7 +2,7 @@ from discord.ext.commands import Bot, Context, command
 
 from bot import bot
 
-from extensions.evt.functions import events, remove_passed_events, update_events, save_events, generate_queue, launch_reminder, msg_to_event
+from extensions.evt.utils import events, remove_passed_events, update_events, save_events, generate_queue, launch_reminder, msg_to_event
 
 # Command function :
 
