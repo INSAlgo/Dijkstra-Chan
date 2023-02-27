@@ -9,29 +9,40 @@ import argparse
 import asyncio
 import random
 import time
-from discord import Message
-
-from discord.ext.commands import Bot
+import discord
+from bot import bot
 
 from commands import p4
 
-MAX_PARALLEL_PROCESSES = 100
+MAX_PARALLEL_PROCESSES = 10
 ALLOWED_EXTENSIONS = ('.py', '.js', '', '.out', '.class')
 
 class Progress():
-    nb_games: int
-    message: Message
 
     def __init__(self):
+        self.nb_games: int
         self.game_nb = 0
         self.start_time = time.time()
+        self.message: discord.Message
+
+    def log_results(self, log, players, winner, errors):
+        self.game_nb += 1
+        print(f"{self.game_nb}.",
+              f"{' vs '.join(display_name(player) for player in players)} ->",
+              f"{display_name(winner) if winner else 'draw'}",
+              sep = " ", end = "", file=log)
+        if errors:
+            print(f" ({', '.join(f'{display_name(player)}: {error}' for player, error in errors.items())})", file=log)
+        else:
+            print(file=log)
+
+    async def first_message(self, ctx):
+        self.message = await ctx.send("0%")
 
     async def update_message(self):
+        if self.game_nb % 30 == 0:
             await self.message.edit(content=f"{round(self.game_nb / self.nb_games * 100)}%" +
                                     f" ({round(time.time() - self.start_time)}s)")
-
-# Globals
-game_nb: int
 
 def explore(out_dir):
     ai_paths = list()
@@ -42,33 +53,21 @@ def explore(out_dir):
                 ai_paths.append(ai_path)
     return ai_paths
 
-def display_name(bot, player):
-    return bot.get_user(int(player.name)).display_name
+def display_name(player):
+    return bot.client.get_user(int(player.name)).display_name
 
-def log_game_results(bot: Bot, log, progress, players, winner, errors):
-    print(f"{progress.game_nb}.",
-          f"{' vs '.join(display_name(bot, player) for player in players)} ->",
-          f"{display_name(bot, winner) if winner else 'draw'}",
-          sep = " ", end = "", file=log)
-    if errors:
-        print(f" ({', '.join(f'{display_name(bot, player)}: {error}' for player, error in errors.items())})", file=log)
-    else:
-        print(file=log)
-
-async def safe_game(bot, game, semaphore, log, progress: Progress, players, args):
+async def safe_game(game, semaphore, log, progress: Progress, players, args):
     async with semaphore:
         players, winner, errors = await game.module.main(list(players) + args, discord=True)
-        progress.game_nb += 1
-        log_game_results(bot, log, progress, players, winner, errors)
-        if progress.game_nb % 30 == 0:
-            await progress.update_message()
+        progress.log_results(log, players, winner, errors)
+        await progress.update_message()
         return players, winner
 
 def make(game, *args):
     args = *("make", "--directory", str(game.game_dir)), *args
     subprocess.run(args, capture_output=True)
 
-async def tournament(bot, ctx, game, rematches, nb_players, src_dir, args):
+async def tournament(ctx, game, rematches, nb_players, src_dir, args):
 
     await ctx.channel.send(content=f"Starting **{game.name}** tournament")
 
@@ -89,16 +88,17 @@ async def tournament(bot, ctx, game, rematches, nb_players, src_dir, args):
 
     log_file = game.log_file.open("w")
     progress = Progress()
+
     for combinations in itertools.combinations(map(str, ai_files), nb_players):
         for players in itertools.permutations(combinations):
             for _ in range(rematches):
-                games.append(safe_game(bot, game, semaphore, log_file, progress, players, args))
+                games.append(safe_game(game, semaphore, log_file, progress, players, args))
 
     progress.nb_games = len(games)
-    await ctx.channel.send(f"Running **{progress.nb_games}** games between **{len(ai_files)}** AI")
-
-    progress.message = await ctx.channel.send(f"0%")
     random.shuffle(games)
+    
+    await ctx.channel.send(f"Running **{progress.nb_games}** games between **{len(ai_files)}** AI")
+    await progress.first_message(ctx)
 
     origin_stdout = sys.stdout
     sys.stdout = open(os.devnull, "w")
@@ -122,7 +122,7 @@ async def tournament(bot, ctx, game, rematches, nb_players, src_dir, args):
 
     return scoreboard
 
-async def main(bot, ctx, game, raw_args=None):
+async def main(ctx, game, raw_args=None):
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-r", "--rematches", type=int, default=1, metavar="NB_REMATCHES")
@@ -132,4 +132,4 @@ async def main(bot, ctx, game, raw_args=None):
     args, remaining_args = parser.parse_known_args(raw_args)
     src_dir = game.game_dir / args.directory
 
-    return await tournament(bot, ctx, game, args.rematches, args.players, src_dir, remaining_args)
+    return await tournament(ctx, game, args.rematches, args.players, src_dir, remaining_args)

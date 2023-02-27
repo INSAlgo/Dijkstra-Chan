@@ -168,7 +168,7 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
                 await ctx.send("Admins only can start a tournament")
                 return
 
-            scoreboard = await tournoi.main(bot.client, ctx, game, args)
+            scoreboard = await tournoi.main(ctx, game, args)
             game.log_file.touch()
 
             embed = discord.Embed(title=f"{game.name} tournament results")
