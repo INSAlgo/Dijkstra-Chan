@@ -8,6 +8,8 @@ import re
 import discord
 from discord.ext.commands import Context, Bot
 
+from bot import bot
+
 from functions import embeding, tournoi
 from submodules.puissance4 import puissance4
 
@@ -20,11 +22,6 @@ GAMES_CHANNEL_ID = 1075844926237061180
 DEBUG_CHANNEL_ID = 1048584804301537310
 
 # bot client from main script
-bot: Bot
-def fetch_bot(main_bot: Bot) :
-    global bot
-    bot = main_bot
-
 
 class Game():
     
@@ -51,7 +48,7 @@ class Ifunc:
     async def __call__(self, name: str):
         def check(msg):
             return msg.channel == self.channel and msg.author.mention == name
-        message: discord.Message = await bot.wait_for("message", check=check)
+        message: discord.Message = await bot.client.wait_for("message", check=check)
         return message.content
 
 class Ofunc:
@@ -66,9 +63,9 @@ class Ofunc:
 
 async def command_(admin_role: discord.Role, ctx: Context, game_name: str, action: str, *args: str) :
 
-    tournament_channel = bot.get_channel(TOURNAMENT_CHANNEL_ID)
-    game_channel = bot.get_channel(GAMES_CHANNEL_ID)
-    debug_channel = bot.get_channel(DEBUG_CHANNEL_ID)
+    tournament_channel = bot.client.get_channel(TOURNAMENT_CHANNEL_ID)
+    game_channel = bot.client.get_channel(GAMES_CHANNEL_ID)
+    debug_channel = bot.client.get_channel(DEBUG_CHANNEL_ID)
     
     if game_name not in GAMES:
         await ctx.send(f"Unknown game `{game_name}`. Here is what we have for now :\n`"
@@ -110,7 +107,7 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
                     continue
                 if not arg.startswith("-"):
                     if pattern.match(arg):
-                        user = bot.get_user(int(arg[2:-1]))
+                        user = bot.client.get_user(int(arg[2:-1]))
                         if user:
                             if is_human:
                                 players.append(arg)
@@ -145,7 +142,7 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
                 try:
                     count = 0
                     while count < len(challenged_users):
-                        await bot.wait_for("reaction_add", check=check, timeout=3600)
+                        await bot.client.wait_for("reaction_add", check=check, timeout=3600)
                         count += 1
                 except asyncio.TimeoutError:
                     return
@@ -171,16 +168,14 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
                 await ctx.send("Admins only can start a tournament")
                 return
 
-            with game.log_file.open("w") as file:
-                with contextlib.redirect_stdout(file):
-                    scoreboard = await tournoi.main(bot, ctx, game, args)
+            scoreboard = await tournoi.main(bot.client, ctx, game, args)
             game.log_file.touch()
 
             embed = discord.Embed(title=f"{game.name} tournament results")
 
             lines = []
             for i, (ai, score) in enumerate(scoreboard) :
-                lines.append(f"{i+1}. {bot.get_user(int(ai)).mention} score : {score}")
+                lines.append(f"{i+1}. {bot.client.get_user(int(ai)).mention} score : {score}")
 
             embed.add_field(name="Scoreboard", value='\n'.join(lines), inline=False)
             
@@ -231,7 +226,7 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
 
             if missing_users:
                 for user_id in missing_users:
-                    ai = bot.get_user(user_id)
+                    ai = bot.client.get_user(user_id)
                     await ai.create_dm().send(f"Please join our server to take part in the connect4 AI tournament : {ctx.channel.create_invite(max_uses=1)}")
                     await ctx.send(f"Sent invite to {ai.mention}")
             else:

@@ -8,14 +8,14 @@ import subprocess
 import argparse
 import asyncio
 import random
+import time
 from discord import Message
 
 from discord.ext.commands import Bot
 
 from commands import p4
 
-
-MAX_PARALLEL_PROCESSES = 200
+MAX_PARALLEL_PROCESSES = 100
 ALLOWED_EXTENSIONS = ('.py', '.js', '', '.out', '.class')
 
 class Progress():
@@ -24,6 +24,11 @@ class Progress():
 
     def __init__(self):
         self.game_nb = 0
+        self.start_time = time.time()
+
+    async def update_message(self):
+            await self.message.edit(content=f"{round(self.game_nb / self.nb_games * 100)}%" +
+                                    f" ({round(time.time() - self.start_time)}s)")
 
 # Globals
 game_nb: int
@@ -40,25 +45,23 @@ def explore(out_dir):
 def display_name(bot, player):
     return bot.get_user(int(player.name)).display_name
 
-def print_game_results(bot: Bot, progress, players, winner, errors):
+def log_game_results(bot: Bot, log, progress, players, winner, errors):
     print(f"{progress.game_nb}.",
           f"{' vs '.join(display_name(bot, player) for player in players)} ->",
           f"{display_name(bot, winner) if winner else 'draw'}",
-          sep = " ", end = "")
+          sep = " ", end = "", file=log)
     if errors:
-        print(f" ({', '.join(f'{display_name(bot, player)}: {error}' for player, error in errors.items())})")
+        print(f" ({', '.join(f'{display_name(bot, player)}: {error}' for player, error in errors.items())})", file=log)
     else:
-        print()
+        print(file=log)
 
-async def safe_game(bot, game, semaphore, devnull, origin_stdout, progress: Progress, players, args):
+async def safe_game(bot, game, semaphore, log, progress: Progress, players, args):
     async with semaphore:
         players, winner, errors = await game.module.main(list(players) + args, discord=True)
         progress.game_nb += 1
-        sys.stdout = origin_stdout
-        print_game_results(bot, progress, players, winner, errors)
-        sys.stdout = devnull
-        if progress.game_nb % 20 == 0:
-            await progress.message.edit(content=f"{round(progress.game_nb / progress.nb_games * 100)}%")
+        log_game_results(bot, log, progress, players, winner, errors)
+        if progress.game_nb % 30 == 0:
+            await progress.update_message()
         return players, winner
 
 def make(game, *args):
@@ -84,15 +87,12 @@ async def tournament(bot, ctx, game, rematches, nb_players, src_dir, args):
     games = list()
     semaphore = asyncio.Semaphore(MAX_PARALLEL_PROCESSES)
 
-    origin_stdout = sys.stdout
-    devnull = open(os.devnull, "w")
-    sys.stdout = devnull
-
+    log_file = game.log_file.open("w")
     progress = Progress()
     for combinations in itertools.combinations(map(str, ai_files), nb_players):
         for players in itertools.permutations(combinations):
             for _ in range(rematches):
-                games.append(safe_game(bot, game, semaphore, devnull, origin_stdout, progress, players, args))
+                games.append(safe_game(bot, game, semaphore, log_file, progress, players, args))
 
     progress.nb_games = len(games)
     await ctx.channel.send(f"Running **{progress.nb_games}** games between **{len(ai_files)}** AI")
@@ -100,19 +100,22 @@ async def tournament(bot, ctx, game, rematches, nb_players, src_dir, args):
     progress.message = await ctx.channel.send(f"0%")
     random.shuffle(games)
 
+    origin_stdout = sys.stdout
+    sys.stdout = open(os.devnull, "w")
     try:
         results = await asyncio.gather(*games)
     except KeyboardInterrupt as exception:
         make(game, "clean")
         raise exception
+    sys.stdout = origin_stdout
+    log_file.close()
 
-    await progress.message.edit(content="100%")
+    await progress.update_message()
 
     # Awaiting and printing results
     for players, winner in results:
         if winner:
             scores[winner.name] += 1
-    sys.stdout = origin_stdout
 
     scoreboard = sorted(scores.items(), key=lambda score: score[1], reverse=True)
     make(game, "clean")
