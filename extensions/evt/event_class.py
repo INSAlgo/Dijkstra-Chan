@@ -20,16 +20,16 @@ regex = re.compile(
 
 class Event :
     def __init__(self, attrs: dict[str, str | int], time: datetime | None = None) :
-        """### Constructor of an event
+        """## Constructor of an event
 
-        ## Parameters :
+        ### Parameters :
         - attrs : :class:`dict[str, str | int]`
             - Must contains 4 text fields : name, link, webs (website) and desc (description).   
         - time : :class:`datetime`
             - Indicates the time of the event.
             - Can be None if `{"time": <timestamp in second>}` is added to `attrs`.
 
-        ## Returns :
+        ### Returns :
         - None
         """
 
@@ -113,12 +113,12 @@ class Event :
         return '\n'.join(lines)
     
     def embed(self) -> Embed :
-        desc = f"*From {self.webs}*\n" + self.desc
+        res = Embed(title=self.name)
 
-        if re.match(regex, self.link) is None :
-            res = Embed(title=self.name, description=desc)
-        else :
-            res = Embed(title=self.name, description=desc, url=self.link)
+        res.description = f"*From {self.webs}*\n" + self.desc
+
+        if re.match(regex, self.link) is not None :
+            res.url = self.link
         
         res.add_field(name="To happen on :", value=self.time.strftime('%B %d, %Y, %H:%M'))
 

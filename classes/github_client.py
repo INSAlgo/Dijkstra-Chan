@@ -1,8 +1,6 @@
 from base64 import standard_b64decode as b64dcd
 from datetime import datetime
-from random import choices
-
-import discord
+from random import choice
 
 from classes.token_error import TokenError
 from classes.client_template import Client
@@ -117,7 +115,12 @@ class GH_Client (Client) :
             return 2, f"websites available are : {', '.join(self.files.keys())}"
         
         if to_search == "" :
-            return 1, "10 random files are :\n" + '\n'.join(choices(self.files[website], k=10))
+            choices = []
+            available = set(self.files[website])
+            for _ in range(10) :
+                choices.append(choice(available))
+                available.discard(choices[-1])
+            return 1, "10 random files are :\n" + '\n'.join(choices)
 
         if to_search not in self.files[website] :
             self.files[website].sort(key=lambda s: dist(s, to_search))
