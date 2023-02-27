@@ -15,8 +15,6 @@ from extensions.evt.utils   import daily_update, save_events
 
 from functions.embeding import embed, embed_help
 
-from commands.p4    import command_ as p4_com
-
 
 #=================================================================================================================================================================
 # GLOBALS
@@ -130,17 +128,6 @@ async def on_message(message: discord.Message) :
 
 
 #=================================================================================================================================================================
-# P4 (connect 4) COMMAND
-
-@bot.client.command()
-async def game(ctx: Context, game: str = "", action: str = "", *args: str) :
-    """
-    General command prefix for any connect 4 AI related command
-    """
-    await p4_com(bot.roles["admin"], ctx, game, action, *args)
-
-
-#=================================================================================================================================================================
 # HELP COMMAND
 
 @bot.client.command()
@@ -173,6 +160,7 @@ if __name__ == "__main__" :
     asyncio.run(bot.client.load_extension("extensions.evt.command"))
     asyncio.run(bot.client.load_extension("extensions.sol.command"))
     asyncio.run(bot.client.load_extension("extensions.g.command"))
+    asyncio.run(bot.client.load_extension("extensions.game.command"))
 
     bot.run()
 

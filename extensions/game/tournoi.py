@@ -13,7 +13,7 @@ from discord import Message
 
 from discord.ext.commands import Bot
 
-from commands import p4
+from extensions.game import command
 
 MAX_PARALLEL_PROCESSES = 100
 ALLOWED_EXTENSIONS = ('.py', '.js', '', '.out', '.class')
@@ -127,7 +127,7 @@ async def main(bot, ctx, game, raw_args=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("-r", "--rematches", type=int, default=1, metavar="NB_REMATCHES")
     parser.add_argument("-p", "--players", type=int, default=2, metavar="NB_PLAYERS")
-    parser.add_argument("-d", "--directory", default=p4.AI_DIR_NAME, metavar="SRC_DIRECTORY")
+    parser.add_argument("-d", "--directory", default=command.AI_DIR_NAME, metavar="SRC_DIRECTORY")
 
     args, remaining_args = parser.parse_known_args(raw_args)
     src_dir = game.game_dir / args.directory

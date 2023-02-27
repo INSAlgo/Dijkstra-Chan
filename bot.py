@@ -62,6 +62,8 @@ class BotObj() :
             self.channels["debug"] = self.server.get_channel(1048584804301537310)
             self.channels["commands"] = self.server.get_channel(1051626187421650954)
             self.channels["ressources"] = self.server.get_channel(762706892652675122)
+            self.channels["games"] = self.server.get_channel(1075844926237061180)
+            self.channels["tournament"] = self.server.get_channel(1072461314418548736)
 
             self.roles["member"] = self.server.get_role(716737589205270559)
             self.roles["admin"] = self.server.get_role(737790034270355488)

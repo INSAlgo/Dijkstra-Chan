@@ -6,42 +6,43 @@ import requests
 import re
 
 import discord
-from discord.ext.commands import Context, Bot
+from discord.ext.commands import Context, Bot, command
 
 from bot import bot
 
-from functions import embeding, tournoi
-from submodules.puissance4 import puissance4
+from extensions.game.utils import *
+from extensions.game import tournoi
 
-
-TOURNAMENT_CHANNEL_ID = 1072461314418548736
-GAMES_CHANNEL_ID = 1075844926237061180
-DEBUG_CHANNEL_ID = 1048584804301537310
+import functions.embeding as embeding
 
 
 # main command :
 
-async def command_(admin_role: discord.Role, ctx: Context, game_name: str, action: str, *args: str) :
-
-    tournament_channel = bot.client.get_channel(TOURNAMENT_CHANNEL_ID)
-    game_channel = bot.client.get_channel(GAMES_CHANNEL_ID)
-    debug_channel = bot.client.get_channel(DEBUG_CHANNEL_ID)
+@command()
+async def game(ctx: Context, game_name: str = None, action: str = None, *args: str):
     
+    if game_name is None :
+        line = f"You need to specify a game. Here is what we have for now :\n"
+        game_names = ", ".join([f"`{name}`" for name in GAMES.keys()])
+        await ctx.send(line + game_names)
+        return
+
     if game_name not in GAMES:
-        await ctx.send(f"Unknown game `{game_name}`. Here is what we have for now :\n`"
-                               + "`, `".join(GAMES) + "`")
+        line = f"Unknown game `{game_name}`. Here is what we have for now :\n"
+        game_names = ", ".join([f"`{name}`" for name in GAMES.keys()])
+        await ctx.send(line + game_names)
         return
 
     game = GAMES[game_name]
 
     match action:
 
-        case "help" :
+        case "help":
             await ctx.send(embed=embeding.embed_help(f"{game.cmd}_help.txt"))
 
         case "participants":
-            if ctx.channel not in (tournament_channel, debug_channel):
-                await ctx.send(f"Use this command in the {tournament_channel.mention} channel :wink:")
+            if bot.check_perm(ctx, ["tournament"]):
+                await ctx.send(f"Use this command in the {bot.channels['tournament'].mention} channel :wink:")
                 return
             embed = discord.Embed(title=f"{game.name} tournament participants")
             embed.description = '\n'.join(f"<@{file.stem}>" for file in game.ai_dir.iterdir())
@@ -49,8 +50,8 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
 
         case "play":
 
-            if ctx.guild and ctx.channel not in (game_channel, debug_channel):
-                await ctx.send(f"You need to send this as a DM or in {game_channel.mention}")
+            if ctx.guild and not bot.check_perm(ctx, ["games"]):
+                await ctx.send(f"You need to send this as a DM or in {bot.channels['games'].mention}")
                 return
 
             game_args = []
@@ -59,7 +60,7 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
             pattern = re.compile(r"^\<\@[0-9]{18}\>$")
             ai_only = True
             is_human = False
-            challenged_users = set()
+            challenged_users: set[discord.User] = set()
 
             for arg in args:
                 if arg == "-d" or arg == "--discord":
@@ -96,7 +97,7 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
                                          f" do you accept {ctx.author.mention}'s challenge to a game of {game.name} ?")
                 await message.add_reaction("👍")
 
-                def check(reaction, user):
+                def check(reaction: discord.Reaction, user: discord.User):
                     return user in challenged_users and str(reaction.emoji) in ("👍")
 
                 try:
@@ -124,7 +125,7 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
 
         case "tournament":
 
-            if admin_role not in ctx.author.roles:
+            if not bot.check_perm(ctx, roles=["admin", "games"]):
                 await ctx.send("Admins only can start a tournament")
                 return
 
@@ -134,7 +135,7 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
             embed = discord.Embed(title=f"{game.name} tournament results")
 
             lines = []
-            for i, (ai, score) in enumerate(scoreboard) :
+            for i, (ai, score) in enumerate(scoreboard):
                 lines.append(f"{i+1}. {bot.client.get_user(int(ai)).mention} score : {score}")
 
             embed.add_field(name="Scoreboard", value='\n'.join(lines), inline=False)
@@ -177,7 +178,7 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
         
         case "invite":
 
-            if admin_role not in ctx.author.roles:
+            if not bot.check_perm(ctx, roles=["admin"]):
                 return
             
             user_ids = {int(file.stem) for file in game.ai_dir.iterdir()}
@@ -193,5 +194,10 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
                 await ctx.send(f"No missing participants on the server :thumbsup:")
 
         case _:
-            await ctx.send("Unknown command")
+            await ctx.send(f"Unknown command. Use `game {game_name} help` for help.")
 
+
+# Required setup :
+
+async def setup(bot: Bot) :
+    bot.add_command(game)
