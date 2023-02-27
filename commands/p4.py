@@ -1,4 +1,5 @@
 import argparse
+import asyncio
 import contextlib
 import pathlib
 import requests
@@ -101,6 +102,7 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
             pattern = re.compile(r"^\<\@[0-9]{18}\>$")
             ai_only = True
             is_human = False
+            challenged_users = set()
 
             for arg in args:
                 if arg == "-d" or arg == "--discord":
@@ -112,10 +114,12 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
                         if user:
                             if is_human:
                                 players.append(arg)
+                                challenged_users.add(user)
                                 ai_only = False
                             else:
                                 for ai_file in game.ai_dir.glob(f"{user.id}.*"):
                                     players.append(str(ai_file))
+                                    challenged_users.add(user)
                                     break
                                 else:
                                     await ctx.send(f"{user.mention} has not submitted any AI :cry:")
@@ -126,6 +130,20 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
             if len(players) < 2:
                 await ctx.send("Not enough players to start a game :grimacing:")
                 return
+
+            for user in challenged_users:
+                if user.id == ctx.author.id:
+                    continue
+                message = await ctx.send(f"Hey {user.mention}, {ctx.author.mention} challenges you to a {game.name}, do you accept ?")
+                await message.add_reaction("👍")
+
+                def check(reaction, user):
+                    return user in challenged_users and user != ctx.author and str(reaction.emoji) in ("👍")
+
+                try:
+                    await bot.wait_for("reaction", check=check, timeout=3600)
+                except asyncio.TimeoutError:
+                    return
 
             game_args.extend(players)
             game_args.extend(("--emoji", "--nodebug"))
