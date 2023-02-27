@@ -117,10 +117,11 @@ class GH_Client (Client) :
         if to_search == "" :
             choices = []
             available = set(self.files[website])
-            for _ in range(10) :
-                choices.append(choice(available))
+            N = min(10, len(available))
+            for _ in range(N) :
+                choices.append(choice(list(available)))
                 available.discard(choices[-1])
-            return 1, "10 random files are :\n" + '\n'.join(choices)
+            return 1, f"{N} random files of {website} are :\n" + '\n'.join(choices)
 
         if to_search not in self.files[website] :
             self.files[website].sort(key=lambda s: dist(s, to_search))
