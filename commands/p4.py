@@ -11,11 +11,19 @@ from functions import embeding, tournoi
 from submodules.puissance4 import puissance4
 
 # Constants
-C4_CHANNEL_ID = 1072461314418548736
-GAMES_CHANNEL_ID = 1075844926237061180
-
 GAMES_DIR = pathlib.Path("submodules")
 AI_DIR_NAME = "ai"
+
+TOURNAMENT_CHANNEL_ID = 1072461314418548736
+GAMES_CHANNEL_ID = 1075844926237061180
+DEBUG_CHANNEL_ID = 1048584804301537310
+
+# bot client from main script
+bot: Bot
+def fetch_bot(main_bot: Bot) :
+    global bot
+    bot = main_bot
+
 
 class Game():
     
@@ -28,15 +36,9 @@ class Game():
         self.ai_dir = self.game_dir / AI_DIR_NAME
         self.log_file = self.game_dir / "log.txt"
 
-GAMES = {"p4": Game("Connect 4", "puissance4", "p4", puissance4)}
+GAMES = {"p4": Game("Connect 4", "puissance4", "p4", puissance4, )}
 
 
-# bot client from main script
-bot: Bot
-
-def fetch_bot(main_bot: Bot) :
-    global bot
-    bot = main_bot
 
 # discord player functions :
 
@@ -62,9 +64,13 @@ class Ofunc:
 # main command :
 
 async def command_(admin_role: discord.Role, ctx: Context, game_name: str, action: str, *args: str) :
+
+    tournament_channel = bot.get_channel(TOURNAMENT_CHANNEL_ID)
+    game_channel = bot.get_channel(GAMES_CHANNEL_ID)
+    debug_channel = bot.get_channel(DEBUG_CHANNEL_ID)
     
     if game_name not in GAMES:
-        await ctx.channel.send(f"Unknown game `{game_name}`. Here is what we have for now :\n`"
+        await ctx.send(f"Unknown game `{game_name}`. Here is what we have for now :\n`"
                                + "`, `".join(GAMES) + "`")
         return
 
@@ -73,14 +79,15 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
     match action:
 
         case "help" :
-            await ctx.channel.send(embed=embeding.embed_help(f"{game.cmd}_help.txt"))
+            await ctx.send(embed=embeding.embed_help(f"{game.cmd}_help.txt"))
 
         case "participants":
-            # if ctx.channel != bot.get_channel(C4_CHANNEL_ID):
-            #     return
+            if ctx.channel not in (tournament_channel, debug_channel):
+                await ctx.send(f"Use this command in the {tournament_channel.mention} channel :wink:")
+                return
             embed = discord.Embed(title=f"{game.name} tournament participants")
             embed.description = '\n'.join(f"<@{file.stem}>" for file in game.ai_dir.iterdir())
-            await ctx.channel.send(embed=embed)
+            await ctx.send(embed=embed)
 
         case "play":
 
@@ -89,10 +96,10 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
             parser.add_argument("-d", "--discord", nargs=1, action="append")
             parsed_args, remaining_args = parser.parse_known_args(args)
 
-            # if ctx.guild and not (ctx.channel == bot.get_channel(GAMES_CHANNEL_ID) and public) :
-            #     await ctx.send(f"You need to send this as a DM or in <#{GAMES_CHANNEL_ID}> with the flag `public`.")
-            #     return
-
+            if ctx.guild and ctx.channel not in (game_channel, debug_channel):
+                await ctx.send(f"You need to send this as a DM or in {game_channel.mention}")
+                return
+            
             ai_files = []
 
             ais = parsed_args.ais
@@ -110,10 +117,10 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
                         ai_files.append((index, str(ai_file)))
                         break
                     else:
-                        await ctx.channel.send(f"{ai} has not submitted any AI :cry:")
+                        await ctx.send(f"{ai} has not submitted any AI :cry:")
                         return
                 else:
-                    await ctx.channel.send(f"{ai} is not a valid user :confused:")
+                    await ctx.send(f"{ai} is not a valid user :confused:")
                     return
 
             if parsed_args.discord:
@@ -128,14 +135,14 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
                             index += 1
                         ai_files.append((index, human))
                     else:
-                        await ctx.channel.send(f"{human} is not a valid user :confused:")
+                        await ctx.send(f"{human} is not a valid user :confused:")
                         return
             else:
                 remaining_args.append("--silent")
 
             ai_files = [ai_file for _, ai_file in sorted(ai_files)]
             while len(ai_files) < 2:
-                await ctx.channel.send("Not enough players to start a game :grimacing:")
+                await ctx.send("Not enough players to start a game :grimacing:")
                 return
 
             remaining_args.extend(ai_files)
@@ -148,12 +155,13 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
                 with contextlib.redirect_stdout(file):
                     await game.module.main(remaining_args, ifunc, ofunc, discord=True)
 
-            await ctx.channel.send(file=discord.File(game.log_file))
+            await ctx.send(file=discord.File(game.log_file))
             game.log_file.unlink()
 
         case "tournament":
 
-            if admin_role not in ctx.author.roles :
+            if admin_role not in ctx.author.roles:
+                await ctx.send("Admins only can start a tournament")
                 return
 
             with game.log_file.open("w") as file:
@@ -179,12 +187,12 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
         case "submit":
 
             if ctx.guild:
-                await ctx.channel.send("You need to send this as a DM :wink:")
+                await ctx.send("You need to send this as a DM :wink:")
                 return
 
             attachments = ctx.message.attachments
             if not attachments:
-                await ctx.channel.send("Missing attachment :poop:")
+                await ctx.send("Missing attachment :poop:")
                 return
 
             attachment = attachments[0]
@@ -196,14 +204,14 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
                 game.ai_dir.mkdir()
 
             for ai_file in game.ai_dir.glob(f"{name}.*"):
-                await ctx.channel.send("Your previous submission will be replaced")
+                await ctx.send("Your previous submission will be replaced")
                 ai_file.replace(new_submission)
                 break
             
             with new_submission.open("w") as file:
                 file.write(requests.get(attachment.url).text)
 
-            await ctx.channel.send("AI submitted ! <:feelsgood:737960024390762568>")
+            await ctx.send("AI submitted ! <:feelsgood:737960024390762568>")
         
         case "invite":
 
@@ -223,5 +231,5 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
                 await ctx.send(f"No missing participants on the server :thumbsup:")
 
         case _:
-            await ctx.channel.send("Unknown command")
+            await ctx.send("Unknown command")
 
