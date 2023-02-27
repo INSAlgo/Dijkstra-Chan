@@ -129,7 +129,7 @@ async def game(ctx: Context, game_name: str = None, action: str = None, *args: s
                 await ctx.send("Admins only can start a tournament")
                 return
 
-            scoreboard = await tournoi.main(bot.client, ctx, game, args)
+            scoreboard = await tournoi.main(ctx, game, args)
             game.log_file.touch()
 
             embed = discord.Embed(title=f"{game.name} tournament results")
