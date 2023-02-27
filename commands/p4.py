@@ -114,34 +114,39 @@ async def command_(admin_role: discord.Role, ctx: Context, game_name: str, actio
                         if user:
                             if is_human:
                                 players.append(arg)
-                                challenged_users.add(user)
+                                if user != ctx.author:
+                                    challenged_users.add(user)
                                 ai_only = False
                             else:
                                 for ai_file in game.ai_dir.glob(f"{user.id}.*"):
                                     players.append(str(ai_file))
-                                    challenged_users.add(user)
+                                    if user != ctx.author:
+                                        challenged_users.add(user)
                                     break
                                 else:
                                     await ctx.send(f"{user.mention} has not submitted any AI :cry:")
                             is_human = False
                     else:
                         await ctx.send(f"Invalid argument {arg} :face_with_raised_eyebrow:")
+                        return
 
             if len(players) < 2:
                 await ctx.send("Not enough players to start a game :grimacing:")
                 return
 
             for user in challenged_users:
-                if user.id == ctx.author.id:
-                    continue
-                message = await ctx.send(f"Hey {user.mention}, {ctx.author.mention} challenges you to a {game.name}, do you accept ?")
+                message = await ctx.send(f"{', '.join(user.mention for user in challenged_users)}" +
+                                         f" do you accept {ctx.author.mention}'s challenge to a game of {game.name} ?")
                 await message.add_reaction("👍")
 
                 def check(reaction, user):
-                    return user in challenged_users and user != ctx.author and str(reaction.emoji) in ("👍")
+                    return user in challenged_users and str(reaction.emoji) in ("👍")
 
                 try:
-                    await bot.wait_for("reaction", check=check, timeout=3600)
+                    count = 0
+                    while count < len(challenged_users):
+                        await bot.wait_for("reaction_add", check=check, timeout=3600)
+                        count += 1
                 except asyncio.TimeoutError:
                     return
 
