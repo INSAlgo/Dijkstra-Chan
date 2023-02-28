@@ -18,5 +18,4 @@ jobs:
         run: git pull --recurse-submodules
       - name: Run bot
         run: |
-          RUNNER_TRACKING_ID="" && nohup python main.py
-          sleep 10
+          RUNNER_TRACKING_ID="" && nohup python main.py &
