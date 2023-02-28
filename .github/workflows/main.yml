@@ -14,4 +14,4 @@ jobs:
           source env/bin/activate
           pip install -r requirements.txt
       - name: Run bot
-      - run: nohup python3 main.py
+        run: nohup python3 main.py
