@@ -1,0 +1,22 @@
+name: Reload bot
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  reload:
+    runs-on: [self-hosted, linux]
+    steps:
+      - name: Go to the bot directory
+        run : cd ~/Dijkstra-Chan
+      - name: Set up python environnement
+        run: |
+          source env/bin/activate
+          pip install -r requirements.txt
+      - name: Checkout repository and submodules
+        run: git pull --recurse-submodules
+      - name: Run bot
+        run: |
+          python3 main.py &
+          sleep 60
