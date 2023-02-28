@@ -1,12 +1,10 @@
 name: Reaload bot
 on: [push]
 jobs:
-  pull:
-    runs-on: [self-hosted, linux]
-    steps:
-      - run: git pull
-      - run: git submodule update --remote
   reload:
     runs-on: [self-hosted, linux]
     steps:
+      - run: pwd
+      - run: ls -a -l
+      - run: source env/bin/activate.sh
       - run: nohup python3 main.py
