@@ -13,7 +13,7 @@ from bot import bot
 from extensions.game.utils import *
 from extensions.game import tournoi
 
-import functions.embeding as embeding
+import utils.embeding as embeding
 
 
 # main command :

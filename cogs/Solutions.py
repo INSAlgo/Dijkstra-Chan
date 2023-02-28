@@ -3,14 +3,15 @@ import discord.ext.commands as commands
 from IDs import *
 from checks import *
 
-from classes.github_client import GH_Client
+from utils.token_error import TokenError
+from cogs.Github_Client import GH_ClientCog
 
 # Solutions Cog :
 
 class SolutionsCog(commands.Cog) :
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
-        self.gh_client = bot.get_cog("GH_ClientCog")
+        self.gh_client: GH_ClientCog = bot.get_cog("GH_ClientCog")
     
     @commands.group(pass_context=True)
     async def sol(self, ctx: commands.Context) :
@@ -21,14 +22,7 @@ class SolutionsCog(commands.Cog) :
     @sol.command(pass_context=True)
     @in_channel(COMMANDS, False)
     async def get(self, ctx: commands.Context, site: str = "", *args) :
-        print(args)
-        n_args = len(args)
-        
-        if n_args == 0 :
-            file = ""
-        else :
-            site = args[0]
-            file = ' '.join(args[1:])
+        file = ' '.join(args)
 
         _, raw_message = self.gh_client.search_correction(site, file)
         await ctx.channel.send(raw_message)
@@ -48,5 +42,10 @@ class SolutionsCog(commands.Cog) :
         if token is None :
             await ctx.channel.send("token command has exactly one parameter : the new token")
             return
-
-        # bot.connect_client("OpenAI", args[0])
+        
+        try :
+            self.gh_client.set_token(token)
+        except TokenError :
+            await ctx.send("Invalid token !")
+        except Exception as e :
+            await ctx.send(f"Error : {e}")

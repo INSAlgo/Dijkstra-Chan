@@ -5,7 +5,7 @@ from discord.ext.commands import Bot, Context, command
 
 from bot import bot
 
-from functions.embeding import embed_help
+from utils.embeding import embed_help
 from extensions.geom.check import check
 from extensions.geom.read import draw_submission
 

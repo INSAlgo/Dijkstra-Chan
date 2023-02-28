@@ -4,12 +4,7 @@ import os
 import discord
 from discord.ext.commands import Bot, Context
 
-from classes.github_client import GH_Client
-from classes.openai_client import OPENAI_Client
-from classes.token_error import TokenError
-
-client_classes = {"GitHub": GH_Client, "OpenAI": OPENAI_Client}
-token_names = {"GitHub": "GH_TOKEN", "OpenAI": "OPENAI_TOKEN"}
+from utils.token_error import TokenError
 
 class BotObj() :
 
@@ -29,29 +24,6 @@ class BotObj() :
 
         self.channels: dict[str, discord.TextChannel] = {}
         self.roles: dict[str, discord.Role] = {}
-
-        self.clients: dict[str, GH_Client | OPENAI_Client] = {}
-    
-    async def connect_client(self, name: str, token: str = None) :
-        """
-        Connects to the github API
-        """
-
-        token_key = token_names[name]
-
-        if token is None :
-            token = os.environ[token_key]
-        
-        try :
-            self.clients[name] = client_classes[name](token)
-        except TokenError as tkerr :
-            await self.channels["debug"].send(f"The {name} token is wrong or has expired, please generate a new one. See README for more info.")
-            raise TokenError from tkerr
-        except Exception as err :
-            await self.channels["debug"].send(err)
-            raise Exception from err
-        
-        os.environ[token_key] = token
             
     def define_on_ready(self, launchers: list[Callable]) -> None :
         @self.client.event
@@ -76,12 +48,6 @@ class BotObj() :
             print("bot ready !")
 
             await self.channels["debug"].send("Up")
-            await self.connect_client("GitHub")
-            await self.connect_client("OpenAI")
-            
-            err, msg = self.clients["GitHub"].reload_repo_tree()
-            if err :
-                self.channels["debug"].send(msg)
     
     def run(self) :
         self.client.run(self.token)

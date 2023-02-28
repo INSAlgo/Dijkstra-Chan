@@ -1,4 +1,4 @@
-from classes.client_template import Client
+from utils.client_template import Client
 
 from extensions.evt.event_class import Event
 

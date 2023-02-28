@@ -13,7 +13,7 @@ from bot import bot
 
 from extensions.evt.utils   import daily_update, save_events
 
-from functions.embeding import embed, embed_help
+from utils.embeding import embed_help, embed
 
 
 #=================================================================================================================================================================
@@ -103,7 +103,7 @@ async def on_message(message: discord.Message) :
         
         repo = message.content.split(' ')[2]
         course = ' '.join(message.content.split(' ')[3:])
-        err_code, res = bot.clients["GitHub"].get_readme(repo, course)
+        err_code, res = bot.client.get_cog("GH_ClientCog").get_readme(repo, course)
 
         if err_code == 0 :
             emb = embed(res).set_thumbnail(url="attachment://INSAlgo.png")
@@ -164,8 +164,8 @@ if __name__ == "__main__" :
     # asyncio.run(bot.client.load_extension("extensions.sol.command"))
     asyncio.run(bot.client.load_extension("extensions.geom.command"))
     asyncio.run(bot.client.load_extension("extensions.game.command"))
-    asyncio.run()
-    asyncio.run(bot.client.add_cog(SolutionsCog(bot.client, None)))
+    asyncio.run(bot.client.add_cog(GH_ClientCog(bot.client, os.environ["GH_TOKEN"])))
+    asyncio.run(bot.client.add_cog(SolutionsCog(bot.client)))
 
     bot.run()
 

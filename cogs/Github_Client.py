@@ -1,33 +1,50 @@
+import os
 from base64 import standard_b64decode as b64dcd
 from datetime import datetime
 from random import choice
 
-from discord.ext.commands import Cog
+from IDs import *
+from discord.ext.commands import Bot, Cog
 
-from classes.token_error import TokenError
-from classes.client_template import Client
+from utils.token_error import TokenError
+from utils.client_template import Client
 
 languages = {"py": "python", "cpp": "C++", "c": "C", "jar": "java", "js": "javascript"}
 
 # GitHub Client Cog
 
 class GH_ClientCog(Client, Cog) :
-    def __init__(self, token: str) :
+    def __init__(self, bot: Bot, token: str) :
         Client.__init__(self, "api.github.com/")
-        
+        self.bot = bot
+
+        self.files: dict[str, list[str]] = {}
+
+        self.set_token(token)
+
+        err_code, msg = self.reload_repo_tree()
+        if err_code :
+            print(msg)
+    
+    def make_header(self, token: str) :
         self.headers = {
             "Accept": "application/vnd.github+json",
             "Authorization": "Bearer " + token
         }
 
+    def set_token(self, new_token: str) :
+
+        self.make_header(new_token)
+        
         if not self.get_w_token(route="rate_limit") :
             raise Exception(self.lr_error())
         if self.lr_status_code() == 401 :
             raise TokenError
         elif self.lr_status_code() != 200 :
             raise Exception(f"status code not OK : {self.lr_status_code()}")
-
-        self.files: dict[str, list[str]] = {}
+        
+        self.token = new_token
+        os.environ["GH_TOKEN"] = new_token
     
     # Levenshtein distance :
     @staticmethod
@@ -147,18 +164,17 @@ class GH_ClientCog(Client, Cog) :
             return 3, f"response status code not OK : {self.lr_status_code()}"
 
         try :
-            raw_text = b64dcd(data["content"]).decode("ascii")
+            raw_text = b64dcd(data["content"]).decode("utf-8")
+        except Exception as e:
+            return 5, f"Could not decode file : {e}"
 
-            ext = to_search.split('.')[-1]
-            if ext in languages :
-                language = languages[ext]
-            else :
-                language = ""
+        ext = to_search.split('.')[-1]
+        if ext in languages :
+            language = languages[ext]
+        else :
+            language = ""
 
-            return 0, f"**Solution file found** :\n||```{language}\n{raw_text}```||"
-        
-        except :
-            return 5, "could not decode file"
+        return 0, f"**Solution file found** :\n||```{language}\n{raw_text}```||"
 
 
     def get_readme(self, repo: str, course: str) -> str :
