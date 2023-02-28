@@ -150,6 +150,7 @@ async def shutdown(ctx: Context) :
 #=================================================================================================================================================================
 # MAIN
 
+from cogs.Github_Client import GH_ClientCog
 from cogs.Solutions import SolutionsCog
 
 if __name__ == "__main__" :
@@ -163,7 +164,8 @@ if __name__ == "__main__" :
     # asyncio.run(bot.client.load_extension("extensions.sol.command"))
     asyncio.run(bot.client.load_extension("extensions.geom.command"))
     asyncio.run(bot.client.load_extension("extensions.game.command"))
-    bot.client.add_cog(SolutionsCog(bot.client, None))
+    asyncio.run()
+    asyncio.run(bot.client.add_cog(SolutionsCog(bot.client, None)))
 
     bot.run()
 
