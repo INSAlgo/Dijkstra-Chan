@@ -17,5 +17,8 @@ jobs:
       - name: Checkout repository and submodules
         run: git pull --recurse-submodules
       - name: Run bot
-        run: |
-          RUNNER_TRACKING_ID="" && nohup python main.py &
+        env:
+          TOKEN: ${{ secrets.TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          OPENAI_TOKEN: ${{ secrets.OPENAI_TOKEN }}
+        run: RUNNER_TRACKING_ID="" && nohup python main.py &
