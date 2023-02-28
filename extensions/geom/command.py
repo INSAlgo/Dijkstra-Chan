@@ -6,14 +6,14 @@ from discord.ext.commands import Bot, Context, command
 from bot import bot
 
 from functions.embeding import embed_help
-from extensions.g.geometry_check import check
-from extensions.g.geometry_read import draw_submission
+from extensions.geom.check import check
+from extensions.geom.read import draw_submission
 
 # Command function :
 
 @command()
 
-async def g(ctx: Context, course: str = "", *args: str) :
+async def geom(ctx: Context, course: str = "", *args: str) :
     courses = {"CH"}
     n_args = len(args)
     
@@ -59,4 +59,4 @@ async def g(ctx: Context, course: str = "", *args: str) :
 # Required setup :
 
 async def setup(bot: Bot) :
-    bot.add_command(g)
+    bot.add_command(geom)

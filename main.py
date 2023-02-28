@@ -159,7 +159,7 @@ if __name__ == "__main__" :
     bot.define_on_ready([daily_update.start])
     asyncio.run(bot.client.load_extension("extensions.evt.command"))
     asyncio.run(bot.client.load_extension("extensions.sol.command"))
-    asyncio.run(bot.client.load_extension("extensions.g.command"))
+    asyncio.run(bot.client.load_extension("extensions.geom.command"))
     asyncio.run(bot.client.load_extension("extensions.game.command"))
 
     bot.run()
