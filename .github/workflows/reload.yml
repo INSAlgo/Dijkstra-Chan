@@ -23,7 +23,8 @@ jobs:
         run: killall python
       - name: Run bot
         env:
+          RUNNER_TRACKING_ID: ""
           TOKEN: ${{ secrets.TOKEN }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           OPENAI_TOKEN: ${{ secrets.OPENAI_TOKEN }}
-        run: RUNNER_TRACKING_ID="" && nohup python main.py &
+        run: nohup python main.py &
