@@ -19,4 +19,5 @@ jobs:
       - name: Run bot
         run: |
           nohup python main.py &
-          sleep 20
+          disown &1
+          sleep 10
