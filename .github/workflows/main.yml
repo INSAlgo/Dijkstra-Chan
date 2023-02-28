@@ -1,10 +1,13 @@
-name: Reaload bot
+name: Reload bot
 on: [push]
 jobs:
   reload:
     runs-on: [self-hosted, linux]
     steps:
+      - uses: actions/checkout@main
+      - run: python3 -m venv env
+      - run: source env/bin/activate.sh
+      - run: pip install -r requirements.txt
       - run: pwd
       - run: ls -a -l
-      - run: source env/bin/activate.sh
       - run: nohup python3 main.py
