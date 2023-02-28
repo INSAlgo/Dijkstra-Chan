@@ -1,13 +1,38 @@
-from discord.ext.commands import Bot, Context, command
+import discord.ext.commands as commands
 
+from IDs import *
 from bot import bot
 
 from classes.github_client import GH_Client
 
+# Solutions Cog :
+
+class Solutions(commands.Cog) :
+    def __init__(self, bot: commands.Bot, gh_client: GH_Client) -> None:
+        self.bot = bot
+        self.gh_client = gh_client
+
+        self.insalgo = bot.get_guild(INSALGO)
+
+        self.debug = bot.get_channel(DEBUG)
+        self.auth_channels = [bot.get_channel(COMMANDS), self.debug]
+
+        self.bureau = self.insalgo.get_role(BUREAU)
+        self.admin = self.insalgo.get_role(ADMIN)
+    
+    @bot.group()
+    async def sol(self, ctx: commands.Context) :
+        if ctx.invoked_subcommand is None:
+            await ctx.send("Invalid subcommand passed, maybe you mean `!sol get`?")
+
+    @sol.command
+    async def get(self, ctx: commands.Context) :
+        pass
+
 # Command function :
 
-@command()
-async def sol(ctx: Context, func: str = None, *args: str) :
+@commands.command()
+async def sol(ctx: commands.Context, func: str = None, *args: str) :
     gh_client: GH_Client = bot.clients["GitHub"]
 
     n_args = len(args)
@@ -63,5 +88,5 @@ async def sol(ctx: Context, func: str = None, *args: str) :
 
 # Required setup :
 
-async def setup(bot: Bot) :
+async def setup(bot: commands.Bot) :
     bot.add_command(sol)
