@@ -11,14 +11,6 @@ class SolutionsCog(commands.Cog) :
     def __init__(self, bot: commands.Bot, gh_client: GH_Client) -> None:
         self.bot = bot
         self.gh_client = gh_client
-
-        self.insalgo = bot.get_guild(INSALGO)
-
-        self.debug = bot.get_channel(DEBUG)
-        self.auth_channels = [bot.get_channel(COMMANDS), self.debug]
-
-        self.bureau = self.insalgo.get_role(BUREAU)
-        self.admin = self.insalgo.get_role(ADMIN)
     
     @commands.group(pass_context=True, invoke_without_command=True)
     async def sol(self, ctx: commands.Context, *args) :

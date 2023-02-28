@@ -17,7 +17,7 @@ def embed(markdown: str) -> discord.Embed :
                 step = "exercises"
                 level = []
             else :
-                levels.append(line)
+                description.append(line)
 
         elif step == "exercises" :
             if line.startswith("### L") :
@@ -32,7 +32,6 @@ def embed(markdown: str) -> discord.Embed :
             coms.append(line)
     
     levels.append(level)
-    levels.pop(0)
 
     embed = discord.Embed(
         title=title,

@@ -150,6 +150,8 @@ async def shutdown(ctx: Context) :
 #=================================================================================================================================================================
 # MAIN
 
+from cogs.Solutions import SolutionsCog
+
 if __name__ == "__main__" :
 
     # Grabing tokens from environment
@@ -158,9 +160,10 @@ if __name__ == "__main__" :
     # Bot commands setup
     bot.define_on_ready([daily_update.start])
     asyncio.run(bot.client.load_extension("extensions.evt.command"))
-    asyncio.run(bot.client.load_extension("extensions.sol.command"))
+    # asyncio.run(bot.client.load_extension("extensions.sol.command"))
     asyncio.run(bot.client.load_extension("extensions.geom.command"))
     asyncio.run(bot.client.load_extension("extensions.game.command"))
+    bot.client.add_cog(SolutionsCog(bot.client, None))
 
     bot.run()
 
