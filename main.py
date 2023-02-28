@@ -32,7 +32,7 @@ fact = 1
 #=================================================================================================================================================================
 # FUNCTION TO SEND HELP
 
-async def help_func(channel: discord.TextChannel) :
+async def help_func(channel) :
         if channel == bot.channels["debug"] :
             await bot.channels["debug"].send(embed=embed_help("admin_help.txt"))
         else :
@@ -93,7 +93,7 @@ async def on_message(message: discord.Message) :
 
     # Help message :
     if message.content.lower() == "help me dijkstra-chan!" :
-        await help_func(message.author, message.channel)
+        await help_func(message.channel)
         return
     
     # (admin) Command to get README of a repo :
@@ -132,7 +132,7 @@ async def on_message(message: discord.Message) :
 
 @bot.client.command()
 async def help(ctx: Context) :
-    await help_func(ctx.author, ctx.channel)
+    await help_func(ctx.channel)
 
 
 #=================================================================================================================================================================
