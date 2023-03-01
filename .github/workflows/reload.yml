@@ -2,6 +2,8 @@ name: Reload bot
 
 on:
   push:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
@@ -10,12 +12,22 @@ jobs:
     steps:
       - name: Go to the bot directory
         run : cd ~/Dijkstra-Chan
-      - name: Set up python environnement
+      - name: Set up Python environnement
         run: |
           source env/bin/activate
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
-      - name: Checkout repository and submodules
-        run: git pull --recurse-submodules
-      - name: Run bot
+      - name: Pull and switch to main branch
         run: |
-          RUNNER_TRACKING_ID="" && nohup python main.py &
+          git pull --recurse-submodules origin main
+          git checkout main
+      - name: Shutdown bot
+        continue-on-error: true
+        run: killall python
+      - name: Run bot
+        env:
+          RUNNER_TRACKING_ID: ""
+          TOKEN: ${{ secrets.TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          OPENAI_TOKEN: ${{ secrets.OPENAI_TOKEN }}
+        run: nohup python main.py &
