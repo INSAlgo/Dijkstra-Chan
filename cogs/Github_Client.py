@@ -3,7 +3,7 @@ from base64 import standard_b64decode as b64dcd
 from datetime import datetime
 from random import choice
 
-from IDs import *
+from utils.IDs import *
 from discord.ext.commands import Bot, Cog
 
 from utils.token_error import TokenError
@@ -14,13 +14,18 @@ languages = {"py": "python", "cpp": "C++", "c": "C", "jar": "java", "js": "javas
 # GitHub Client Cog
 
 class GH_ClientCog(Client, Cog) :
-    def __init__(self, bot: Bot, token: str) :
+    def __init__(self) :
         Client.__init__(self, "api.github.com/")
-        self.bot = bot
 
         self.files: dict[str, list[str]] = {}
 
-        self.set_token(token)
+        try :
+            self.set_token(os.environ["GH_TOKEN"])
+        except KeyError :
+            print("GH_TOKEN not in environment variables")
+            return
+        except Exception as e :
+            print(e)
 
         err_code, msg = self.reload_repo_tree()
         if err_code :

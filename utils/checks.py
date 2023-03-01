@@ -2,7 +2,7 @@ from typing import Iterable
 
 import discord.ext.commands as commands
 
-from IDs import DEBUG
+from utils.IDs import DEBUG
 
 def in_channel(channel_id: int, ensure_guild = True, allow_debug = True) :
     async def predicate(ctx: commands.Context) :

@@ -39,33 +39,41 @@ def check(S: list[tuple[int]], CH: list[tuple[int]], ex_type: str = "points") ->
 
     if set(CH).issubset(set(S)) :
         if ex_type == "points" :
-            message.append("The hull is made of the points given. :white_check_mark:")
+            txt = "given"
         else :
-            message.append("The hull is made of the polygon's points. :white_check_mark:")
+            txt = "polygon's"
+        message.append(f"The hull is made of the {txt} points. :white_check_mark:")
     else :
         mistake = True
         if ex_type == "points" :
-            message.append("The hull is made of points that were not given! <:ah:737340475866087526> :x:")
+            txt = "were not given"
         else :
-            message.append("The hull is made of points that are not part of the polygon! <:ah:737340475866087526> :x:")
+            txt = "are not part of the polygon"
+        message.append(f"The hull is made of points that {txt}! <:ah:737340475866087526> :x:")
     
-    if is_convex(CH) and not mistake :
+    if mistake :
+        pass
+    elif is_convex(CH) :
         message.append("The hull is convex. :white_check_mark:")
-    elif not mistake :
+    else :
         mistake = True
         message.append("The hull is not convex! <:oof:762676683546689556> :x:")
     
-    if is_hull(S, CH) and not mistake :
+    if mistake :
+        pass
+    if is_hull(S, CH) :
         if ex_type == "points" :
-            message.append("The hull contains all the points. :white_check_mark:")
+            txt = "points"
         else :
-            message.append("The hull contains all the polygon's points. :white_check_mark:")
-    elif not mistake :
+            txt = "polygon's points"
+        message.append(f"The hull contains all the {txt}. :white_check_mark:")
+    else :
         mistake = True
         if ex_type == "points" :
-            message.append("The hull does not contains all the points! <:chonteux:722130313979101314> :x:")
+            txt = "points"
         else :
-            message.append("The hull does not contains all the polygon's points! <:chonteux:722130313979101314> :x:")
+            txt = "polygon's points"
+        message.append(f"The hull does not contains all the {txt}! <:chonteux:722130313979101314> :x:")
 
     if mistake :
         message.append("Incorrect solution. <:sad_cat:737953393816895549> :x:")
