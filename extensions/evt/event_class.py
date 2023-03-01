@@ -42,6 +42,9 @@ class Event :
         self.desc = attrs["desc"]
         self.time = None
 
+        # Really complicated time parsing because fuck this
+
+        self.valid_time = False
         if "time" in attrs.keys() :
             time = attrs["time"]
 
@@ -55,12 +58,14 @@ class Event :
                 time = int(time)
             if isinstance(time, int) :
                 self.time = datetime.fromtimestamp(time)
+                self.valid_time = True
             else :
                 print(f"time attribute not properly typed : should be int, float or string, is {type(time)} instead")
 
         elif time is not None :
             if isinstance(time, datetime) :
                 self.time = time
+                self.valid_time = True
             else :
                 print(f"Parameter time should be datetime object, instead it's {type(time)}")
         else :
@@ -76,41 +81,34 @@ class Event :
             self.id = self.name
     
     def to_dict(self) :
+        if self.valid_time :
+            time = int(self.time.timestamp())
+        else :
+            time = self.time
+        
         return {
             "name" : self.name, "link" : self.link, "webs" : self.webs,
-            "time" : int(self.time.timestamp()), "desc" : self.desc,
+            "time" : time, "desc" : self.desc,
             "id" : self.id
         }
     
     def __lt__(self, other: Event) :
+        if not self.valid_time :
+            return True
+        if not other.valid_time :
+            return False
+        
         return self.time < other.time
     
     def __eq__(self, other: Event) :
         return self.id == other.id
     
     def __hash__(self) :
-        # For identification, to avoid duplicate events
         if type(self.id) == int :
             return self.id
         if type(self.id) == str :
             return sum(ord(char) for char in self.id)
         return self.name.__hash__()
-        
-
-    def msg(self) -> str :
-        # Unused
-        """
-        A method returning a representation of the event as a formated discord message.
-        """
-
-        lines = []
-        lines.append(f"**{self.name}**")
-        lines.append(f"*from {self.webs}*")
-        lines.append(f"main page : {self.link}")
-        lines.append(f"To happen on : {self.time.strftime('%B %d, %Y, %H:%M')}")
-        lines.append(self.desc)
-
-        return '\n'.join(lines)
     
     def embed(self) -> Embed :
         res = Embed(title=self.name)
@@ -120,6 +118,10 @@ class Event :
         if re.match(regex, self.link) is not None :
             res.url = self.link
         
-        res.add_field(name="To happen on :", value=self.time.strftime('%B %d, %Y, %H:%M'))
+        if self.valid_time :
+            timestamp = self.time.timestamp()
+            res.add_field(name="To happen on :", value=f"<t:{timestamp}:f> (<t:{timestamp}:R>)")
+        else :
+            res.add_field(name="Invalid Time :angry:")
 
         return res

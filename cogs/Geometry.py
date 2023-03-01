@@ -41,7 +41,7 @@ class GeometryCog(cmds.Cog) :
     async def geom(self, ctx: cmds.Context) :
         if ctx.invoked_subcommand is None:
             text = ', '.join(self.commands.keys())
-            await ctx.send(f"Invalid course, available courses are : {text}.")
+            await ctx.send(f"Invalid course, available courses are : {text}. Use `!geom help` for details.")
 
     @geom.command()
     async def help(self, ctx: cmds.Context) :
@@ -51,7 +51,7 @@ class GeometryCog(cmds.Cog) :
     async def CH(self, ctx: cmds.Context) :
         if ctx.invoked_subcommand is None:
             text = ', '.join(self.commands["CH"])
-            await ctx.send(f"Invalid exercise, available exercises are : {text}.")
+            await ctx.send(f"Invalid exercise, available exercises are : {text}. Use `!geom CH help` for details.")
 
     @CH.command()
     async def help(self, ctx: cmds.Context) :
