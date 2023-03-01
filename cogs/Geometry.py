@@ -8,8 +8,8 @@ from utils.IDs import *
 from utils.checks import *
 
 from utils.embeding import embed_help
-from extensions.geom.check import check
-from extensions.geom.read import draw_submission
+from utils.geom.check import check
+from utils.geom.read import draw_submission
 
 # Geometry Cog :
 
