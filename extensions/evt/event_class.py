@@ -120,6 +120,7 @@ class Event :
         if re.match(regex, self.link) is not None :
             res.url = self.link
         
-        res.add_field(name="To happen on :", value=self.time.strftime('%B %d, %Y, %H:%M'))
+        timestamp = int(self.time.timestamp())
+        res.add_field(name="To happen on :", value=f"<t:{timestamp}:f> (<t:{timestamp}:R>)")
 
         return res
