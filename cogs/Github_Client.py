@@ -3,8 +3,7 @@ from base64 import standard_b64decode as b64dcd
 from datetime import datetime
 from random import choice
 
-from utils.IDs import *
-from discord.ext.commands import Bot, Cog
+from discord.ext.commands import Cog
 
 from utils.token_error import TokenError
 from utils.client_template import Client

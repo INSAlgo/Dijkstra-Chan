@@ -119,7 +119,7 @@ class Event :
             res.url = self.link
         
         if self.valid_time :
-            timestamp = self.time.timestamp()
+            timestamp = int(self.time.timestamp())
             res.add_field(name="To happen on :", value=f"<t:{timestamp}:f> (<t:{timestamp}:R>)")
         else :
             res.add_field(name="Invalid Time :angry:")

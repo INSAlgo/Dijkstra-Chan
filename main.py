@@ -9,9 +9,9 @@ from requests import post
 import discord
 from discord.ext.commands import Context
 
-from bot import bot
+from utils.IDs import *
 
-from extensions.evt.utils   import daily_update, save_events
+from bot import bot
 
 from utils.embeding import embed_help, embed
 
@@ -32,11 +32,24 @@ fact = 1
 #=================================================================================================================================================================
 # FUNCTION TO SEND HELP
 
-async def help_func(channel) :
+async def help_func(channel: discord.TextChannel) :
         if channel == bot.channels["debug"] :
             await bot.channels["debug"].send(embed=embed_help("admin_help.txt"))
         else :
             await channel.send(embed=embed_help("help.txt"))
+
+
+#=================================================================================================================================================================
+# NEW ON_READY
+
+@bot.client.event
+async def on_ready() :
+    evt_cog: EventRemindCog = bot.client.get_cog("EventRemindCog")
+    evt_cog.event_role = bot.client.get_guild(INSALGO).get_role(EVENT_PING)
+    evt_cog.event_channel = bot.client.get_channel(EVENTS)
+    evt_cog.daily_update.start()
+
+    bot.client.get_channel(DEBUG).send("Up!")
 
 
 #=================================================================================================================================================================
@@ -152,7 +165,11 @@ async def shutdown(ctx: Context) :
 
 from cogs.Github_Client import GH_ClientCog
 from cogs.Solutions import SolutionsCog
+
 from cogs.Geometry import GeometryCog
+
+from cogs.Codeforces_Client import CF_ClientCog
+from cogs.EventReminders import EventRemindCog
 
 if __name__ == "__main__" :
 
@@ -160,18 +177,21 @@ if __name__ == "__main__" :
     openai_token = os.environ["OPENAI_TOKEN"]
 
     # Bot commands setup
-    bot.define_on_ready([daily_update.start])
-    asyncio.run(bot.client.load_extension("extensions.evt.command"))
     asyncio.run(bot.client.load_extension("extensions.game.command"))
     asyncio.run(bot.client.add_cog(GH_ClientCog()))
     asyncio.run(bot.client.add_cog(SolutionsCog(bot.client)))
+
     asyncio.run(bot.client.add_cog(GeometryCog()))
+
+    asyncio.run(bot.client.add_cog(CF_ClientCog()))
+    evt_cog = EventRemindCog(bot.client)
+    asyncio.run(bot.client.add_cog(evt_cog))
 
     bot.run()
 
     # Saving stuff after closing
     print("Saving events, DO NOT CLOSE APP!")
-    save_events()
+    evt_cog.save_events()
 
     # Sending a message to confirm shutdown :
     headers = {'Authorization': 'Bot %s' % bot.token }

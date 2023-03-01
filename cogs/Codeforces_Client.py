@@ -1,10 +1,14 @@
+from discord.ext.commands import Cog
+
 from utils.client_template import Client
 
-from extensions.evt.event_class import Event
+from utils.evt.event_class import Event
 
-class CF_Client(Client) :
+# Codeforces Client Cog
+
+class CF_ClientCog(Client, Cog) :
     def __init__(self):
-        super().__init__("codeforces.com/api/")
+        Client.__init__(self, "codeforces.com/api/")
         self.contests = []
 
     def get_contests(self, statuses: set[str] = {"BEFORE"}) -> tuple[int, str] :
