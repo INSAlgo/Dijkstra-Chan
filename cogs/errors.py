@@ -43,6 +43,8 @@ class ErrorHandler(commands.Cog):
             await ctx.send(f"{self.emote} {d_error}")
         except commands.NSFWChannelRequired:
             await ctx.send(f"{self.emote} This command require an NSFW channel")
+        except commands.CheckFailure as d_error:
+            await ctx.send(f"{self.emote} {d_error}")
         # DisabledCommand
         except commands.DisabledCommand:
             await ctx.send(f"{self.emote} Sorry, this command is disabled")
