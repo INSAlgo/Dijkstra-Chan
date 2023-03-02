@@ -30,8 +30,11 @@ class Game(commands.Cog):
             raise commands.BadArgument("Invalid subcommand")
 
     @game.command()
-    async def help(self, ctx: Context, game: AvailableGame):
-        await ctx.send(embed=embeding.embed_help(f"{game.cmd}_help.txt"))
+    async def help(self, ctx: Context, game: AvailableGame | None):
+        if game:
+            await ctx.send(embed=embeding.embed_help(f"{game.cmd}_help.txt"))
+        else:
+            await ctx.send("Global game help coming soon")
 
     @game.command()
     @checks.in_channel(IDs.GAMES)
