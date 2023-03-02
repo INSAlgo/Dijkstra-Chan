@@ -1,0 +1,9 @@
+.vscode/*
+venv/*
+env/*
+out/*
+*.out
+__pycache__/*
+ai/*
+old-ai/*
+log
