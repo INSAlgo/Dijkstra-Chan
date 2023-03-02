@@ -47,6 +47,9 @@ class BotObj() :
 
             print("bot ready !")
 
+            # Sync application commands
+            await self.client.tree.sync(guild=self.client.guilds[0])
+
             await self.channels["debug"].send("Up")
     
     def run(self) :
