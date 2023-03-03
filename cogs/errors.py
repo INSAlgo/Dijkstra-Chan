@@ -20,13 +20,13 @@ class ErrorHandler(commands.Cog):
             await ctx.send(f"{self.emote} Missing required attachement")
         # UserInputError -> BadArgument
         except commands.MemberNotFound or commands.UserNotFound as d_error:
-            await ctx.send(f"{self.emote} User `{str(d_error).split(' ')[1]}` not found")
+            await ctx.send(f"{self.emote} User `{str(d_error).split(' ')[1][1:-1]}` not found")
         # UserInputError -> BadUnionArgument | BadLiteralArgument | ArgumentParsingError
         except commands.BadArgument or commands.BadUnionArgument or commands.BadLiteralArgument or commands.ArgumentParsingError as d_error:
             await ctx.send(f"{self.emote} {d_error}")
         # CommandNotFound
         except commands.CommandNotFound as d_error:
-            await ctx.send(f"{self.emote} Command `{str(d_error).split(' ')[1]}` not found")
+            await ctx.send(f"{self.emote} Command `{str(d_error).split(' ')[1][1:-1]}` not found")
         # CheckFailure
         except commands.PrivateMessageOnly:
             await ctx.send(f"{self.emote} This command can only be used in DM")
