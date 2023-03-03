@@ -55,6 +55,7 @@ class Reminder :
         res = Embed(title=messages[self.delay], description=desc, color=colors[self.delay])
         
         res.add_field(name="From", value=f"*{self.event.webs}*", inline=False)
-        res.add_field(name="To happen on :", value=self.event.time.strftime('%B %d, %Y, %H:%M'), inline=False)
+        timestamp = int(self.time.timestamp())
+        res.add_field(name="To happen on :", value=f"<t:{timestamp}:f> (<t:{timestamp}:R>)", inline=False)
 
         return res

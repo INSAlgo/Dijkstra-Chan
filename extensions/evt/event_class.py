@@ -121,6 +121,6 @@ class Event :
             res.url = self.link
         
         timestamp = int(self.time.timestamp())
-        res.add_field(name="To happen on :", value=f"<t:{timestamp}:f> (<t:{timestamp}:R>)")
+        res.add_field(name="To happen on :", value=f"<t:{timestamp}:f> (<t:{timestamp}:R>)", inline=False)
 
         return res
