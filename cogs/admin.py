@@ -14,7 +14,7 @@ class Admin(commands.Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
 
-    @commands.command()
+    @commands.command(hidden=True)
     @commands.has_role(IDs.BUREAU)
     async def course(self, ctx: commands.Context, repo: str, course: str):
         """ Command to get and embed README of a repo """
@@ -35,7 +35,7 @@ class Admin(commands.Cog):
         else :
             await ctx.send(res)
 
-    @commands.command()
+    @commands.command(hidden=True)
     @commands.is_owner()
     async def shutdown(self, ctx: commands.Context) :
         await ctx.send("Shutting down ...")

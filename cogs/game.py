@@ -26,19 +26,14 @@ class Game(commands.Cog):
 
     @commands.group()
     async def game(self, ctx: Context):
+        """Commands to play games, with users or their handcrafted AI"""
         if ctx.invoked_subcommand is None:
             raise commands.BadArgument("Invalid subcommand")
 
     @game.command()
-    async def help(self, ctx: Context, game: AvailableGame | None):
-        if game:
-            await ctx.send(embed=embeding.embed_help(f"{game.cmd}_help.txt"))
-        else:
-            await ctx.send("Global game help coming soon")
-
-    @game.command()
     @checks.in_channel(IDs.GAMES)
     async def participants(self, ctx: Context, game: AvailableGame):
+        """Get the list of players who have submitted an AI to the game"""
 
         embed = discord.Embed(title=f"{game.name} tournament participants")
         embed.description = '\n'.join(f"<@{file.stem}>" for file in game.ai_dir.iterdir())
@@ -46,6 +41,7 @@ class Game(commands.Cog):
 
     @game.command()
     async def play(self, ctx: Context, game: AvailableGame, *args: str):
+        """Play a game between AI or users if available"""
 
         game_args = []
         players = []
@@ -119,6 +115,7 @@ class Game(commands.Cog):
     @game.command()
     @commands.has_role(IDs.BUREAU)
     async def tournament(self, ctx: Context, game: AvailableGame, *args: str):
+        """Start a tournament between every player that have submitted an AI"""
 
         scoreboard = await tournament.tournament.main(ctx, game, args)
         game.log_file.touch()
@@ -142,6 +139,10 @@ class Game(commands.Cog):
     @game.command()
     @commands.dm_only()
     async def submit(self, ctx: Context, game: AvailableGame, attachment: discord.Attachment):
+        """
+        Submit an AI to a game
+        Your program must be sent as an attachment
+        """
 
         new_ext = attachment.filename.split(".")[-1]
         name = str(ctx.message.author.id)
@@ -160,9 +161,10 @@ class Game(commands.Cog):
 
         await ctx.send("AI submitted ! <:feelsgood:737960024390762568>")
 
-    @game.command()
+    @game.command(hidden=True)
     @commands.has_role(IDs.BUREAU)
     async def invite(self, ctx: Context, game: AvailableGame):
+        """Invite missing players of a tournament on the server"""
 
         user_ids = {int(file.stem) for file in game.ai_dir.iterdir()}
         assert ctx.guild
