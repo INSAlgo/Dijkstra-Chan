@@ -168,6 +168,10 @@ class EventReminder(cmds.Cog) :
             await self.get(ctx)
     
     @evt.command()
+    async def help(self, ctx: cmds.Context) :
+        await ctx.send("TODO :)")
+
+    @evt.command()
     async def toggle(self, ctx: cmds.Context) :
         msg = "Role successfully "
         if self.event_role in ctx.author.roles :

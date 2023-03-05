@@ -17,7 +17,7 @@ class Admin(commands.Cog):
     @commands.command()
     @commands.has_role(IDs.BUREAU)
     async def course(self, ctx: commands.Context, repo: str, course: str):
-        """ Command to get README of a repo """
+        """ Command to get and embed README of a repo """
 
         github_client = self.bot.get_cog("GithubClient")
         assert isinstance(github_client, GithubClient)
