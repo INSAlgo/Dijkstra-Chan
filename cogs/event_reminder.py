@@ -162,7 +162,7 @@ class EventReminder(cmds.Cog) :
     # Commands :
 
     @cmds.group(pass_context=True)
-    @in_channel(COMMANDS, False)
+    @in_channel(COMMANDS, force_guild=False)
     async def evt(self, ctx: cmds.Context) :
         if ctx.invoked_subcommand is None:
             await self.get(ctx)
