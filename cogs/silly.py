@@ -10,7 +10,7 @@ from utils import IDs
 
 fact = 1
 
-class Silly(commands.Cog):
+class Silly(commands.Cog, name="Silly commands"):
 
     def __init__(self, bot: CustomBot):
         self.bot = bot
@@ -56,7 +56,7 @@ class Silly(commands.Cog):
     @checks.in_channel(IDs.COMMANDS)
     async def factorial(self, ctx: commands.Context, nb: int):
         """
-        Compute factorial of a number in a very efficient way
+        Compute the factorial of a number in a very efficient way
         """
         await self.__factorial(ctx.message, nb)
         

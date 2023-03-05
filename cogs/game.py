@@ -16,7 +16,10 @@ from submodules.p4 import puissance4
 from main import CustomBot
 
 
-class Game(commands.Cog):
+class Game(commands.Cog, name="Games"):
+    """
+    Commands related to games
+    """
 
     games = dict()
     games["p4"] = AvailableGame("Connect 4", "p4", puissance4)
