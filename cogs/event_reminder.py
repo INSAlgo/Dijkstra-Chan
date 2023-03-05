@@ -14,8 +14,8 @@ from cogs.codeforces import CodeforcesClient
 
 from utils.evt.event_class import Event
 from utils.evt.reminder_class import Reminder, delays
-
-# Events reminders Cog :
+import logging
+logger = logging.getLogger(__name__)
 
 class EventReminder(cmds.Cog) :
 
@@ -31,6 +31,16 @@ class EventReminder(cmds.Cog) :
 
         self.cf_client: CodeforcesClient = bot.get_cog("CodeforcesClient")
 
+    async def cog_unload(self):
+        self.save_events()
+        return await super().cog_unload()
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        self.daily_update.start()
+        logger.info("updated events")
+
+
     # Methods about events :
 
     def update_events(self) -> int :
@@ -38,7 +48,7 @@ class EventReminder(cmds.Cog) :
 
         err_code, res = self.cf_client.get_fut_cont_events()
         if err_code == 1 :
-            print(res)
+            logger.error(res)
         
         else :
             self.events.update(res)
@@ -75,10 +85,11 @@ class EventReminder(cmds.Cog) :
         self.events.difference_update(to_remove)
 
     def save_events(self) :
+        logger.info("saving events, DO NOT CLOSE APP!")
         File = open("saved_data/events.json", 'w')
         json.dump(list(map(Event.to_dict, self.events)), File)
         File.close()
-        print("saved", len(self.events), "events to json.")
+        logger.info(f"saved {len(self.events)} events to json.")
 
     def load_events(self) :
         if not os.path.exists("saved_data") :
@@ -110,11 +121,11 @@ class EventReminder(cmds.Cog) :
         Waits for reminders in the background of the bot
         """
         time = (self.reminders.queue[0].time - datetime.now()).total_seconds()
-        print("Waiting for a reminder at :", self.reminders.queue[0].time)
+        logger.info(f"waiting for a reminder at : {self.reminders.queue[0].time}")
         try :
             await asyncio.sleep(time)
         except asyncio.CancelledError :
-            print("Wait reminders cancelled")
+            logger.error("wait reminders cancelled")
             return
         
         await self.event_channel.send(self.event_role.mention)  # event role mention
@@ -141,7 +152,7 @@ class EventReminder(cmds.Cog) :
         self.generate_queue()
         self.launch_reminder()
 
-        print("Waiting for next daily update at :", datetime.now()+timedelta(days=1))
+        logger.info(f"waiting for next daily update at : {datetime.now()+timedelta(days=1)}")
 
     @daily_update.before_loop
     async def before_loop(self) :

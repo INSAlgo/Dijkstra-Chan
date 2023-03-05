@@ -52,8 +52,8 @@ class ErrorHandler(commands.Cog):
         except commands.DisabledCommand:
             await ctx.send(f"{self.emote} Sorry, this command is disabled")
         # CommandInvokeError
-        except commands.CommandInvokeError as d_error:
-            await ctx.send(f"{self.emote} {d_error.original}")
+        # except commands.CommandInvokeError as d_error:
+        #     await ctx.send(f"{self.emote} {d_error.original}")
         # CommandOnCooldown
         except commands.CommandOnCooldown as d_error:
             await ctx.send(f"{self.emote} Command is on cooldown, wait `{str(d_error).split(' ')[7]}` !")
