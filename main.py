@@ -8,13 +8,14 @@ import requests
 from discord.ext import commands
 import pathlib
 from utils import IDs
+from utils.help import CustomHelp
 
 logger = logging.getLogger(__name__)
 
 class CustomBot(commands.Bot):
 
     def __init__(self, *args, **kwargs):
-        super().__init__(intents=discord.Intents.all(), command_prefix="!", *args, **kwargs)
+        super().__init__(intents=discord.Intents.all(), command_prefix="!", help_command=CustomHelp(), *args, **kwargs)
 
     async def setup_hook(self):
 

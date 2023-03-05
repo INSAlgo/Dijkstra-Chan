@@ -1,7 +1,6 @@
 import pathlib
 import discord
 from discord.ext import commands
-from bot import bot
 from cogs import game
 
 class AvailableGame(commands.Converter):
