@@ -9,7 +9,7 @@ def in_channel(*channel_ids: int, force_guild=True) :
         if ctx.channel.id in channel_ids or ctx.channel.id == IDs.DEBUG:
             return True
         
-        channel_list = [ctx.bot.get_channel(channel_id).mention for channel_id in channel_ids]
+        channel_list = [f"<#{channel_id}>" for channel_id in channel_ids]
         if not force_guild :
             channel_list.append("or in DM :smirk:")
         raise commands.CheckFailure(f"This command can be used in thoses channels: {' '.join(channel_list)}")

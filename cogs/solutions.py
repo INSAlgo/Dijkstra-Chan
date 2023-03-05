@@ -14,6 +14,7 @@ class Solutions(cmds.Cog) :
         self.gh_client: GithubClient = bot.get_cog("GithubClient")
     
     @cmds.group(pass_context=True)
+    @in_channel(COMMANDS, force_guild=False)
     async def sol(self, ctx: cmds.Context) :
         if ctx.invoked_subcommand is None:
             await ctx.send("Invalid subcommand passed, maybe you mean `!sol get`?")
@@ -23,13 +24,13 @@ class Solutions(cmds.Cog) :
         await ctx.send("TODO :)")
 
     @sol.command(rest_is_raw=True)
-    @in_channel(COMMANDS, False)
     async def get(self, ctx: cmds.Context, site: str = "", *, file: str) :
         _, raw_message = self.gh_client.search_correction(site, file.strip())
         await ctx.channel.send(raw_message)
         return
     
     @sol.command()
+    @in_channel(DEBUG)
     @cmds.has_role(ADMIN)
     async def tree(self,  ctx: cmds.Context) :
         _, msg = self.gh_client.reload_repo_tree()

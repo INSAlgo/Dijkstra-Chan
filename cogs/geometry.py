@@ -39,7 +39,7 @@ class Geometry(cmds.Cog) :
         os.remove("temp.png")
     
     @commands.group(pass_context=True)
-    @in_channel(COMMANDS, False)
+    @in_channel(COMMANDS, force_guild=False)
     async def geom(self, ctx: cmds.Context) :
         if ctx.invoked_subcommand is None:
             text = ', '.join(self.commands.keys())
