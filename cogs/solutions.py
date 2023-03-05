@@ -4,13 +4,14 @@ from utils.IDs import *
 from utils.checks import *
 
 from utils.token_error import TokenError
-from cogs.Github_Client import GH_ClientCog
+from cogs.github import GithubClient
+from main import CustomBot
 
-# Solutions Cog :
 
-class SolutionsCog(cmds.Cog) :
-    def __init__(self, bot: cmds.Bot) -> None:
-        self.gh_client: GH_ClientCog = bot.get_cog("GH_ClientCog")
+class Solutions(cmds.Cog) :
+    def __init__(self, bot: CustomBot) -> None:
+        self.bot = bot
+        self.gh_client: GithubClient = bot.get_cog("GithubClient")
     
     @cmds.group(pass_context=True)
     async def sol(self, ctx: cmds.Context) :
@@ -49,3 +50,7 @@ class SolutionsCog(cmds.Cog) :
             await ctx.send("Invalid token !")
         except Exception as e :
             await ctx.send(f"Error : {e}")
+
+
+async def setup(bot):
+	await bot.add_cog(Solutions(bot))

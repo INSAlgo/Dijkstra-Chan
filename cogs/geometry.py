@@ -3,6 +3,7 @@ from requests import get
 
 import discord
 import discord.ext.commands as cmds
+from main import CustomBot
 
 from utils.IDs import *
 from utils.checks import *
@@ -11,10 +12,11 @@ from utils.embeding import embed_help
 from utils.geom.check import check
 from utils.geom.read import draw_submission
 
-# Geometry Cog :
 
-class GeometryCog(cmds.Cog) :
-    def __init__(self) -> None :
+class Geometry(cmds.Cog) :
+
+    def __init__(self, bot: CustomBot) -> None :
+        self.bot = bot
         self.commands = {"CH": {"points", "polygon"}}
     
     @staticmethod
@@ -64,3 +66,6 @@ class GeometryCog(cmds.Cog) :
     @CH.command()
     async def polygon(self, ctx: cmds.Context) :
         await self.process_submission("polygon", ctx)
+
+async def setup(bot):
+    await bot.add_cog(Geometry(bot))

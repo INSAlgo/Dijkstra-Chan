@@ -19,8 +19,9 @@ jobs:
           pip install -r requirements.txt
       - name: Pull and switch to main branch
         run: |
-          git pull --recurse-submodules origin main
-          git checkout main
+          git pull
+          git submodule update --remote
+          git checkout ${{ github.ref_name }}
       - name: Shutdown bot
         continue-on-error: true
         run: killall python

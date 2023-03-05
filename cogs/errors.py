@@ -1,11 +1,13 @@
-import discord
 from discord.ext import commands
+from main import CustomBot
+import logging
+logger = logging.getLogger(__name__)
 
 class ErrorHandler(commands.Cog):
 
     emote = ":triangular_flag_on_post:"
 
-    def __init__(self, bot):
+    def __init__(self, bot: CustomBot):
         self.bot = bot
 
     @commands.Cog.listener()
@@ -15,18 +17,19 @@ class ErrorHandler(commands.Cog):
         except commands.ConversionError as d_error:
             await ctx.send(f"{self.emote} {d_error}")
         except commands.MissingRequiredArgument as d_error:
+            assert ctx.command
             await ctx.send(f"{self.emote} Missing argument: `{ctx.clean_prefix}{ctx.command} <{'> <'.join(ctx.command.clean_params)}>`")
         except commands.MissingRequiredAttachment as d_error:
             await ctx.send(f"{self.emote} Missing required attachement")
         # UserInputError -> BadArgument
         except commands.MemberNotFound or commands.UserNotFound as d_error:
-            await ctx.send(f"{self.emote} User `{str(d_error).split(' ')[1]}` not found")
+            await ctx.send(f"{self.emote} User `{str(d_error).split(' ')[1][1:-1]}` not found")
         # UserInputError -> BadUnionArgument | BadLiteralArgument | ArgumentParsingError
         except commands.BadArgument or commands.BadUnionArgument or commands.BadLiteralArgument or commands.ArgumentParsingError as d_error:
             await ctx.send(f"{self.emote} {d_error}")
         # CommandNotFound
         except commands.CommandNotFound as d_error:
-            await ctx.send(f"{self.emote} Command `{str(d_error).split(' ')[1]}` not found")
+            await ctx.send(f"{self.emote} Command `{str(d_error).split(' ')[1][1:-1]}` not found")
         # CheckFailure
         except commands.PrivateMessageOnly:
             await ctx.send(f"{self.emote} This command can only be used in DM")
@@ -43,12 +46,14 @@ class ErrorHandler(commands.Cog):
             await ctx.send(f"{self.emote} {d_error}")
         except commands.NSFWChannelRequired:
             await ctx.send(f"{self.emote} This command require an NSFW channel")
+        except commands.CheckFailure as d_error:
+            await ctx.send(f"{self.emote} {d_error}")
         # DisabledCommand
         except commands.DisabledCommand:
             await ctx.send(f"{self.emote} Sorry, this command is disabled")
         # CommandInvokeError
-        except commands.CommandInvokeError as d_error:
-            await ctx.send(f"{self.emote} {d_error.original}")
+        # except commands.CommandInvokeError as d_error:
+        #     await ctx.send(f"{self.emote} {d_error.original}")
         # CommandOnCooldown
         except commands.CommandOnCooldown as d_error:
             await ctx.send(f"{self.emote} Command is on cooldown, wait `{str(d_error).split(' ')[7]}` !")
@@ -57,5 +62,5 @@ class ErrorHandler(commands.Cog):
             await ctx.send(f"{self.emote} Max concurrency reached. Maximum number of concurrent invokers allowed: `{d_error.number}`, per `{d_error.per}`.")
 
 
-def setup(bot):
-    bot.add_cog(ErrorHandler(bot))
+async def setup(bot):
+    await bot.add_cog(ErrorHandler(bot))
