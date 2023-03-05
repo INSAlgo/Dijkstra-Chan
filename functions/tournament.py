@@ -10,7 +10,6 @@ import asyncio
 import random
 import time
 import discord
-from bot import bot
 from utils.game import AvailableGame
 
 MAX_PARALLEL_PROCESSES = 10
