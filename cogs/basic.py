@@ -21,7 +21,9 @@ class Basic(commands.Cog):
 
     @commands.command()
     async def ping(self, ctx: commands.Context):
-        """Show latency in milliseconds"""
+        """
+        Show latency in milliseconds
+        """
         before = time.monotonic()
         message = await ctx.send(":ping_pong: Pong")
         ping = (time.monotonic() - before) * 1000

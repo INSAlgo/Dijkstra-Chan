@@ -55,6 +55,9 @@ class Silly(commands.Cog):
     @commands.command()
     @checks.in_channel(IDs.COMMANDS)
     async def factorial(self, ctx: commands.Context, nb: int):
+        """
+        Compute factorial of a number in a very efficient way
+        """
         await self.__factorial(ctx.message, nb)
         
 
