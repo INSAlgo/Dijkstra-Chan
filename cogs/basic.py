@@ -4,7 +4,7 @@ from discord.ext.commands import Context, command
 import time
 
 from main import CustomBot
-from utils import IDs
+from utils import ids
 
 
 class Basic(commands.Cog):
@@ -17,7 +17,7 @@ class Basic(commands.Cog):
         """
         Automatically gives member role to newcommers
         """
-        await member.add_roles(self.bot.get_role(IDs.MEMBRE))
+        await member.add_roles(self.bot.get_role(ids.MEMBRE))
 
     @commands.command()
     async def ping(self, ctx: commands.Context):

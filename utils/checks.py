@@ -1,12 +1,12 @@
 import discord.ext.commands as commands
 
-from utils import IDs
+from utils import ids
 
 def in_channel(*channel_ids: int, force_guild=True) :
     async def predicate(ctx: commands.Context) :
         if not force_guild and ctx.guild is None :
             return True
-        if ctx.channel.id in channel_ids or ctx.channel.id == IDs.DEBUG:
+        if ctx.channel.id in channel_ids or ctx.channel.id == ids.DEBUG:
             return True
         
         channel_list = [f"<#{channel_id}>" for channel_id in channel_ids]

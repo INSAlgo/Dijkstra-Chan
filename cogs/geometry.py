@@ -5,7 +5,7 @@ import discord
 import discord.ext.commands as cmds
 from main import CustomBot
 
-from utils.IDs import *
+from utils.ids import *
 from utils.checks import *
 
 from utils.embeding import embed_help

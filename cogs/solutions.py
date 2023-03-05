@@ -1,6 +1,6 @@
 import discord.ext.commands as cmds
 
-from utils.IDs import *
+from utils.ids import *
 from utils.checks import *
 
 from utils.token_error import TokenError

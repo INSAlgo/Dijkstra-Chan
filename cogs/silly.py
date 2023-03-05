@@ -6,7 +6,7 @@ from utils import checks
 import asyncio
 
 from main import CustomBot
-from utils import IDs
+from utils import ids
 
 fact = 1
 
@@ -53,7 +53,7 @@ class Silly(commands.Cog, name="Silly commands"):
             await self.__di_cri(message)
 
     @commands.command()
-    @checks.in_channel(IDs.COMMANDS)
+    @checks.in_channel(ids.COMMANDS)
     async def factorial(self, ctx: commands.Context, nb: int):
         """
         Compute the factorial of a number in a very efficient way

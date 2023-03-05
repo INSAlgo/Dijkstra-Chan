@@ -6,7 +6,7 @@ import re
 import discord
 from discord.ext.commands import Context
 from discord.ext import commands
-from utils import IDs
+from utils import ids
 
 from utils import embeding, checks
 from utils.game import AvailableGame, Ifunc, Ofunc
@@ -34,7 +34,7 @@ class Game(commands.Cog, name="Games"):
             raise commands.BadArgument("Invalid subcommand")
 
     @game.command()
-    @checks.in_channel(IDs.GAMES)
+    @checks.in_channel(ids.GAMES)
     async def participants(self, ctx: Context, game: AvailableGame):
         """Get the list of players who have submitted an AI to the game"""
 
@@ -116,7 +116,7 @@ class Game(commands.Cog, name="Games"):
 
 
     @game.command()
-    @commands.has_role(IDs.BUREAU)
+    @commands.has_role(ids.BUREAU)
     async def tournament(self, ctx: Context, game: AvailableGame, *args: str):
         """Start a tournament between every player that have submitted an AI"""
 
@@ -165,7 +165,7 @@ class Game(commands.Cog, name="Games"):
         await ctx.send("AI submitted ! <:feelsgood:737960024390762568>")
 
     @game.command(hidden=True)
-    @commands.has_role(IDs.BUREAU)
+    @commands.has_role(ids.BUREAU)
     async def invite(self, ctx: Context, game: AvailableGame):
         """Invite missing players of a tournament on the server"""
 

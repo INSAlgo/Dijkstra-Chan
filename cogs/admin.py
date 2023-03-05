@@ -6,7 +6,7 @@ from cogs.github import GithubClient
 from utils import embeding
 
 from main import CustomBot
-from utils import IDs
+from utils import ids
 
 
 class Admin(commands.Cog):
@@ -15,7 +15,7 @@ class Admin(commands.Cog):
         self.bot = bot
 
     @commands.command(hidden=True)
-    @commands.has_role(IDs.BUREAU)
+    @commands.has_role(ids.BUREAU)
     async def course(self, ctx: commands.Context, repo: str, course: str):
         """ Command to get and embed README of a repo """
 
@@ -26,10 +26,10 @@ class Admin(commands.Cog):
         if err_code == 0:
             emb = embeding.embed(res).set_thumbnail(url="attachment://INSAlgo.png")
             logo = discord.File("fixed_data/INSAlgo.png", filename="INSAlgo.png")
-            if ctx.channel.id == IDs.DEBUG:
+            if ctx.channel.id == ids.DEBUG:
                 channel = ctx.channel
             else:
-                channel = self.bot.get_channel(IDs.RESSOURCES)
+                channel = self.bot.get_channel(ids.RESSOURCES)
                 assert channel
             await channel.send(file=logo, embed=emb)
         else :

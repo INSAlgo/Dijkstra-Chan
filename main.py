@@ -7,7 +7,7 @@ import requests
 
 from discord.ext import commands
 import pathlib
-from utils import IDs
+from utils import ids
 from utils.help import CustomHelp
 
 logger = logging.getLogger(__name__)

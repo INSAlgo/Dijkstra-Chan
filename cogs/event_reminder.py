@@ -7,7 +7,7 @@ import discord.ext.commands as cmds
 from discord.ext.tasks import loop
 from main import CustomBot
 
-from utils.IDs import *
+from utils.ids import *
 from utils.checks import *
 
 from cogs.codeforces import CodeforcesClient
