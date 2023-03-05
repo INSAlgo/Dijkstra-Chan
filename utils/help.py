@@ -13,7 +13,7 @@ class CustomHelp(commands.HelpCommand):
         desc += f"The following is a list of the commands, that you can use with the prefix `{self.context.prefix}`\n"
         desc += f"Get more help for an individual command with `{self.context.prefix}help <command>`."
         embed = discord.Embed(color=discord.Color.dark_grey(),
-                              title = "Dijkstra-Chan's help",
+                              title = "👋 Dijkstra-Chan's help",
                               description=desc)
         
         for cog, cmds in mapping.items():
@@ -31,5 +31,21 @@ class CustomHelp(commands.HelpCommand):
                             value = "\n".join(desc),
                             inline=False)
 
+        await self.context.send(embed=embed)
 
-        await self.context.send(embed = embed)
+    async def send_command_help(self, command: Command[Any, ..., Any], /) -> None:
+
+        desc = []
+        params = (f"<{param}>" for param in command.clean_params.keys())
+        desc.append(f"`{self.context.prefix}{command.qualified_name} {' '.join(params)}`")
+
+        embed = discord.Embed(color=discord.Color.dark_grey(),
+                              title = "Command help",
+                              description="\n".join(desc))
+
+        if command.help:
+            embed.add_field(name="Description",
+                            value=f"{command.help}")
+
+        await self.context.send(embed=embed)
+
