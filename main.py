@@ -1,207 +1,55 @@
-#=================================================================================================================================================================
-# IMPORTS
-import os
 import asyncio
-import re
-from requests import post
-
+import logging
+import logging.handlers
+import os
 import discord
-from discord.ext.commands import Context
-import discord.ext.commands
-
-from utils.IDs import *
-
-from bot import bot
-
-from utils.embeding import embed_help, embed
 
 
-#=================================================================================================================================================================
-# GLOBALS
+from discord.ext import commands
+import pathlib
 
-File = open("fixed_data/help.txt")
-help_txt = File.read()
-File.close()
-File = open("fixed_data/admin_help.txt")
-admin_help_txt = File.read()
-File.close()
+from discord.ext.commands.context import is_cog
+logger = logging.getLogger(__name__)
 
-fact = 1
+COG_DIR = pathlib.Path("cogs")
 
+class CustomBot(commands.Bot):
 
-#=================================================================================================================================================================
-# FUNCTION TO SEND HELP
+    def __init__(self, *args, **kwargs):
+        super().__init__(intents=discord.Intents.all(), command_prefix="!", *args, **kwargs)
 
-async def help_func(channel: discord.TextChannel) :
-        if channel == bot.channels["debug"] :
-            await bot.channels["debug"].send(embed=embed_help("admin_help.txt"))
-        else :
-            await channel.send(embed=embed_help("help.txt"))
+    async def setup_hook(self):
 
+        for extension in COG_DIR.iterdir():
+            if extension.is_file():
+                await self.load_extension(f"{COG_DIR}.{extension.stem}")
 
-#=================================================================================================================================================================
-# NEW ON_READY
+    async def on_ready(self):
 
-@bot.client.event
-async def on_ready() :
-    evt_cog: EventRemindCog = bot.client.get_cog("EventRemindCog")
-    evt_cog.event_role = bot.client.get_guild(INSALGO).get_role(EVENT_PING)
-    evt_cog.event_channel = bot.client.get_channel(EVENTS)
-    evt_cog.daily_update.start()
-		
-	# Sync application commands
-    await bot.client.get_channel(DEBUG).send("Up!")
+        self.debug_channel = self.get_channel(1048584804301537310)
 
+        await self.debug_channel.send("Up")
+        logger.info("bot up")
 
-#=================================================================================================================================================================
-# ON_MEMBER_JOIN
+async def main():
 
-@bot.client.event
-async def on_member_join(member: discord.Member) :
-    """
-    Automatically gives member role to newcommers
-    """
-    await member.add_roles(bot.roles["member"])
+    # Terminal logger
+    logging.basicConfig(format="[%(levelname)s] %(name)s: %(message)s", level=logging.INFO)
+
+    # File logger
+    handler = logging.handlers.RotatingFileHandler(
+        filename="bot.log",
+        maxBytes=1 * 1024 * 1024,  # 1 MiB
+        backupCount=2,  # Rotate through 2 files
+    )
+    date_format = '%Y-%m-%d %H:%M:%S'
+    formatter = logging.Formatter('[{asctime}] [{levelname:<8}] {name}: {message}', date_format, style='{')
+    handler.setFormatter(formatter)
+    logging.getLogger().addHandler(handler)
+
+    async with CustomBot() as bot:
+        await bot.start(os.getenv('TOKEN', ''))
 
 
-#=================================================================================================================================================================
-# ON_REACTION_ADD
-
-@bot.client.event
-async def on_reaction_add(reaction: discord.Reaction, user: discord.User) :
-    # This might be usefull
-    pass
-
-#=================================================================================================================================================================
-# ON_MESSAGE
-
-@bot.client.event
-async def on_message(message: discord.Message) :
-    """
-    Executes commands depending on message received (without command prefix)
-    """
-    global fact
-
-    # Silly recursive function
-    if re.fullmatch("^factorial [0-9]+$", message.content) is not None :
-        if message.channel not in {bot.channels["debug"], bot.channels["command"]} :
-            return
-
-        nb = int(message.content.split(' ')[-1])
-        if nb < 0 :
-            await message.channel.send("number cannot be negative !")
-        elif nb > 20 :
-            await message.channel.send(f"factorial {nb-1}\njust joking, I'm not doing that")
-        elif nb <= 1 :
-            await message.channel.send(f"result : {fact}")
-            fact = 1
-        else :
-            fact *= nb
-            await asyncio.sleep(1)
-            await message.channel.send(f"factorial {nb-1}")
-        return
-
-    # Avoid answering itself
-    if message.author == bot.client.user :
-        return
-
-    # Help message :
-    if message.content.lower() == "help me dijkstra-chan!" :
-        await help_func(message.channel)
-        return
-    
-    # (admin) Command to get README of a repo :
-    elif message.content.startswith("embed course ") :
-        if bot.roles["admin"] not in message.author.roles :
-            return
-        
-        repo = message.content.split(' ')[2]
-        course = ' '.join(message.content.split(' ')[3:])
-        err_code, res = bot.client.get_cog("GH_ClientCog").get_readme(repo, course)
-
-        if err_code == 0 :
-            emb = embed(res).set_thumbnail(url="attachment://INSAlgo.png")
-            logo = discord.File("fixed_data/INSAlgo.png", filename="INSAlgo.png")
-            await bot.channels["ressources"].send(file=logo, embed=emb)
-        else :
-            await bot.channels["debug"].send(res)
-
-    # Di-/Cri- words silly answer
-    elif "di" in message.content or "cri" in message.content :
-        words = message.content.split()
-        for i in range(len(words)) :
-            if words[i].lower().startswith("di") and len(words[i]) > 2 :
-                await message.channel.send(words[i][2:])
-                break
-            
-            if words[i].lower().startswith("cri") and len(words[i]) > 3 :
-                await message.channel.send(words[i][3:].upper())
-                break
-    
-    await bot.client.process_commands(message)
-
-
-#=================================================================================================================================================================
-# HELP COMMAND
-
-@bot.client.command()
-async def help(ctx: Context) :
-    await help_func(ctx.channel)
-
-
-#=================================================================================================================================================================
-# SHUTDOWN COMMAND
-
-@bot.client.command()
-async def shutdown(ctx: Context) :
-    if ctx.channel != bot.channels["debug"] or bot.roles["admin"] not in ctx.author.roles :
-        return
-    
-    await bot.channels["debug"].send("shutting down...")
-    await bot.client.close()
-
-
-#=================================================================================================================================================================
-# MAIN
-
-from cogs.Github_Client import GH_ClientCog
-from cogs.Solutions import SolutionsCog
-
-from cogs.Geometry import GeometryCog
-
-from cogs.Codeforces_Client import CF_ClientCog
-from cogs.EventReminders import EventRemindCog
-from cogs.game import Game
-from cogs.errors import ErrorHandler
-
-
-if __name__ == "__main__" :
-
-    # Grabing tokens from environment
-    openai_token = os.environ["OPENAI_TOKEN"]
-
-    # Bot commands setup
-    # asyncio.run(bot.client.load_extension("extensions.game.command"))
-    asyncio.run(bot.client.add_cog(GH_ClientCog()))
-    asyncio.run(bot.client.add_cog(SolutionsCog(bot.client)))
-
-    asyncio.run(bot.client.add_cog(GeometryCog()))
-
-    asyncio.run(bot.client.add_cog(CF_ClientCog()))
-    evt_cog = EventRemindCog(bot.client)
-    asyncio.run(bot.client.add_cog(evt_cog))
-    asyncio.run(bot.client.add_cog(Game(bot.client)))
-    asyncio.run(bot.client.add_cog(ErrorHandler(bot.client)))
-
-    bot.run()
-
-    # Saving stuff after closing
-    print("Saving events, DO NOT CLOSE APP!")
-    evt_cog.save_events()
-
-    # Sending a message to confirm shutdown :
-    headers = {'Authorization': 'Bot %s' % bot.token }
-    post(f"https://discord.com/api/v6/channels/1048584804301537310/messages", headers=headers, json={"content": "Down"})
-
-
-
+if __name__ == "__main__":
+    asyncio.run(main())

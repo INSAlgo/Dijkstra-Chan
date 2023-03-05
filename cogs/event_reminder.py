@@ -5,19 +5,22 @@ import asyncio, json, os
 import discord
 import discord.ext.commands as cmds
 from discord.ext.tasks import loop
+from main import CustomBot
 
 from utils.IDs import *
 from utils.checks import *
 
-from cogs.Codeforces_Client import CF_ClientCog
+from cogs.codeforces import CodeforcesClient
 
 from utils.evt.event_class import Event
 from utils.evt.reminder_class import Reminder, delays
 
 # Events reminders Cog :
 
-class EventRemindCog(cmds.Cog) :
-    def __init__(self, bot: cmds.Bot) -> None:
+class EventReminder(cmds.Cog) :
+
+    def __init__(self, bot: CustomBot) -> None:
+
         self.bot = bot
         self.event_role: discord.Role = None
         self.event_channel: discord.TextChannel = None
@@ -26,7 +29,7 @@ class EventRemindCog(cmds.Cog) :
         self.reminders: PQ[Reminder] = PQ()
         self.cur_rem: asyncio.Task[None] | None = None
 
-        self.cf_client: CF_ClientCog = bot.get_cog("CF_ClientCog")
+        self.cf_client: CodeforcesClient = bot.get_cog("CodeforcesClient")
 
     # Methods about events :
 
@@ -202,3 +205,6 @@ class EventRemindCog(cmds.Cog) :
             self.save_events()
 
             self.launch_reminder()
+
+async def setup(bot):
+    await bot.add_cog(EventReminder(bot))

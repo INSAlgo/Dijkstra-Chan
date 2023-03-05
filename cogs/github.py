@@ -4,31 +4,39 @@ from datetime import datetime
 from random import choice
 
 from discord.ext.commands import Cog
+from main import CustomBot
 
 from utils.token_error import TokenError
 from utils.client_template import Client
+import logging
+logger = logging.getLogger(__name__)
 
 languages = {"py": "python", "cpp": "C++", "c": "C", "jar": "java", "js": "javascript"}
 
-# GitHub Client Cog
 
-class GH_ClientCog(Client, Cog) :
-    def __init__(self) :
+class GithubClient(Client, Cog) :
+    def __init__(self, bot: CustomBot) :
         Client.__init__(self, "api.github.com/")
+
+        logger.info("initializing github client")
+        self.bot = bot
 
         self.files: dict[str, list[str]] = {}
 
         try :
             self.set_token(os.environ["GH_TOKEN"])
         except KeyError :
-            print("GH_TOKEN not in environment variables")
+            logger.error("GH_TOKEN not in environment variables")
             return
         except Exception as e :
-            print(e)
+            logger.error(e)
 
         err_code, msg = self.reload_repo_tree()
+
         if err_code :
-            print(msg)
+            logger.error(msg)
+
+        logger.info("github client initialized")
     
     def make_header(self, token: str) :
         self.headers = {
@@ -118,13 +126,13 @@ class GH_ClientCog(Client, Cog) :
             if self.lr_status_code() == 403 :
                 errors.append(self.get_api_rate()[1])
                 continue
-            
+
             if self.lr_status_code() != 200 :
                 errors.append(f"status code not OK for site {site} : {self.lr_status_code()}")
                 continue
-            
+
             self.files[site] = [sol["name"] for sol in resp]
-        
+
         err_code = 0
         msg = "reloaded solution repo structure cache"
         if errors != [] :
@@ -200,3 +208,6 @@ class GH_ClientCog(Client, Cog) :
         
         except Exception as err:
             return 5, f"could not decode file : {err}"
+
+async def setup(bot):
+    await bot.add_cog(GithubClient(bot))

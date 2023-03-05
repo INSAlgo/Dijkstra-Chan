@@ -13,6 +13,7 @@ from utils.game import AvailableGame, Ifunc, Ofunc
 from functions import tournament
 
 from submodules.p4 import puissance4
+from main import CustomBot
 
 
 class Game(commands.Cog):
@@ -20,8 +21,7 @@ class Game(commands.Cog):
     games = dict()
     games["p4"] = AvailableGame("Connect 4", "p4", puissance4)
 
-    def __init__(self, bot: commands.Bot):
-        super().__init__()
+    def __init__(self, bot: CustomBot):
         self.bot = bot
 
     @commands.group()
@@ -179,6 +179,5 @@ class Game(commands.Cog):
             await ctx.send(f"No missing participants on the server :thumbsup:")
 
 
-async def setup(bot: commands.Bot):
+async def setup(bot):
 	await bot.add_cog(Game(bot))
-

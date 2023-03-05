@@ -1,11 +1,13 @@
-import discord
 from discord.ext import commands
+from main import CustomBot
+import logging
+logger = logging.getLogger(__name__)
 
 class ErrorHandler(commands.Cog):
 
     emote = ":triangular_flag_on_post:"
 
-    def __init__(self, bot):
+    def __init__(self, bot: CustomBot):
         self.bot = bot
 
     @commands.Cog.listener()
@@ -15,6 +17,7 @@ class ErrorHandler(commands.Cog):
         except commands.ConversionError as d_error:
             await ctx.send(f"{self.emote} {d_error}")
         except commands.MissingRequiredArgument as d_error:
+            assert ctx.command
             await ctx.send(f"{self.emote} Missing argument: `{ctx.clean_prefix}{ctx.command} <{'> <'.join(ctx.command.clean_params)}>`")
         except commands.MissingRequiredAttachment as d_error:
             await ctx.send(f"{self.emote} Missing required attachement")
@@ -59,5 +62,5 @@ class ErrorHandler(commands.Cog):
             await ctx.send(f"{self.emote} Max concurrency reached. Maximum number of concurrent invokers allowed: `{d_error.number}`, per `{d_error.per}`.")
 
 
-def setup(bot):
-    bot.add_cog(ErrorHandler(bot))
+async def setup(bot):
+    await bot.add_cog(ErrorHandler(bot))
