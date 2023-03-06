@@ -1,5 +1,6 @@
 from discord.ext import commands
 from main import CustomBot
+from utils import ids
 import logging
 logger = logging.getLogger(__name__)
 
@@ -52,8 +53,9 @@ class ErrorHandler(commands.Cog):
         except commands.DisabledCommand:
             await ctx.send(f"{self.emote} Sorry, this command is disabled")
         # CommandInvokeError
-        # except commands.CommandInvokeError as d_error:
-        #     await ctx.send(f"{self.emote} {d_error.original}")
+        except commands.CommandInvokeError as d_error:
+            await ctx.send(f"{self.emote} Error during command execution <@&{ids.ADMIN}>")
+            raise d_error
         # CommandOnCooldown
         except commands.CommandOnCooldown as d_error:
             await ctx.send(f"{self.emote} Command is on cooldown, wait `{str(d_error).split(' ')[7]}` !")

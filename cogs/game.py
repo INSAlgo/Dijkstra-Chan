@@ -29,13 +29,13 @@ class Game(commands.Cog, name="Games"):
 
     @commands.group()
     async def game(self, ctx: Context):
-        """Commands to play games, with users or their handcrafted AI"""
+        """Commands to play games with users or their handcrafted AI, and participate in tournaments"""
         if ctx.invoked_subcommand is None:
             raise commands.BadArgument("Invalid subcommand")
 
     @game.command()
     async def list(self, ctx: Context):
-        """List available games"""
+        """List available games, with their prefixes and rules"""
 
         embed = discord.Embed(title=f"INSAlgo tournament games")
         for game in self.games.values():
@@ -46,7 +46,7 @@ class Game(commands.Cog, name="Games"):
 
     @game.command()
     async def participants(self, ctx: Context, game: AvailableGame):
-        """Get the list of players who have submitted an AI to the game"""
+        """Get the list of users who submitted an AI to the game"""
 
         embed = discord.Embed(title=f"{game.name} tournament participants")
         embed.description = '\n'.join(f"<@{file.stem}>" for file in game.ai_dir.iterdir())
@@ -55,7 +55,13 @@ class Game(commands.Cog, name="Games"):
     @game.command()
     @checks.in_channel(ids.GAMES)
     async def play(self, ctx: Context, game: AvailableGame, *args: str):
-        """Play a game between AI or users if available"""
+        """
+        Play a game between AI or users if available
+        Specify the list of players in the <args> by mentionning them. \
+        If you want a player to play on manually on discord instead of using their AI, \
+        add the flag -d (or --discord) before their name.
+        You can also append any other flag that the game supports (see the game page).
+        """
 
         game_args = []
         players = []
@@ -87,12 +93,10 @@ class Game(commands.Cog, name="Games"):
                                 await ctx.send(f"{user.mention} has not submitted any AI :cry:")
                         is_human = False
                 else:
-                    await ctx.send(f"Invalid argument {arg} :face_with_raised_eyebrow:")
-                    return
+                    raise commands.BadArgument(f"Invalid argument {arg} :face_with_raised_eyebrow:")
 
         if len(players) < 2:
-            await ctx.send("Not enough players to start a game :grimacing:")
-            return
+            raise commands.BadArgument("Not enough players to start a game :grimacing:")
 
         for user in challenged_users:
             message = await ctx.send(f"{', '.join(user.mention for user in challenged_users)}" +
@@ -126,10 +130,13 @@ class Game(commands.Cog, name="Games"):
         game.log_file.unlink()
 
 
-    @game.command()
+    @game.command(hidden=True)
     @commands.has_role(ids.BUREAU)
     async def tournament(self, ctx: Context, game: AvailableGame, *args: str):
-        """Start a tournament between every player that have submitted an AI"""
+        """
+        Start a tournament between every player that have submitted an AI
+        You can also append flags supported by the game.
+        """
 
         scoreboard = await tournament.tournament.main(ctx, game, args)
         game.log_file.touch()
@@ -155,7 +162,15 @@ class Game(commands.Cog, name="Games"):
     async def submit(self, ctx: Context, game: AvailableGame, attachment: discord.Attachment):
         """
         Submit an AI to a game
-        Your program must be sent as an attachment
+        This command must be used in private message, with your program as an attachment.
+        Authorized languages are :
+         - python (.py)
+         - javascript (.js)
+         - C++ (.cpp)
+         - C (.c)
+         - Java (.java)
+         - C# (.cs)
+         - Rust (.rs)
         """
 
         new_ext = attachment.filename.split(".")[-1]
