@@ -29,13 +29,14 @@ class AvailableGame(commands.Converter):
 
 class Ifunc:
 
-    def __init__(self, channel):
+    def __init__(self, channel, bot):
+        self.bot = bot
         self.channel: discord.TextChannel = channel
 
     async def __call__(self, name: str):
         def check(msg: discord.Message):
             return msg.channel == self.channel and msg.author.mention == name
-        message: discord.Message = await bot.client.wait_for("message", check=check)
+        message: discord.Message = await self.bot.wait_for("message", check=check)
         return message.content
 
 class Ofunc:

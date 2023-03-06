@@ -2,6 +2,7 @@ import asyncio
 import contextlib
 import requests
 import re
+import argparse
 
 import discord
 from discord.ext.commands import Context
@@ -63,9 +64,14 @@ class Game(commands.Cog, name="Games"):
         Play a game between AI or users if available
         Specify the list of players in the <args> by mentionning them. \
         If you want a player to play on manually on discord instead of using their AI, \
-        add the flag -d (or --discord) before their name.
+        add the flag -d (or --discord) before their name. \
+        You can play in private channel by adding the 
         You can also append any other flag that the game supports (see the game page).
         """
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--private", action="store_true")
+        parsed_args, remaining_args = parser.parse_known_args(args)
+
         game_args = []
         players = []
         pattern = re.compile(r"^\<\@[0-9]{18}\>$")
@@ -73,64 +79,79 @@ class Game(commands.Cog, name="Games"):
         is_human = False
         challenged_users: set[discord.User] = set()
 
-        for arg in args:
+        for arg in remaining_args :
             if arg == "-d" or arg == "--discord":
                 is_human = True
                 continue
-            if not arg.startswith("-"):
-                if pattern.match(arg):
-                    user = self.bot.get_user(int(arg[2:-1]))
-                    if user:
-                        if is_human:
-                            players.append(arg)
+            if pattern.match(arg):
+                user = self.bot.get_user(int(arg[2:-1]))
+                if user:
+                    if is_human:
+                        players.append(arg)
+                        if user != ctx.author:
+                            challenged_users.add(user)
+                        ai_only = False
+                    else:
+                        for ai_file in game.ai_dir.glob(f"{user.id}.*"):
+                            players.append(str(ai_file))
                             if user != ctx.author:
                                 challenged_users.add(user)
-                            ai_only = False
+                            break
                         else:
-                            for ai_file in game.ai_dir.glob(f"{user.id}.*"):
-                                players.append(str(ai_file))
-                                if user != ctx.author:
-                                    challenged_users.add(user)
-                                break
-                            else:
-                                await ctx.send(f"{user.mention} has not submitted any AI :cry:")
-                        is_human = False
-                else:
-                    raise commands.BadArgument(f"Invalid argument {arg} :face_with_raised_eyebrow:")
+                            await ctx.send(f"{user.mention} has not submitted any AI :cry:")
+                    is_human = False
+            else:
+                game_args.append(arg)
 
         if len(players) < 2:
             raise commands.BadArgument("Not enough players to start a game :grimacing:")
 
-        for user in challenged_users:
-            message = await ctx.send(f"{', '.join(user.mention for user in challenged_users)}" +
-                                     f" do you accept {ctx.author.mention}'s challenge to a game of {game.name} ?")
-            await message.add_reaction("👍")
+        if parsed_args.private:
+            channel_type = discord.ChannelType.private_thread
+            await ctx.send(f"The game will be played in the private thread :spy:")
+        else:
+            channel_type = discord.ChannelType.public_thread
+        assert isinstance(ctx.channel, discord.TextChannel)
+        thread = await ctx.channel.create_thread(name=f"{game.name} game started by {ctx.author.display_name}",
+                                             type=channel_type)
 
-            def check(reaction: discord.Reaction, user: discord.User):
-                return user in challenged_users and str(reaction.emoji) in ("👍")
+        try:
+            if challenged_users:
+                message = await thread.send(f"{', '.join(user.mention for user in challenged_users)}" +
+                                         f" do you accept {ctx.author.mention}'s challenge to a game of {game.name} ?")
+                await message.add_reaction("👍")
+                for user in challenged_users:
 
-            try:
-                count = 0
-                while count < len(challenged_users):
-                    await self.bot.wait_for("reaction_add", check=check, timeout=3600)
-                    count += 1
-            except asyncio.TimeoutError:
-                return
+                    def check(reaction: discord.Reaction, user: discord.User):
+                        return user in challenged_users and str(reaction.emoji) in ("👍")
 
-        game_args.extend(players)
-        game_args.extend(("--emoji", "--nodebug"))
-        if ai_only:
-            game_args.append("--silent")
+                    try:
+                        count = 0
+                        while count < len(challenged_users):
+                            await self.bot.wait_for("reaction_add", check=check, timeout=60)
+                            count += 1
+                    except asyncio.TimeoutError:
+                        await thread.send("Waited too long for the game to start, giving up")
+                        return 
 
-        ofunc = Ofunc(ctx.channel)
-        ifunc = Ifunc(ctx.channel)
+            game_args.extend(players)
+            game_args.extend(("--emoji", "--nodebug"))
+            if ai_only:
+                game_args.append("--silent")
 
-        with game.log_file.open("w") as file:
-            with contextlib.redirect_stdout(file):
-                await game.module.main(game_args, ifunc, ofunc, discord=True)
+            ofunc = Ofunc(thread)
+            ifunc = Ifunc(thread, self.bot)
 
-        await ctx.send(file=discord.File(game.log_file))
-        game.log_file.unlink()
+            with game.log_file.open("w") as file:
+                with contextlib.redirect_stdout(file):
+                    await game.module.main(game_args, ifunc, ofunc, discord=True)
+
+            await thread.send(file=discord.File(game.log_file))
+            game.log_file.unlink()
+
+        finally:
+            await thread.edit(archived=True, locked=True)
+
 
 
     @game.command(hidden=True)

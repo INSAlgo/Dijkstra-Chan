@@ -25,9 +25,10 @@ class CustomBot(commands.Bot):
 
         cog_dir = pathlib.Path("cogs")
 
-        for extension in cog_dir.iterdir():
-            if extension.is_file():
-                await self.load_extension(f"{cog_dir}.{extension.stem}")
+        # for extension in cog_dir.iterdir():
+        #     if extension.is_file():
+        #         await self.load_extension(f"{cog_dir}.{extension.stem}")
+        await self.load_extension(f"{cog_dir}.game")
 
     async def on_ready(self):
 

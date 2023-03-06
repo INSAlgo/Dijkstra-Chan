@@ -14,7 +14,9 @@ class ErrorHandler(commands.Cog, name="Errors"):
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: commands.CommandError):
-        """Send a message describing the error to discord"""
+        """
+        Send a message describing the error to discord
+        """
         try:
             raise error
         except commands.ConversionError as d_error:
