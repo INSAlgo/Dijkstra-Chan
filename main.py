@@ -31,6 +31,7 @@ class CustomBot(commands.Bot):
                 await self.load_extension(f"{cog_dir}.{extension.stem}")
 
     async def on_ready(self):
+        self.insalgo = self.get_guild(ids.INSALGO)
 
         self.debug_channel = self.get_channel(ids.DEBUG)
         assert isinstance(self.debug_channel, discord.TextChannel)
@@ -57,8 +58,9 @@ async def main():
     async with CustomBot() as bot:
         await bot.start(os.getenv('TOKEN', ''))
 
+    # Sending "Down" message
     headers = {'Authorization': 'Bot %s' % os.getenv('TOKEN', '')}
-    requests.post(f"https://discord.com/api/v6/channels/1048584804301537310/messages", headers=headers, json={"content": "Down"})
+    requests.post(f"https://discord.com/api/v6/channels/{ids.DEBUG}/messages", headers=headers, json={"content": "Down"})
 
 
 if __name__ == "__main__":

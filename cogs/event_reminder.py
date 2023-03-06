@@ -18,6 +18,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 class EventReminder(cmds.Cog, name="Events reminder"):
+    """
+    Commands and internal functions about coding events like contests
+    Operates reminders and some APIs to fetch events
+    """
 
     def __init__(self, bot: CustomBot) -> None:
 
@@ -39,6 +43,14 @@ class EventReminder(cmds.Cog, name="Events reminder"):
     async def on_ready(self):
         self.daily_update.start()
         logger.info("updated events")
+
+        self.event_role = self.bot.insalgo.get_role(ids.EVENT_PING)
+        self.event_channel = self.bot.get_channel(ids.EVENTS)
+
+        brief = f"Toggles the {self.event_role.mention} role"
+        self.toggle.brief = brief
+        help_ = brief + f"This role is automatically pinged when I send a reminder to {self.event_channel.mention}"
+        self.toggle.help = help_
 
 
     # Methods about events :
@@ -125,7 +137,7 @@ class EventReminder(cmds.Cog, name="Events reminder"):
         try :
             await asyncio.sleep(time)
         except asyncio.CancelledError :
-            logger.error("wait reminders cancelled")
+            logger.warning("wait reminders cancelled")
             return
         
         await self.event_channel.send(self.event_role.mention)  # event role mention
@@ -164,12 +176,12 @@ class EventReminder(cmds.Cog, name="Events reminder"):
     @cmds.group(pass_context=True)
     @in_channel(COMMANDS, force_guild=False)
     async def evt(self, ctx: cmds.Context) :
+        """
+        Commands about coding events and reminders
+        Shortcut for `!evt get 3`
+        """
         if ctx.invoked_subcommand is None:
             await self.get(ctx)
-    
-    @evt.command()
-    async def help(self, ctx: cmds.Context) :
-        await ctx.send("TODO :)")
 
     @evt.command()
     async def toggle(self, ctx: cmds.Context) :
@@ -184,6 +196,9 @@ class EventReminder(cmds.Cog, name="Events reminder"):
     
     @evt.command()
     async def get(self, ctx: cmds.Context, N: int = 3) :
+        """
+        Command to get a list of the next N events (N=3 by default)
+        """
         self.remove_passed_events()
         list_events = list(self.events)
         list_events.sort()
@@ -191,9 +206,13 @@ class EventReminder(cmds.Cog, name="Events reminder"):
         for event in list_events[:N] :
             await ctx.channel.send(embed=event.embed())
 
-    @evt.command()
+    @evt.command(hidden=True)
     @cmds.has_role(ADMIN)
     async def update(self, ctx: cmds.Context) :
+        """
+        Fetches events from websites and generates reminders
+        Currently, only CodeForces is polled for rounds
+        """
         self.remove_passed_events()
         N = self.update_events()
         await ctx.channel.send(f"{N} new event(s) found!")
@@ -203,9 +222,22 @@ class EventReminder(cmds.Cog, name="Events reminder"):
             self.generate_queue()
             self.launch_reminder()
 
-    @evt.command()
+    @evt.command(hidden=True)
     @cmds.has_role(ADMIN)
     async def add(self, ctx: cmds.Context) :
+        """
+        Creates a new custom event with its reminders
+        Please format your message as this to avoid errors :
+        ```
+        !evt add
+        {name}
+        {link}
+        {origin/host of the event}
+        {date and time format YYYY/MM/DD HH:MM} 
+        {description (can be 1 to 6 lines)}
+        ```
+        TODO : change parsing to converters (and use discord timestamp)
+        """
         
         event = self.msg_to_event(ctx.message.content)
 

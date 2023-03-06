@@ -46,10 +46,19 @@ class Silly(commands.Cog, name="Silly commands"):
         """
         Parse every message to find if there is a silly thing to answer
         """
+        
+        # Self responding :
+
         if message.author == self.bot.user:
             if re.fullmatch(r"^\!factorial [0-9]+$", message.content) is not None:
                 nb = int(message.content.split(' ')[-1])
                 await self.__factorial(message, nb)
+
+        # To prevent self response
+        if message.author == self.bot.user :
+            return
+
+        # Classic silly things :
 
         if "di" in message.content or "cri" in message.content:
             await self.__di_cri(message)
