@@ -8,7 +8,7 @@ from discord.ext.commands import Context
 from discord.ext import commands
 from utils import ids
 
-from utils import embeding, checks
+from utils import checks
 from utils.game import AvailableGame, Ifunc, Ofunc
 from functions import tournament
 
@@ -29,14 +29,17 @@ class Game(commands.Cog, name="Games"):
 
     @commands.group()
     async def game(self, ctx: Context):
-        """Commands to play games with users or their handcrafted AI, and participate in tournaments"""
+        """
+        Commands to play games with users or their handcrafted AI, and participate in tournaments
+        """
         if ctx.invoked_subcommand is None:
             raise commands.BadArgument("Invalid subcommand")
 
     @game.command()
     async def list(self, ctx: Context):
-        """List available games, with their prefixes and rules"""
-
+        """
+        List available games, with their prefixes and rules
+        """
         embed = discord.Embed(title=f"INSAlgo tournament games")
         for game in self.games.values():
             embed.add_field(name=game.name,
@@ -46,8 +49,9 @@ class Game(commands.Cog, name="Games"):
 
     @game.command()
     async def participants(self, ctx: Context, game: AvailableGame):
-        """Get the list of users who submitted an AI to the game"""
-
+        """
+        Get the list of users who submitted an AI to the game
+        """
         embed = discord.Embed(title=f"{game.name} tournament participants")
         embed.description = '\n'.join(f"<@{file.stem}>" for file in game.ai_dir.iterdir())
         await ctx.send(embed=embed)
@@ -62,7 +66,6 @@ class Game(commands.Cog, name="Games"):
         add the flag -d (or --discord) before their name.
         You can also append any other flag that the game supports (see the game page).
         """
-
         game_args = []
         players = []
         pattern = re.compile(r"^\<\@[0-9]{18}\>$")
@@ -137,7 +140,6 @@ class Game(commands.Cog, name="Games"):
         Start a tournament between every player that have submitted an AI
         You can also append flags supported by the game.
         """
-
         scoreboard = await tournament.tournament.main(ctx, game, args)
         game.log_file.touch()
 
@@ -172,7 +174,6 @@ class Game(commands.Cog, name="Games"):
          - C# (.cs)
          - Rust (.rs)
         """
-
         new_ext = attachment.filename.split(".")[-1]
         name = str(ctx.message.author.id)
         new_submission = game.ai_dir / f"{name}.{new_ext}"
@@ -193,8 +194,9 @@ class Game(commands.Cog, name="Games"):
     @game.command(hidden=True)
     @commands.has_role(ids.BUREAU)
     async def invite(self, ctx: Context, game: AvailableGame):
-        """Invite missing players of a tournament on the server"""
-
+        """
+        Invite missing players of a tournament on the server
+        """
         user_ids = {int(file.stem) for file in game.ai_dir.iterdir()}
         assert ctx.guild
         guild_users = {user.id for user in ctx.guild.members}
@@ -204,6 +206,7 @@ class Game(commands.Cog, name="Games"):
             for user_id in missing_users:
                 ai = self.bot.get_user(user_id)
                 assert ai 
+                assert isinstance(ctx.channel, discord.TextChannel)
                 await ai.create_dm().send(f"Please join our server to take part in the connect4 AI tournament : {ctx.channel.create_invite(max_uses=1)}")
                 await ctx.send(f"Sent invite to {ai.mention}")
         else:

@@ -46,7 +46,7 @@ class CustomHelp(commands.HelpCommand):
     async def send_cog_help(self, cog: Cog, /) -> None:
 
         embed = discord.Embed(color=discord.Color.dark_grey(),
-                              title="Category help",
+                              title=f"Category help : {cog.qualified_name}",
                               description=cog.description)
         
         for cmd in cog.get_commands():
@@ -66,7 +66,7 @@ class CustomHelp(commands.HelpCommand):
     async def send_group_help(self, group: Group[Any, ..., Any], /) -> None:
 
         embed = discord.Embed(color=discord.Color.dark_grey(),
-                              title = "Group command help",
+                              title=f"Group command help : {group.qualified_name}",
                               description=group.help)
         
         for cmd in group.commands:
@@ -92,7 +92,7 @@ class CustomHelp(commands.HelpCommand):
             desc = f"`{command.qualified_name}`"
 
         embed = discord.Embed(color=discord.Color.dark_grey(),
-                              title="Command help",
+                              title=f"Command help : {command.qualified_name}",
                               description=desc)
 
         if command.help:

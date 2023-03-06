@@ -1,7 +1,5 @@
-import logging
 import discord
 from discord.ext import commands
-import time
 from cogs.github import GithubClient
 from utils import embeding
 
@@ -10,6 +8,9 @@ from utils import ids
 
 
 class Admin(commands.Cog):
+    """
+    Admin only commands
+    """
 
     def __init__(self, bot: CustomBot):
         self.bot = bot
@@ -17,8 +18,9 @@ class Admin(commands.Cog):
     @commands.command(hidden=True)
     @commands.has_role(ids.BUREAU)
     async def course(self, ctx: commands.Context, repo: str, course: str):
-        """ Command to get and embed README of a repo """
-
+        """
+        Get an embed README of a repo
+        """
         github_client = self.bot.get_cog("GithubClient")
         assert isinstance(github_client, GithubClient)
         err_code, res = github_client.get_readme(repo, course)
@@ -30,7 +32,7 @@ class Admin(commands.Cog):
                 channel = ctx.channel
             else:
                 channel = self.bot.get_channel(ids.RESSOURCES)
-                assert channel
+            assert isinstance(channel, discord.TextChannel)
             await channel.send(file=logo, embed=emb)
         else :
             await ctx.send(res)
@@ -38,6 +40,9 @@ class Admin(commands.Cog):
     @commands.command(hidden=True)
     @commands.is_owner()
     async def shutdown(self, ctx: commands.Context) :
+        """
+        Shutdown the bot
+        """
         await ctx.send("Shutting down ...")
         await self.bot.close()
 

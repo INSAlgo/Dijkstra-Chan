@@ -17,7 +17,7 @@ from utils.evt.reminder_class import Reminder, delays
 import logging
 logger = logging.getLogger(__name__)
 
-class EventReminder(cmds.Cog, name="Event reminder"):
+class EventReminder(cmds.Cog, name="Events reminder"):
 
     def __init__(self, bot: CustomBot) -> None:
 

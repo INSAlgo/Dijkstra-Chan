@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-from discord.ext.commands import Context, command
 import time
 
 from main import CustomBot
@@ -8,6 +7,9 @@ from utils import ids
 
 
 class Basic(commands.Cog):
+    """
+    Various basic commands
+    """
 
     def __init__(self, bot: CustomBot):
         self.bot = bot
@@ -17,12 +19,14 @@ class Basic(commands.Cog):
         """
         Automatically gives member role to newcommers
         """
-        await member.add_roles(self.bot.get_role(ids.MEMBRE))
+        member_role = member.guild.get_role(ids.MEMBRE)
+        assert member_role
+        await member.add_roles(member_role)
 
     @commands.command()
     async def ping(self, ctx: commands.Context):
         """
-        Show latency in milliseconds
+        Shows latency in milliseconds
         """
         before = time.monotonic()
         message = await ctx.send(":ping_pong: Pong")

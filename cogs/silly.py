@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-from discord.ext.commands import Context, command
 import re
 from utils import checks
 import asyncio
@@ -11,6 +10,9 @@ from utils import ids
 fact = 1
 
 class Silly(commands.Cog, name="Silly commands"):
+    """
+    Silly commands
+    """
 
     def __init__(self, bot: CustomBot):
         self.bot = bot
@@ -42,7 +44,7 @@ class Silly(commands.Cog, name="Silly commands"):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) :
         """
-        Automatically gives member role to newcommers
+        Parse every message to find if there is a silly thing to answer
         """
         if message.author == self.bot.user:
             if re.fullmatch(r"^\!factorial [0-9]+$", message.content) is not None:
@@ -56,7 +58,7 @@ class Silly(commands.Cog, name="Silly commands"):
     @checks.in_channel(ids.COMMANDS)
     async def factorial(self, ctx: commands.Context, nb: int):
         """
-        Compute the factorial of a number in a very efficient way
+        Computes the factorial of a number in a very efficient way
         """
         await self.__factorial(ctx.message, nb)
         

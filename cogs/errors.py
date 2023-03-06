@@ -4,7 +4,8 @@ from utils import ids
 import logging
 logger = logging.getLogger(__name__)
 
-class ErrorHandler(commands.Cog):
+class ErrorHandler(commands.Cog, name="Errors"):
+    """Handles the errors globally across commands"""
 
     emote = ":triangular_flag_on_post:"
 
@@ -13,6 +14,7 @@ class ErrorHandler(commands.Cog):
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: commands.CommandError):
+        """Send a message describing the error to discord"""
         try:
             raise error
         except commands.ConversionError as d_error:
