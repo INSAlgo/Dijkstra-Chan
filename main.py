@@ -8,6 +8,7 @@ import requests
 from discord.ext import commands
 import pathlib
 from utils.help import CustomHelp
+from utils import ids
 
 logger = logging.getLogger(__name__)
 
@@ -25,14 +26,13 @@ class CustomBot(commands.Bot):
 
         cog_dir = pathlib.Path("cogs")
 
-        # for extension in cog_dir.iterdir():
-        #     if extension.is_file():
-        #         await self.load_extension(f"{cog_dir}.{extension.stem}")
-        await self.load_extension(f"{cog_dir}.game")
+        for extension in cog_dir.iterdir():
+            if extension.is_file():
+                await self.load_extension(f"{cog_dir}.{extension.stem}")
 
     async def on_ready(self):
 
-        self.debug_channel = self.get_channel(1048584804301537310)
+        self.debug_channel = self.get_channel(ids.DEBUG)
         assert isinstance(self.debug_channel, discord.TextChannel)
         await self.debug_channel.send("Up")
         logger.info("bot up")

@@ -9,8 +9,10 @@ import argparse
 import asyncio
 import random
 import time
+from typing import Tuple
 import discord
 from functions.game.game_classes import AvailableGame
+from submodules.p4.puissance4 import AI
 
 MAX_PARALLEL_PROCESSES = 10
 ALLOWED_EXTENSIONS = ('.py', '.js', '', '.out', '.class')
@@ -122,7 +124,7 @@ async def tournament(ctx, game, rematches, nb_players, src_dir, args):
 
     return scoreboard
 
-async def main(ctx, game, raw_args=None):
+async def main(ctx, game, raw_args=None) -> list[Tuple[AI, int]]:
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-r", "--rematches", type=int, default=1, metavar="NB_REMATCHES")

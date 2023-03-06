@@ -168,7 +168,7 @@ class Game(commands.Cog, name="Games"):
 
         lines = []
         for i, (ai, score) in enumerate(scoreboard):
-            user = self.bot.get_user(int(ai))
+            user = self.bot.get_user(int(str(ai)))
             assert user
             lines.append(f"{i+1}. {user.mention} score : {score}")
 
