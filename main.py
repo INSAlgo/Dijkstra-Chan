@@ -7,7 +7,6 @@ import requests
 
 from discord.ext import commands
 import pathlib
-from utils import ids
 from utils.help import CustomHelp
 
 logger = logging.getLogger(__name__)
@@ -15,7 +14,12 @@ logger = logging.getLogger(__name__)
 class CustomBot(commands.Bot):
 
     def __init__(self, *args, **kwargs):
-        super().__init__(intents=discord.Intents.all(), command_prefix="!", help_command=CustomHelp(), *args, **kwargs)
+        super().__init__(
+                intents=discord.Intents.all(),
+                command_prefix="!",
+                help_command=CustomHelp(),
+                *args,
+                **kwargs)
 
     async def setup_hook(self):
 
@@ -28,6 +32,7 @@ class CustomBot(commands.Bot):
     async def on_ready(self):
 
         self.debug_channel = self.get_channel(1048584804301537310)
+        assert isinstance(self.debug_channel, discord.TextChannel)
         await self.debug_channel.send("Up")
         logger.info("bot up")
 
@@ -51,7 +56,7 @@ async def main():
     async with CustomBot() as bot:
         await bot.start(os.getenv('TOKEN', ''))
 
-    headers = {'Authorization': 'Bot %s' % os.getenv('TOKEN', '') }
+    headers = {'Authorization': 'Bot %s' % os.getenv('TOKEN', '')}
     requests.post(f"https://discord.com/api/v6/channels/1048584804301537310/messages", headers=headers, json={"content": "Down"})
 
 

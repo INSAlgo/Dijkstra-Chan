@@ -12,8 +12,8 @@ from utils.checks import *
 
 from cogs.codeforces import CodeforcesClient
 
-from utils.evt.event_class import Event
-from utils.evt.reminder_class import Reminder, delays
+from functions.evt.event_class import Event
+from functions.evt.reminder_class import Reminder, delays
 import logging
 logger = logging.getLogger(__name__)
 

@@ -8,9 +8,8 @@ from main import CustomBot
 from utils.ids import *
 from utils.checks import *
 
-from utils.embeding import embed_help
-from utils.geom.check import check
-from utils.geom.read import draw_submission
+from functions.geom.check import check
+from functions.geom.read import draw_submission
 
 
 class Geometry(cmds.Cog) :
@@ -44,10 +43,6 @@ class Geometry(cmds.Cog) :
         if ctx.invoked_subcommand is None:
             text = ', '.join(self.commands.keys())
             await ctx.send(f"Invalid course, available courses are : {text}. Use `!geom help` for details.")
-
-    @geom.command()
-    async def help(self, ctx: cmds.Context) :
-        await ctx.send("TODO :)")
 
     @geom.group(pass_context=True)
     async def CH(self, ctx: cmds.Context) :

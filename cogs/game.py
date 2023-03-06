@@ -9,8 +9,8 @@ from discord.ext import commands
 from utils import ids
 
 from utils import checks
-from utils.game import AvailableGame, Ifunc, Ofunc
-from functions import tournament
+from functions.game.game_classes import AvailableGame, Ifunc, Ofunc
+from functions.game import tournament
 
 from submodules.p4 import puissance4
 from main import CustomBot
@@ -140,7 +140,7 @@ class Game(commands.Cog, name="Games"):
         Start a tournament between every player that have submitted an AI
         You can also append flags supported by the game.
         """
-        scoreboard = await tournament.tournament.main(ctx, game, args)
+        scoreboard = await tournament.main(ctx, game, args)
         game.log_file.touch()
 
         embed = discord.Embed(title=f"{game.name} tournament results")
