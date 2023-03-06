@@ -9,10 +9,11 @@ class AvailableGame(commands.Converter):
     ai_dir_name = "ai"
     log_name = "log.txt"
     
-    def __init__(self, name, cmd, module) -> None:
+    def __init__(self, name, cmd, module, url) -> None:
         self.name = name
         self.cmd = cmd
         self.module = module
+        self.url = url
         self.game_dir = AvailableGame.game_dir / self.cmd
         self.ai_dir = self.game_dir / AvailableGame.ai_dir_name
         self.log_file = self.game_dir / AvailableGame.log_name

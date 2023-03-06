@@ -21,8 +21,8 @@ class Game(commands.Cog, name="Games"):
     Commands related to games
     """
 
-    games = dict()
-    games["p4"] = AvailableGame("Connect 4", "p4", puissance4)
+    games: dict[str, AvailableGame] = dict()
+    games["p4"] = AvailableGame("Connect 4", "p4", puissance4, "https://github.com/INSAlgo/Concours-Puissance4/")
 
     def __init__(self, bot: CustomBot):
         self.bot = bot
@@ -34,7 +34,17 @@ class Game(commands.Cog, name="Games"):
             raise commands.BadArgument("Invalid subcommand")
 
     @game.command()
-    @checks.in_channel(ids.GAMES)
+    async def list(self, ctx: Context):
+        """List available games"""
+
+        embed = discord.Embed(title=f"INSAlgo tournament games")
+        for game in self.games.values():
+            embed.add_field(name=game.name,
+                            value=f"`{game.cmd}` - [game page]({game.url})",
+                            inline=False)
+        await ctx.send(embed=embed)
+
+    @game.command()
     async def participants(self, ctx: Context, game: AvailableGame):
         """Get the list of players who have submitted an AI to the game"""
 
@@ -43,6 +53,7 @@ class Game(commands.Cog, name="Games"):
         await ctx.send(embed=embed)
 
     @game.command()
+    @checks.in_channel(ids.GAMES)
     async def play(self, ctx: Context, game: AvailableGame, *args: str):
         """Play a game between AI or users if available"""
 
