@@ -30,4 +30,4 @@ jobs:
           RUNNER_TRACKING_ID: ""
           TOKEN: ${{ secrets.TOKEN }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: nohup python main.py &
+        run: python main.py &
