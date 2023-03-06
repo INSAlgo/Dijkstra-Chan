@@ -1,6 +1,6 @@
 import discord
 
-def embed(markdown: str) -> discord.Embed :
+def embed_lesson(markdown: str) -> discord.Embed :
     step = "title"
     title = ""
     link = ""
@@ -17,7 +17,7 @@ def embed(markdown: str) -> discord.Embed :
                 step = "exercises"
                 level = []
             else :
-                levels.append(line)
+                description.append(line)
 
         elif step == "exercises" :
             if line.startswith("### L") :
@@ -32,7 +32,6 @@ def embed(markdown: str) -> discord.Embed :
             coms.append(line)
     
     levels.append(level)
-    levels.pop(0)
 
     embed = discord.Embed(
         title=title,
@@ -51,36 +50,6 @@ def embed(markdown: str) -> discord.Embed :
         embed.add_field(
             name="Commentaires",
             value="\n".join(coms),
-            inline=False
-        )
-    
-    return embed
-
-def embed_help(dir_: str) -> discord.Embed :
-    File = open("fixed_data/" + dir_)
-    lines = File.read().split('\n')
-    File.close()
-    
-    title = "Dijkstra-Chan's Commands :"
-
-    categories: dict[str, list[str]] = {}
-    cat = ""
-
-    for line in lines :
-        if line.startswith("# ") :
-            cat = line[2:]
-            categories[cat] = []
-        else :
-            categories[cat].append(line)
-    
-    embed = discord.Embed(title=title)
-
-    for cat_name, cat_lines in categories.items() :
-        while cat_lines[-1] == "" :
-            cat_lines.pop()
-        embed.add_field(
-            name=cat_name,
-            value='\n'.join(cat_lines),
             inline=False
         )
     

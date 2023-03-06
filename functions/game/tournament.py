@@ -9,10 +9,10 @@ import argparse
 import asyncio
 import random
 import time
+from typing import Tuple
 import discord
-from bot import bot
-
-from extensions.game import command
+from functions.game.game_classes import AvailableGame
+from submodules.p4.puissance4 import AI
 
 MAX_PARALLEL_PROCESSES = 10
 ALLOWED_EXTENSIONS = ('.py', '.js', '', '.out', '.class')
@@ -25,14 +25,14 @@ class Progress():
         self.start_time = time.time()
         self.message: discord.Message
 
-    def log_results(self, log, players, winner, errors):
+    def log_results(self, bot, log, players, winner, errors):
         self.game_nb += 1
         print(f"{self.game_nb}.",
-              f"{' vs '.join(display_name(player) for player in players)} ->",
-              f"{display_name(winner) if winner else 'draw'}",
+              f"{' vs '.join(display_name(bot, player) for player in players)} ->",
+              f"{display_name(bot, winner) if winner else 'draw'}",
               sep = " ", end = "", file=log)
         if errors:
-            print(f" ({', '.join(f'{display_name(player)}: {error}' for player, error in errors.items())})", file=log)
+            print(f" ({', '.join(f'{display_name(bot, player)}: {error}' for player, error in errors.items())})", file=log)
         else:
             print(file=log)
 
@@ -53,13 +53,15 @@ def explore(out_dir):
                 ai_paths.append(ai_path)
     return ai_paths
 
-def display_name(player):
-    return bot.client.get_user(int(player.name)).display_name
+def display_name(bot, player):
+    user = bot.get_user(int(player.name))
+    assert user
+    return user.display_name
 
-async def safe_game(game, semaphore, log, progress: Progress, players, args):
+async def safe_game(game, semaphore, bot, log, progress: Progress, players, args):
     async with semaphore:
         players, winner, errors = await game.module.main(list(players) + args, discord=True)
-        progress.log_results(log, players, winner, errors)
+        progress.log_results(bot, log, players, winner, errors)
         await progress.update_message()
         return players, winner
 
@@ -92,7 +94,7 @@ async def tournament(ctx, game, rematches, nb_players, src_dir, args):
     for combinations in itertools.combinations(map(str, ai_files), nb_players):
         for players in itertools.permutations(combinations):
             for _ in range(rematches):
-                games.append(safe_game(game, semaphore, log_file, progress, players, args))
+                games.append(safe_game(game, semaphore, ctx.bot, log_file, progress, players, args))
 
     progress.nb_games = len(games)
     random.shuffle(games)
@@ -122,12 +124,12 @@ async def tournament(ctx, game, rematches, nb_players, src_dir, args):
 
     return scoreboard
 
-async def main(ctx, game, raw_args=None):
+async def main(ctx, game, raw_args=None) -> list[Tuple[AI, int]]:
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-r", "--rematches", type=int, default=1, metavar="NB_REMATCHES")
     parser.add_argument("-p", "--players", type=int, default=2, metavar="NB_PLAYERS")
-    parser.add_argument("-d", "--directory", default=command.AI_DIR_NAME, metavar="SRC_DIRECTORY")
+    parser.add_argument("-d", "--directory", default=AvailableGame.ai_dir_name, metavar="SRC_DIRECTORY")
 
     args, remaining_args = parser.parse_known_args(raw_args)
     src_dir = game.game_dir / args.directory

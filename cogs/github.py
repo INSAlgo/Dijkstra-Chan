@@ -1,46 +1,79 @@
+import os
 from base64 import standard_b64decode as b64dcd
 from datetime import datetime
 from random import choice
 
-from classes.token_error import TokenError
-from classes.client_template import Client
+from discord.ext.commands import Cog
+from main import CustomBot
+
+from utils.token_error import TokenError
+from utils.client_template import Client
+import logging
+logger = logging.getLogger(__name__)
 
 languages = {"py": "python", "cpp": "C++", "c": "C", "jar": "java", "js": "javascript"}
 
-# Levenshtein distance :
-def dist(str1, str2) :
-    l1, l2 = len(str1), len(str2)
-    arr = [[j for j in range(l2+1)]]
-    arr += [[i] + [0 for _ in range(l2)] for i in range(1, l1+1)]
 
-    for i in range(1, l1 + 1) :
-        for j in range(1, l2 + 1) :
-            m = min(arr[i-1][j-1], arr[i][j-1], arr[i-1][j])
-            if str1[i-1] == str2[j-1] :
-                arr[i][j] = m
-            else :
-                arr[i][j] = m + 1
+class GithubClient(Client, Cog) :
+    def __init__(self, bot: CustomBot) :
+        Client.__init__(self, "api.github.com/")
+
+        logger.info("initializing github client")
+        self.bot = bot
+
+        self.files: dict[str, list[str]] = {}
+
+        try :
+            self.set_token(os.environ["GH_TOKEN"])
+        except KeyError :
+            logger.error("GH_TOKEN not in environment variables")
+            return
+        except Exception as e :
+            logger.error(e)
+
+        err_code, msg = self.reload_repo_tree()
+
+        if err_code :
+            logger.error(msg)
+
+        logger.info("github client initialized")
     
-    return arr[l1][l2]
-
-class GH_Client (Client) :
-    def __init__(self, token: str) :
-        super().__init__("api.github.com/")
-        
+    def make_header(self, token: str) :
         self.headers = {
             "Accept": "application/vnd.github+json",
             "Authorization": "Bearer " + token
         }
 
+    def set_token(self, new_token: str) :
+
+        self.make_header(new_token)
+        
         if not self.get_w_token(route="rate_limit") :
             raise Exception(self.lr_error())
         if self.lr_status_code() == 401 :
             raise TokenError
         elif self.lr_status_code() != 200 :
             raise Exception(f"status code not OK : {self.lr_status_code()}")
-
-        self.files: dict[str, list[str]] = {}
+        
+        self.token = new_token
+        os.environ["GH_TOKEN"] = new_token
     
+    # Levenshtein distance :
+    @staticmethod
+    def dist(str1, str2) :
+        l1, l2 = len(str1), len(str2)
+        arr = [[j for j in range(l2+1)]]
+        arr += [[i] + [0 for _ in range(l2)] for i in range(1, l1+1)]
+
+        for i in range(1, l1 + 1) :
+            for j in range(1, l2 + 1) :
+                m = min(arr[i-1][j-1], arr[i][j-1], arr[i-1][j])
+                if str1[i-1] == str2[j-1] :
+                    arr[i][j] = m
+                else :
+                    arr[i][j] = m + 1
+        
+        return arr[l1][l2]
 
     def get_w_token(self, route: str = "", protocol: str | None = None, payload: dict[str, str] = {}) -> bool:
         return self.get(route, protocol=protocol, payload=payload, headers=self.headers)
@@ -93,13 +126,13 @@ class GH_Client (Client) :
             if self.lr_status_code() == 403 :
                 errors.append(self.get_api_rate()[1])
                 continue
-            
+
             if self.lr_status_code() != 200 :
                 errors.append(f"status code not OK for site {site} : {self.lr_status_code()}")
                 continue
-            
+
             self.files[site] = [sol["name"] for sol in resp]
-        
+
         err_code = 0
         msg = "reloaded solution repo structure cache"
         if errors != [] :
@@ -124,7 +157,7 @@ class GH_Client (Client) :
             return 1, f"{N} random files of {website} are :\n" + '\n'.join(choices)
 
         if to_search not in self.files[website] :
-            self.files[website].sort(key=lambda s: dist(s, to_search))
+            self.files[website].sort(key=lambda s: self.dist(s, to_search))
             close_files = '\n'.join(self.files[website][:10])
             return 1, "file not found, similar files are :\n" + close_files
 
@@ -143,18 +176,17 @@ class GH_Client (Client) :
             return 3, f"response status code not OK : {self.lr_status_code()}"
 
         try :
-            raw_text = b64dcd(data["content"]).decode("ascii")
+            raw_text = b64dcd(data["content"]).decode("utf-8")
+        except Exception as e:
+            return 5, f"Could not decode file : {e}"
 
-            ext = to_search.split('.')[-1]
-            if ext in languages :
-                language = languages[ext]
-            else :
-                language = ""
+        ext = to_search.split('.')[-1]
+        if ext in languages :
+            language = languages[ext]
+        else :
+            language = ""
 
-            return 0, f"**Solution file found** :\n||```{language}\n{raw_text}```||"
-        
-        except :
-            return 5, "could not decode file"
+        return 0, f"**Solution file found** :\n||```{language}\n{raw_text}```||"
 
 
     def get_readme(self, repo: str, course: str) -> str :
@@ -176,3 +208,6 @@ class GH_Client (Client) :
         
         except Exception as err:
             return 5, f"could not decode file : {err}"
+
+async def setup(bot):
+    await bot.add_cog(GithubClient(bot))
