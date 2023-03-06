@@ -1,6 +1,6 @@
 import discord
 
-def embed(markdown: str) -> discord.Embed :
+def embed_lesson(markdown: str) -> discord.Embed :
     step = "title"
     title = ""
     link = ""

@@ -26,7 +26,7 @@ class Admin(commands.Cog):
         err_code, res = github_client.get_readme(repo, course)
 
         if err_code == 0:
-            emb = embeding.embed(res).set_thumbnail(url="attachment://INSAlgo.png")
+            emb = embeding.embed_lesson(res).set_thumbnail(url="attachment://INSAlgo.png")
             logo = discord.File("fixed_data/INSAlgo.png", filename="INSAlgo.png")
             if ctx.channel.id == ids.DEBUG:
                 channel = ctx.channel
