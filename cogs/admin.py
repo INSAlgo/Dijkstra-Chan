@@ -28,14 +28,12 @@ class Admin(commands.Cog):
         if err_code == 0:
             emb = embeding.embed_lesson(res).set_thumbnail(url="attachment://INSAlgo.png")
             logo = discord.File("fixed_data/INSAlgo.png", filename="INSAlgo.png")
-            if ctx.channel.id == ids.DEBUG:
-                channel = ctx.channel
-            else:
-                channel = self.bot.get_channel(ids.RESSOURCES)
+            channel = self.bot.get_channel(ids.RESSOURCES)
             assert isinstance(channel, discord.TextChannel)
             await channel.send(file=logo, embed=emb)
+        
         else :
-            await ctx.send(res)
+            await self.bot.get_channel(ids.DEBUG).send(res)
 
     @commands.command(hidden=True)
     @commands.is_owner()
