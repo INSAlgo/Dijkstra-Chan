@@ -8,6 +8,16 @@ Then you can do :
 - `pip install -r requirements.txt`,
 - and finally : `python main.py`
 
+## Connect to VPS to debug
+`ssh insalgo@vps-4468ae11.vps.ovh.net -p 50000`
+input pwd
+`cd Dijkstra-Chan/`
+logs are in nohup.out
+
+### To launch the bot from the VPS :
+`source ./env/bin/activate`
+`nohup python ./main.py &`
+
 ## Discord Token
 If the token was reset, you can generate a new token in the [discord developer portal](https://discord.com/developers), but someone will need to give you authorizations, so ask for the previous head of INSAlgo on the discord server (they should still be "ancients").</br>
 To give authorization to a new bureau, select the team "Dijkstra-Chan administrators" in the "Teams" tab, then invite new members. You can also transfer team ownership to the new head of INSAlgo.
