@@ -17,7 +17,7 @@ class Admin(commands.Cog):
 
     @commands.command(hidden=True)
     @commands.has_role(ids.BUREAU)
-    async def course(self, ctx: commands.Context, repo: str, course: str):
+    async def lesson(self, ctx: commands.Context, repo: str, course: str):
         """
         Get an embed README of a repo
         """
