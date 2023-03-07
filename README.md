@@ -9,7 +9,7 @@ Then you can do :
 - and finally : `python main.py`
 
 ## Connect to VPS to debug
-`ssh insalgo@vps-4468ae11.vps.ovh.net -p 50000`
+`ssh <adresse> -p <port>`
 input pwd
 `cd Dijkstra-Chan/`
 logs are in nohup.out
