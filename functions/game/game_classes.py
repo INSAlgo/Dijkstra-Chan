@@ -21,7 +21,7 @@ class AvailableGame(commands.Converter):
     @classmethod
     async def convert(cls, ctx: commands.Context, argument: str):
         if argument not in game.Game.games:
-            raise commands.BadArgument("Game not found")
+            raise commands.BadArgument("Game not found, see `game list`")
         return game.Game.games[argument]
 
 
