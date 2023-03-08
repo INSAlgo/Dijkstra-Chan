@@ -5,3 +5,4 @@
 [submodule "auto_compiler"]
 	path = auto_compiler
 	url = https://github.com/INSAlgo/auto_compiler.git
+	branch = main
