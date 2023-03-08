@@ -25,6 +25,8 @@ jobs:
       - name: Shutdown bot
         continue-on-error: true
         run: killall python
+      - name: Check submodule
+        run: ls -lai auto_compiler/
       - name: Run bot
         env:
           RUNNER_TRACKING_ID: ""
