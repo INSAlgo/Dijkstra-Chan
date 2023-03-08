@@ -2,6 +2,7 @@
 	path = submodules/p4
 	url = https://github.com/INSAlgo/Concours-Puissance4.git
 	branch = main
-[submodule "submodules/auto_compiler"]
+[submodule "auto_compiler"]
 	path = submodules/auto_compiler
-	url = git@github.com:INSAlgo/auto_compiler.git
+	url = https://github.com/INSAlgo/auto_compiler.git
+	brach = main
