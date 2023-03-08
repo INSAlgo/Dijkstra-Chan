@@ -14,8 +14,8 @@ from functions.game.game_classes import AvailableGame, Ifunc, Ofunc
 from functions.game import tournament
 
 from submodules.p4 import puissance4
-from subbmodules.auto_compiler.auto_compiler import AutoCompiler
-from submodules.auto_compiler.errors import CompilerException
+from auto_compiler.auto_compiler import AutoCompiler
+from auto_compiler.errors import CompilerException
 from main import CustomBot
 
 
@@ -212,8 +212,10 @@ class Game(commands.Cog, name="Games"):
         with new_submission.open("w") as file:
             file.write(requests.get(attachment.url).text)
 
+        autocompiler = AutoCompiler(game.ai_dir)
+
         try:
-            _ = await AutoCompiler.compile_user(f"ai_{name}")
+            _ = await autocompiler.compile_user(f"ai_{name}")
         except CompilerException as e:
             await ctx.send("Could not compile your sumbission : "+e.message)
 
