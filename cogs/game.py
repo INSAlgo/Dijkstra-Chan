@@ -14,6 +14,8 @@ from functions.game.game_classes import AvailableGame, Ifunc, Ofunc
 from functions.game import tournament
 
 from submodules.p4 import puissance4
+from subbmodules.auto_compiler.auto_compiler import AutoCompiler
+from submodules.auto_compiler.errors import CompilerException
 from main import CustomBot
 
 
@@ -197,20 +199,25 @@ class Game(commands.Cog, name="Games"):
         """
         new_ext = attachment.filename.split(".")[-1]
         name = str(ctx.message.author.id)
-        new_submission = game.ai_dir / f"{name}.{new_ext}"
+        new_submission = game.ai_dir / f"ai_{name}.{new_ext}"
 
         if not game.ai_dir.is_dir():
             game.ai_dir.mkdir()
 
-        for ai_file in game.ai_dir.glob(f"{name}.*"):
+        for ai_file in game.ai_dir.glob(f"ai_{name}.*"):
             await ctx.send("Your previous submission will be replaced")
             ai_file.replace(new_submission)
             break
-        
+
         with new_submission.open("w") as file:
             file.write(requests.get(attachment.url).text)
 
-        await ctx.send("AI submitted ! <:feelsgood:737960024390762568>")
+        try:
+            _ = await AutoCompiler.compile_user(f"ai_{name}")
+        except CompilerException as e:
+            await ctx.send("Could not compile your sumbission : "+e.message)
+
+        await ctx.send("AI submitted (new)! <:feelsgood:737960024390762568>")
 
     @game.command(hidden=True)
     @commands.has_role(ids.BUREAU)
