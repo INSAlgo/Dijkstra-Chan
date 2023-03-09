@@ -14,8 +14,8 @@ from functions.game.game_classes import AvailableGame, Ifunc, Ofunc
 from functions.game import tournament
 
 from submodules.p4 import puissance4
-from auto_compiler.auto_compiler import AutoCompiler
-from auto_compiler.errors import CompilerException
+from submodules.auto_compiler.auto_compiler import AutoCompiler
+from submodules.auto_compiler.errors import CompilerException
 from main import CustomBot
 
 
