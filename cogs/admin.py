@@ -15,9 +15,9 @@ class Admin(commands.Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
 
-    @commands.command(hidden=True)
+    @commands.command(hidden=True, rest_is_raw=True)
     @commands.has_role(ids.BUREAU)
-    async def lesson(self, ctx: commands.Context, repo: str, course: str):
+    async def lesson(self, ctx: commands.Context, repo: str = "", *, course: str):
         """
         Get an embed README of a repo
         """
@@ -33,6 +33,11 @@ class Admin(commands.Cog):
             await channel.send(file=logo, embed=emb)
         
         else :
+            if err_code == 5 :
+                res += "\nYou can also pass the exact repo name as an argument of this function."
+            if err_code == 6 :
+                res += "\nYou can also pass the exact lesson (folder) name as an argument of this function."
+            
             await self.bot.get_channel(ids.DEBUG).send(res)
 
     @commands.command(hidden=True)
