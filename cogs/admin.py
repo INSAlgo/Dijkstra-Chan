@@ -17,14 +17,16 @@ class Admin(commands.Cog):
 
     @commands.command(hidden=True, rest_is_raw=True)
     @commands.has_role(ids.BUREAU)
-    async def lesson(self, ctx: commands.Context, repo: str = "", *, lesson: str):
+    async def lesson(self, ctx: commands.Context, repo: str = "", *, lesson: str = ""):
         """
         Get an embed from the README of a given lesson in a given repo.
-        If no repo is given, takes the repo named after the current schoolyear `INSAlgo-{year1}-{year2}`.
+        If no repo is given, takes the repo named after the current schoolyear : `INSAlgo-{year1}-{year2}`.
         If no lesson is given, takes the lesson with the highest number.
         """
         github_client = self.bot.get_cog("GithubClient")
-        assert isinstance(github_client, GithubClient)
+        print(type(github_client))
+        print("type of github_client is GithubClient :", type(github_client) == GithubClient)
+        assert isinstance(github_client, GithubClient) # never passes for some reason, even tho type(github_client) is fine.
         err_code, res = github_client.get_lesson_ressource(repo, lesson.strip())
 
         if err_code == 0:
