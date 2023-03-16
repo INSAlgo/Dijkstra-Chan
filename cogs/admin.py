@@ -24,8 +24,11 @@ class Admin(commands.Cog):
         If no lesson is given, takes the lesson with the highest number.
         """
         github_client = self.bot.get_cog("GithubClient")
-        print(type(github_client))
+        print("type github_client :", type(github_client))
+        print("class github_client :", github_client.__class__)
+        print("repr GithubClient :", GithubClient)
         print("type of github_client is GithubClient :", type(github_client) == GithubClient)
+        print("class of github_client is GithubClient :", github_client.__class__ == GithubClient)
         assert isinstance(github_client, GithubClient) # never passes for some reason, even tho type(github_client) is fine.
         err_code, res = github_client.get_lesson_ressource(repo, lesson.strip())
 

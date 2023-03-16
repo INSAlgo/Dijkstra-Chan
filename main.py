@@ -29,6 +29,7 @@ class CustomBot(commands.Bot):
         for extension in cog_dir.iterdir():
             if extension.is_file():
                 await self.load_extension(f"{cog_dir}.{extension.stem}")
+                logger.info(f"extension {extension.stem} loaded")
 
     async def on_ready(self):
         self.insalgo = self.get_guild(ids.INSALGO)
