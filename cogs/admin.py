@@ -23,14 +23,9 @@ class Admin(commands.Cog):
         If no repo is given, takes the repo named after the current schoolyear : `INSAlgo-{year1}-{year2}`.
         If no lesson is given, takes the lesson with the highest number.
         """
-        github_client = self.bot.get_cog("GithubClient")
-        print("type github_client :", type(github_client))
-        print("class github_client :", github_client.__class__)
-        print("GithubClient :", GithubClient)
-        print("type of github_client is GithubClient :", type(github_client) == GithubClient)
-        print("class of github_client is GithubClient :", github_client.__class__ == GithubClient)
-        print("isinstance :", isinstance(github_client, GithubClient))
-        assert isinstance(github_client, GithubClient) # never passes for some reason, even tho type(github_client) is fine.
+        github_client: GithubClient = self.bot.get_cog("GithubClient")
+        assert type(github_client).__name__ == GithubClient.__name__
+        # Can't do `isinstance` because cog was imported with `bot.add_extension` while class is imported here
         err_code, res = github_client.get_lesson_ressource(repo, lesson.strip())
 
         if err_code == 0:
