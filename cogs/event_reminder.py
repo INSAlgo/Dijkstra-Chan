@@ -140,8 +140,7 @@ class EventReminder(cmds.Cog, name="Events reminder"):
             logger.warning("wait reminders cancelled")
             return
         
-        await self.event_channel.send(self.event_role.mention)  # event role mention
-        await self.event_channel.send(embed=self.reminders.get().embed())
+        await self.event_channel.send(content=self.event_role.mention, embed=self.reminders.get().embed())
 
         self.launch_reminder()
 
