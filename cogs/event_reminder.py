@@ -244,8 +244,13 @@ class EventReminder(cmds.Cog, name="Events reminder"):
             await ctx.channel.send("please format the date as YYYY/MM/DD HH:MM")
 
         else :
+            if event in self.events :
+                await ctx.channel.send(f"event {event.name} already exists, replacing...")
+                self.events.discard(event)
+            
             self.events.add(event)
             await ctx.channel.send(f"event {event.name} succesfully added to the list!")
+
             self.generate_queue()
             await ctx.channel.send("succesfully generated new reminders!")
             self.save_events()
