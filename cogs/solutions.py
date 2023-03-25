@@ -26,13 +26,13 @@ class Solutions(cmds.Cog) :
         if ctx.invoked_subcommand is None:
             raise cmds.BadArgument("Invalid subcommand. Use `!help sol` for details")
 
-    @sol.command(rest_is_raw=True)
+    @sol.command()
     async def get(self, ctx: cmds.Context, site: str = "", *, file: str) :
         """
         Fetches a solution of any exercise we have documented
         You need to specify the website before an exercise name, use `!sol get` to see available websites
         """
-        _, raw_message = self.gh_client.search_correction(site, file.strip())
+        _, raw_message = self.gh_client.search_correction(site, file)
         await ctx.channel.send(raw_message)
         return
     

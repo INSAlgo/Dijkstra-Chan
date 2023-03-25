@@ -66,26 +66,6 @@ class EventReminder(cmds.Cog, name="Events reminder"):
             self.events.update(res)
 
         return len(self.events) - prev_N
-    
-    @staticmethod
-    def msg_to_event(message: str) -> Event | None :
-        lines = message.split('\n')[1:] # the first line is the command keyword
-
-        attrs = {}
-
-        attrs["name"] = lines[0]
-        attrs["link"] = lines[1]
-        attrs["webs"] = lines[2]
-        attrs["desc"] = '\n'.join(lines[4:10])
-
-        time = lines[3]
-        try :
-            data = map(int, (time[:4], time[5:7], time[8:10], time[11:13], time[14:16]))
-            time = datetime(*data)
-        except ValueError :
-            return None
-        
-        return Event(attrs, time=time)
 
     def remove_passed_events(self) -> None :
         to_remove = set()
@@ -223,22 +203,22 @@ class EventReminder(cmds.Cog, name="Events reminder"):
 
     @evt.command(hidden=True)
     @cmds.has_role(ADMIN)
-    async def add(self, ctx: cmds.Context) :
+    async def add(self, ctx: cmds.Context, name: str, link: str, origin: str, timestamp: int, *, description: str) :
         """
         Creates a new custom event with its reminders
-        Please format your message as this to avoid errors :
-        ```
-        !evt add
-        {name}
-        {link}
-        {origin/host of the event}
-        {date and time format YYYY/MM/DD HH:MM} 
-        {description (can be 1 to 6 lines)}
-        ```
-        TODO : change parsing to converters (and use discord timestamp)
+        In most cases, <name> is the identifier of the event
+        Add double quotes around <link> if it has spaces
+        <origin> is where the event is from, for example "CodeForces" or "HackerRank"
+        Go (here)[https://www.timestamp-converter.com/] to convert a date-time into a timestamp
+        <description> is the tail of your command, spaces and newlines included
         """
         
-        event = self.msg_to_event(ctx.message.content)
+        event = Event({
+            "name": name,
+            "link": link,
+            "webs": origin,
+            "desc": description
+        }, datetime.fromtimestamp(timestamp))
 
         if event is None :
             await ctx.channel.send("please format the date as YYYY/MM/DD HH:MM")

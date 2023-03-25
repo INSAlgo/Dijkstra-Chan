@@ -15,7 +15,7 @@ class Admin(commands.Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
 
-    @commands.command(hidden=True, rest_is_raw=True)
+    @commands.command(hidden=True)
     @commands.has_role(ids.BUREAU)
     async def lesson(self, ctx: commands.Context, repo: str = "", *, lesson: str = ""):
         """
@@ -26,7 +26,7 @@ class Admin(commands.Cog):
         github_client: GithubClient = self.bot.get_cog("GithubClient")
         assert type(github_client).__name__ == GithubClient.__name__
         # Can't do `isinstance` because cog was imported with `bot.add_extension` while class is imported here
-        err_code, res = github_client.get_lesson_ressource(repo, lesson.strip())
+        err_code, res = github_client.get_lesson_ressource(repo, lesson)
 
         if err_code == 0:
             emb = embeding.embed_lesson(res).set_thumbnail(url="attachment://INSAlgo.png")
