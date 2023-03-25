@@ -209,7 +209,7 @@ class EventReminder(cmds.Cog, name="Events reminder"):
         In most cases, <name> is the identifier of the event
         Add double quotes around <link> if it has spaces
         <origin> is where the event is from, for example "CodeForces" or "HackerRank"
-        Go (here)[https://www.timestamp-converter.com/] to convert a date-time into a timestamp
+        Go [here](https://www.timestamp-converter.com/) to convert a date-time into a timestamp
         <description> is the tail of your command, spaces and newlines included
         """
         
