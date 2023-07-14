@@ -12,7 +12,6 @@ import time
 from typing import Tuple
 import discord
 from functions.game.game_classes import AvailableGame
-from submodules.p4.puissance4 import AI
 
 MAX_PARALLEL_PROCESSES = 10
 ALLOWED_EXTENSIONS = ('.py', '.js', '', '.out', '.class')
@@ -124,12 +123,12 @@ async def tournament(ctx, game, rematches, nb_players, src_dir, args):
 
     return scoreboard
 
-async def main(ctx, game, raw_args=None) -> list[Tuple[AI, int]]:
+async def main(ctx, game, raw_args=None) -> list[Tuple]:
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-r", "--rematches", type=int, default=1, metavar="NB_REMATCHES")
     parser.add_argument("-p", "--players", type=int, default=2, metavar="NB_PLAYERS")
-    parser.add_argument("-d", "--directory", default=AvailableGame.ai_dir_name, metavar="SRC_DIRECTORY")
+    parser.add_argument("-d", "--directory", default=AvailableGame.AI_DIR_NAME, metavar="SRC_DIRECTORY")
 
     args, remaining_args = parser.parse_known_args(raw_args)
     src_dir = game.game_dir / args.directory

@@ -13,7 +13,6 @@ from utils import checks
 from functions.game.game_classes import AvailableGame, Ifunc, Ofunc
 from functions.game import tournament
 
-from submodules.p4 import puissance4
 from auto_compiler.auto_compiler import AutoCompiler
 from auto_compiler.errors import CompilerException
 from main import CustomBot
@@ -24,11 +23,9 @@ class Game(commands.Cog, name="Games"):
     Commands related to games
     """
 
-    games: dict[str, AvailableGame] = dict()
-    games["p4"] = AvailableGame("Connect 4", "p4", puissance4, "https://github.com/INSAlgo/Concours-Puissance4/")
-
     def __init__(self, bot: CustomBot):
         self.bot = bot
+        AvailableGame.load_games()
 
     @commands.group()
     async def game(self, ctx: Context):
@@ -44,10 +41,8 @@ class Game(commands.Cog, name="Games"):
         List available games, with their prefixes and rules
         """
         embed = discord.Embed(title=f"INSAlgo tournament games")
-        for game in self.games.values():
-            embed.add_field(name=game.name,
-                            value=f"`{game.cmd}` - [game page]({game.url})",
-                            inline=False)
+        for game in AvailableGame.games.values():
+            embed.add_field(name=game.name, value=f"`{game.cmd}`", inline=False)
         await ctx.send(embed=embed)
 
     @game.command()
@@ -217,7 +212,7 @@ class Game(commands.Cog, name="Games"):
         try:
             _ = await autocompiler.compile_user(f"ai_{name}")
         except CompilerException as e:
-            await ctx.send("Could not compile your sumbission : "+e.message)
+            await ctx.send(f"Could not compile your sumbission:\n```\n{e}\n```")
 
         await ctx.send("AI submitted (new)! <:feelsgood:737960024390762568>")
 

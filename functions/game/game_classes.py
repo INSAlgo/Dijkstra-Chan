@@ -1,28 +1,36 @@
 import pathlib
 import discord
+import importlib
 from discord.ext import commands
 from cogs import game
 
+
 class AvailableGame(commands.Converter):
 
-    game_dir = pathlib.Path("submodules") 
-    ai_dir_name = "ai"
-    log_name = "log.txt"
+    games = dict()
+
+    games_path = pathlib.Path("games") 
+    AI_DIR_NAME = "ai"
+    LOG_FIlE_NAME = "log.txt"
     
-    def __init__(self, name, cmd, module, url) -> None:
-        self.name = name
-        self.cmd = cmd
-        self.module = module
-        self.url = url
-        self.game_dir = AvailableGame.game_dir / self.cmd
-        self.ai_dir = self.game_dir / AvailableGame.ai_dir_name
-        self.log_file = self.game_dir / AvailableGame.log_name
+    def __init__(self, games_path) -> None:
+        self.module = importlib.import_module(f"{games_path.parent}.{games_path.name}")
+        self.cmd = games_path.name
+        self.name = self.cmd.capitalize()
+        self.games_path = games_path
+        self.ai_dir = self.games_path / AvailableGame.AI_DIR_NAME
+        self.log_file = self.games_path / AvailableGame.LOG_FIlE_NAME
+
+    @classmethod
+    def load_games(cls):
+        for game_path in cls.games_path.iterdir():
+            cls.games[game_path.name] = AvailableGame(game_path)
 
     @classmethod
     async def convert(cls, ctx: commands.Context, argument: str):
-        if argument not in game.Game.games:
+        if argument not in cls.games:
             raise commands.BadArgument("Game not found, see `game list`")
-        return game.Game.games[argument]
+        return cls.games[argument]
 
 
 # Discord player i/o function-classes
