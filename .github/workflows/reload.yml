@@ -15,13 +15,12 @@ jobs:
       - name: Set up Python environnement
         run: |
           source env/bin/activate
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          python3.11 -m pip install --upgrade pip
+          pip3.11 install -r requirements.txt
       - name: Pull and switch to main branch
         run: |
           git pull origin ${{ github.ref_name }}
           git checkout ${{ github.ref_name }}
-          git submodule update --remote
       - name: Shutdown bot
         continue-on-error: true
         run: killall python
@@ -30,4 +29,4 @@ jobs:
           RUNNER_TRACKING_ID: ""
           TOKEN: ${{ secrets.TOKEN }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: python main.py &
+        run: python3.11 main.py &
