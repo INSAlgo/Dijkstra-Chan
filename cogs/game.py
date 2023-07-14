@@ -42,7 +42,9 @@ class Game(commands.Cog, name="Games"):
         """
         embed = discord.Embed(title=f"INSAlgo tournament games")
         for game in AvailableGame.games.values():
-            embed.add_field(name=game.name, value=f"`{game.cmd}`", inline=False)
+            embed.add_field(name=game.name,
+                    value=f"`{game.cmd}` - [game page]({game.url})",
+                    inline=False)
         await ctx.send(embed=embed)
 
     @game.command()
@@ -51,7 +53,7 @@ class Game(commands.Cog, name="Games"):
         Get the list of users who submitted an AI to the game
         """
         embed = discord.Embed(title=f"{game.name} tournament participants")
-        embed.description = '\n'.join(f"<@{file.stem}>" for file in game.ai_dir.iterdir())
+        embed.description = '\n'.join(f"<@{file.stem}>" for file in game.ai_path.iterdir())
         await ctx.send(embed=embed)
 
     @game.command()
@@ -89,7 +91,7 @@ class Game(commands.Cog, name="Games"):
                             challenged_users.add(user)
                         ai_only = False
                     else:
-                        for ai_file in game.ai_dir.glob(f"{user.id}.*"):
+                        for ai_file in game.ai_path.glob(f"{user.id}.*"):
                             players.append(str(ai_file))
                             if user != ctx.author:
                                 challenged_users.add(user)
@@ -194,12 +196,12 @@ class Game(commands.Cog, name="Games"):
         """
         new_ext = attachment.filename.split(".")[-1]
         name = str(ctx.message.author.id)
-        new_submission = game.ai_dir / f"ai_{name}.{new_ext}"
+        new_submission = game.ai_path / f"ai_{name}.{new_ext}"
 
-        if not game.ai_dir.is_dir():
-            game.ai_dir.mkdir()
+        if not game.ai_path.is_dir():
+            game.ai_path.mkdir()
 
-        for ai_file in game.ai_dir.glob(f"ai_{name}.*"):
+        for ai_file in game.ai_path.glob(f"ai_{name}.*"):
             await ctx.send("Your previous submission will be replaced")
             ai_file.replace(new_submission)
             break
@@ -207,7 +209,7 @@ class Game(commands.Cog, name="Games"):
         with new_submission.open("w") as file:
             file.write(requests.get(attachment.url).text)
 
-        autocompiler = AutoCompiler(game.ai_dir)
+        autocompiler = AutoCompiler(game.ai_path)
 
         try:
             _ = await autocompiler.compile_user(f"ai_{name}")
@@ -222,7 +224,7 @@ class Game(commands.Cog, name="Games"):
         """
         Invite missing players of a tournament on the server
         """
-        user_ids = {int(file.stem) for file in game.ai_dir.iterdir()}
+        user_ids = {int(file.stem) for file in game.ai_path.iterdir()}
         assert ctx.guild
         guild_users = {user.id for user in ctx.guild.members}
         missing_users = user_ids.difference(guild_users)

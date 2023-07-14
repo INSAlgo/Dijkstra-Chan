@@ -14,11 +14,13 @@ class AvailableGame(commands.Converter):
     LOG_FIlE_NAME = "log.txt"
     
     def __init__(self, games_path) -> None:
-        self.module = importlib.import_module(f"{games_path.parent}.{games_path.name}")
-        self.cmd = games_path.name
-        self.name = self.cmd.capitalize()
+        self.package = importlib.import_module(f"{games_path.parent}.{games_path.name}")
+        self.module = self.package.game
+        self.name = self.package.NAME
+        self.cmd = self.package.COMMAND
+        self.url = self.package.URL
         self.games_path = games_path
-        self.ai_dir = self.games_path / AvailableGame.AI_DIR_NAME
+        self.ai_path = self.games_path / AvailableGame.AI_DIR_NAME
         self.log_file = self.games_path / AvailableGame.LOG_FIlE_NAME
 
     @classmethod
