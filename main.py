@@ -3,7 +3,7 @@ import logging
 import logging.handlers
 import os
 import discord
-import requests
+import typing
 
 from discord.ext import commands
 import pathlib
@@ -11,6 +11,9 @@ from utils.help import CustomHelp
 from utils import ids
 
 logger = logging.getLogger(__name__)
+
+# Good practices from discord example repository:
+# https://github.com/Rapptz/discord.py/blob/v2.3.1/examples/advanced_startup.py
 
 class CustomBot(commands.Bot):
 
@@ -21,6 +24,7 @@ class CustomBot(commands.Bot):
                 help_command=CustomHelp(),
                 *args,
                 **kwargs)
+        self.debug_channel: discord.TextChannel
 
     async def setup_hook(self):
 
@@ -32,17 +36,10 @@ class CustomBot(commands.Bot):
                 logger.info(f"extension {extension.stem} loaded")
 
     async def on_ready(self):
-        self.insalgo = self.get_guild(ids.INSALGO)
-
-        self.debug_channel = self.get_channel(ids.DEBUG)
-        assert isinstance(self.debug_channel, discord.TextChannel)
+        self.insalgo = typing.cast(discord.Guild, self.get_guild(ids.INSALGO))
+        self.debug_channel = typing.cast(discord.TextChannel, self.get_channel(ids.DEBUG))
         await self.debug_channel.send("Up")
         logger.info("bot up")
-
-    async def close(self):
-        logger.info("shuting down")
-        await super().close()
-
 
 async def main():
 
@@ -58,11 +55,6 @@ async def main():
 
     async with CustomBot() as bot:
         await bot.start(os.getenv('TOKEN', ''))
-
-    # Sending "Down" message
-    headers = {'Authorization': 'Bot %s' % os.getenv('TOKEN', '')}
-    requests.post(f"https://discord.com/api/v6/channels/{ids.DEBUG}/messages", headers=headers, json={"content": "Down"})
-
 
 if __name__ == "__main__":
     asyncio.run(main())

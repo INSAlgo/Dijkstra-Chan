@@ -1,3 +1,4 @@
+import logging
 import discord
 from discord.ext import commands
 from cogs.github import GithubClient
@@ -5,7 +6,7 @@ from utils import embeding
 
 from main import CustomBot
 from utils import ids
-
+logger = logging.getLogger(__name__)
 
 class Admin(commands.Cog):
     """
@@ -49,7 +50,8 @@ class Admin(commands.Cog):
         """
         Shutdown the bot
         """
-        await ctx.send("Shutting down ...")
+        await ctx.send("Down")
+        logger.info("shutting down")
         await self.bot.close()
 
 async def setup(bot):
