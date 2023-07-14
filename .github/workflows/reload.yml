@@ -14,10 +14,12 @@ jobs:
         run : cd ~/Dijkstra-Chan
       - name: Pull and checkout branch
         run: |
+          cd ~/Dijkstra-Chan
           git pull origin ${{ github.ref_name }}
           git checkout ${{ github.ref_name }}
       - name: Set up Python environnement
         run: |
+          cd ~/Dijkstra-Chan
           source env/bin/activate
           python3.11 -m pip install --upgrade pip
           pip3.11 install -r requirements.txt
@@ -29,4 +31,6 @@ jobs:
           RUNNER_TRACKING_ID: ""
           TOKEN: ${{ secrets.TOKEN }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: python3.11 main.py &
+        run: |
+          cd ~/Dijkstra-Chan
+          python3.11 main.py &
