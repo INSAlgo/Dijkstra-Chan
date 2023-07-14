@@ -12,15 +12,15 @@ jobs:
     steps:
       - name: Go to the bot directory
         run : cd ~/Dijkstra-Chan
+      - name: Pull and checkout branch
+        run: |
+          git pull origin ${{ github.ref_name }}
+          git checkout ${{ github.ref_name }}
       - name: Set up Python environnement
         run: |
           source env/bin/activate
           python3.11 -m pip install --upgrade pip
           pip3.11 install -r requirements.txt
-      - name: Pull and switch to main branch
-        run: |
-          git pull origin ${{ github.ref_name }}
-          git checkout ${{ github.ref_name }}
       - name: Shutdown bot
         continue-on-error: true
         run: killall python
