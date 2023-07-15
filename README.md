@@ -1,33 +1,40 @@
-# Setup info
+# Dijkstra-Chan
 
-If you want to run it locally, first get your hand on the tokens (ask the current admin) to add them to your environment variables.</br>
+INSAlgo's friendly Discord bot. He can play with you, help you with algorithms, remind you of contests, and more. He also has the ability to get annoying by repeating what you say.
+
+# Setup
+
+## Local
+
+If you want to run it locally, first get your hand on the tokens (ask the current admin) to add them to your environment variables.
+
 Then you can do :
-- `git clone --recurse-submodule https://github.com/INSAlgo/Dijkstra-Chan.git`,
-- `python -m venv env`,
-- `env/Scripts/activate` (win) or `source env/bin/activate` (lin),
-- `pip install -r requirements.txt`,
-- and finally : `python main.py`
 
-## Connect to VPS to debug
-`ssh <adresse> -p <port>`
-input pwd
-`cd Dijkstra-Chan/`
-logs are in nohup.out
+ - `git clone https://github.com/INSAlgo/Dijkstra-Chan.git`
+ - `python -m venv env`
+ - `source env/bin/activate` (Linux) or `env/Scripts/activate` (Windows)
+ - `pip install -r requirements.txt`
+ - `python main.py`
 
-### To launch the bot from the VPS :
-`source ./env/bin/activate`
-`nohup python ./main.py &`
+## Deploy on the VPS
+
+The normal way to deploy the bot is with the GitHub action. It runs automatically when a commit is pushed on the master branch, but you can trigger it manually on any branch from the "Actions" panel.
+
+## Debug on the VPS
+
+ - `ssh <adresse>`
+ - input password
+ - `cd Dijkstra-Chan/`
+ - logs are in `bot.log`
+
+If you want to add new games, just clone them in the `games` folder. You will have to pull the updates manually. (submodules are a pain, please don't try them again)
 
 ## Discord Token
-If the token was reset, you can generate a new token in the [discord developer portal](https://discord.com/developers), but someone will need to give you authorizations, so ask for the previous head of INSAlgo on the discord server (they should still be "ancients").</br>
-To give authorization to a new bureau, select the team "Dijkstra-Chan administrators" in the "Teams" tab, then invite new members. You can also transfer team ownership to the new head of INSAlgo.
+
+If for some reason you need a new token, you can generate one on the [discord developer portal](https://discord.com/developers). You will need the authorization, that you can ask from the previous admins.
+
+To give authorization to new people, select the team "Dijkstra-Chan administrators" in the "Teams" tab, then invite new members. You can also transfer team ownership.
 
 ## GitHub Token
-For the bot to access the repository with exercise corrections, you'll need to provide him with an access token (else he only has 60 queries per hour). Here is a tutorial on how to set it up :
-- You need to be an administrator of the association INSAlgo on GitHub.
-- Go to your profile's Settings -> Developer settings -> Fine-grained tokens.
-- Select "Generate new token".
-- Fill these settings (change the expiration date to the end of your mandate) :</br>
-![](data/github.png)
-- Then, in the permissions, choose "Contents".
-- You can now generate the token and copy the string given, paste it somewhere safe now to avoid losing it.
+
+For the bot to access the repository with exercise corrections, you'll need to provide an access token (else he only has 60 queries per hour). If you need a new one, you can do so from settings of INSAlgo's GitHub organisation page.
