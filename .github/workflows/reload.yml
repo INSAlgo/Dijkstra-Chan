@@ -6,6 +6,10 @@ on:
       - main
   workflow_dispatch:
 
+env:
+  PYTHON: python3.11
+  PIP: pip3.11
+
 jobs:
   reload:
     runs-on: [self-hosted, linux]
@@ -21,11 +25,11 @@ jobs:
         run: |
           cd ~/Dijkstra-Chan
           source env/bin/activate
-          python3.11 -m pip install --upgrade pip
-          pip3.11 install -r requirements.txt
+          $PYTHON -m pip install --upgrade pip
+          $PIP install -r requirements.txt
       - name: Shutdown bot
         continue-on-error: true
-        run: killall python
+        run: killall $PYTHON
       - name: Run bot
         env:
           RUNNER_TRACKING_ID: ""
@@ -34,4 +38,4 @@ jobs:
         run: |
           cd ~/Dijkstra-Chan
           source env/bin/activate
-          python3.11 main.py &
+          $PYTHON main.py &
