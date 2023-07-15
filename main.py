@@ -41,11 +41,6 @@ class CustomBot(commands.Bot):
         await self.debug_channel.send("Up")
         logger.info("bot up")
 
-    async def close(self):
-        await self.debug_channel.send("Down")
-        await super().close()
-
-
 async def main():
 
     # Terminal logger
