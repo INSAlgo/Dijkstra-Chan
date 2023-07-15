@@ -3,7 +3,7 @@ from main import CustomBot
 
 from utils.client_template import Client
 
-from functions.evt.event_class import Event
+from modules.evt.event_class import Event
 
 
 class CodeforcesClient(Client, Cog) :

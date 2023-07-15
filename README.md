@@ -28,6 +28,6 @@ For the bot to access the repository with exercise corrections, you'll need to p
 - Go to your profile's Settings -> Developer settings -> Fine-grained tokens.
 - Select "Generate new token".
 - Fill these settings (change the expiration date to the end of your mandate) :</br>
-![](README_images/github.png)
+![](data/github.png)
 - Then, in the permissions, choose "Contents".
 - You can now generate the token and copy the string given, paste it somewhere safe now to avoid losing it.

@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 from discord import Embed
 
-from functions.evt.event_class import Event
+from modules.evt.event_class import Event
 
 # For message formating :
 delays = {

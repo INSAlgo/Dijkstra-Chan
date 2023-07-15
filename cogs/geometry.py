@@ -12,8 +12,8 @@ from main import CustomBot
 from utils.ids import *
 from utils.checks import *
 
-from functions.geom.check import check
-from functions.geom.read import draw_submission
+from modules.geom.check import check
+from modules.geom.read import draw_submission
 
 
 class Geometry(cmds.Cog) :
@@ -42,7 +42,7 @@ class Geometry(cmds.Cog) :
     @in_channel(COMMANDS, force_guild=False)
     async def geom(self, ctx: cmds.Context) :
         """
-        A bunch of usefull functions for lessons on computational geometry
+        A bunch of usefull modules for lessons on computational geometry
         (i.e. : convex hulls and fractals)
         """
 

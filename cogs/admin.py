@@ -31,7 +31,7 @@ class Admin(commands.Cog):
 
         if err_code == 0:
             emb = embeding.embed_lesson(res).set_thumbnail(url="attachment://INSAlgo.png")
-            logo = discord.File("fixed_data/INSAlgo.png", filename="INSAlgo.png")
+            logo = discord.File("data/INSAlgo.png", filename="INSAlgo.png")
             channel = self.bot.get_channel(ids.RESSOURCES)
             assert isinstance(channel, discord.TextChannel)
             await channel.send(file=logo, embed=emb)

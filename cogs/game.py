@@ -10,8 +10,8 @@ from discord.ext import commands
 from utils import ids
 
 from utils import checks
-from functions.game.game_classes import AvailableGame, Ifunc, Ofunc
-from functions.game import tournament
+from modules.game.game_classes import AvailableGame, Ifunc, Ofunc
+from modules.game import tournament
 
 from auto_compiler.auto_compiler import AutoCompiler
 from auto_compiler.errors import CompilerException

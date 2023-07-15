@@ -12,14 +12,14 @@ from utils.checks import *
 
 from cogs.codeforces import CodeforcesClient
 
-from functions.evt.event_class import Event
-from functions.evt.reminder_class import Reminder, delays
+from modules.evt.event_class import Event
+from modules.evt.reminder_class import Reminder, delays
 import logging
 logger = logging.getLogger(__name__)
 
 class EventReminder(cmds.Cog, name="Events reminder"):
     """
-    Commands and internal functions about coding events like contests
+    Commands and internal modules about coding events like contests
     Operates reminders and some APIs to fetch events
     """
 

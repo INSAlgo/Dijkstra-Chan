@@ -1,5 +1,6 @@
 env*/
 __pycache__/
+.idea/
 
 saved_data/
 C4_AIs/

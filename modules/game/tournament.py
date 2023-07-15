@@ -11,7 +11,7 @@ import random
 import time
 from typing import Tuple
 import discord
-from functions.game.game_classes import AvailableGame
+from modules.game.game_classes import AvailableGame
 
 MAX_PARALLEL_PROCESSES = 10
 ALLOWED_EXTENSIONS = ('.py', '.js', '', '.out', '.class')
