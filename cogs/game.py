@@ -33,7 +33,7 @@ class Game(commands.Cog, name="Games"):
         Commands to play games with users or their handcrafted AI, and participate in tournaments
         """
         if ctx.invoked_subcommand is None:
-            raise commands.BadArgument("Invalid subcommand")
+            raise commands.BadArgument("Invalid subcommand, see `help game`")
 
     @game.command()
     async def list(self, ctx: Context):
@@ -42,7 +42,7 @@ class Game(commands.Cog, name="Games"):
         """
         AvailableGame.load_games()
         embed = discord.Embed(title=f"INSAlgo tournament games")
-        for game in AvailableGame.games.values():
+        for game in AvailableGame.games:
             embed.add_field(name=game.name,
                     value=f"`{game.cmd}` - [game page]({game.url})",
                     inline=False)

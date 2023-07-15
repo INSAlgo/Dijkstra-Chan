@@ -7,34 +7,36 @@ from cogs import game
 
 class AvailableGame(commands.Converter):
 
-    games = dict()
+    games = []
 
     games_path = pathlib.Path("games") 
     AI_DIR_NAME = "ai"
     LOG_FIlE_NAME = "log.txt"
     
-    def __init__(self, games_path) -> None:
-        self.package = importlib.import_module(f"{games_path.parent}.{games_path.name}")
+    def __init__(self, game_path) -> None:
+        self.package = importlib.import_module(f"{game_path.parent}.{game_path.name}")
         self.module = self.package.game
         self.name = self.package.NAME
         self.cmd = self.package.COMMAND
         self.url = self.package.URL
-        self.games_path = games_path
-        self.ai_path = self.games_path / AvailableGame.AI_DIR_NAME
-        self.log_file = self.games_path / AvailableGame.LOG_FIlE_NAME
+        self.game_path = game_path
+        self.ai_path = self.game_path / AvailableGame.AI_DIR_NAME
+        self.log_file = self.game_path / AvailableGame.LOG_FIlE_NAME
 
     @classmethod
     def load_games(cls):
         if cls.games_path.is_dir():
+            loaded_path_names = (game.game_path.name for game in cls.games)
             for game_path in cls.games_path.iterdir():
-                if game_path.name not in cls.games:
-                    cls.games[game_path.name] = AvailableGame(game_path)
+                if game_path.name not in loaded_path_names:
+                    cls.games.append(AvailableGame(game_path))
 
     @classmethod
     async def convert(cls, ctx: commands.Context, argument: str):
-        if argument not in cls.games:
-            raise commands.BadArgument("Game not found, see `game list`")
-        return cls.games[argument]
+        for game in cls.games:
+            if game.cmd == argument:
+                return game
+        raise commands.BadArgument("Game not found, see `game list`")
 
 
 # Discord player i/o function-classes
