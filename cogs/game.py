@@ -40,6 +40,7 @@ class Game(commands.Cog, name="Games"):
         """
         List available games, with their prefixes and rules
         """
+        AvailableGame.load_games()
         embed = discord.Embed(title=f"INSAlgo tournament games")
         for game in AvailableGame.games.values():
             embed.add_field(name=game.name,

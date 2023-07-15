@@ -27,7 +27,8 @@ class AvailableGame(commands.Converter):
     def load_games(cls):
         if cls.games_path.is_dir():
             for game_path in cls.games_path.iterdir():
-                cls.games[game_path.name] = AvailableGame(game_path)
+                if game_path.name not in cls.games:
+                    cls.games[game_path.name] = AvailableGame(game_path)
 
     @classmethod
     async def convert(cls, ctx: commands.Context, argument: str):
