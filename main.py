@@ -54,7 +54,7 @@ async def main():
     logging.getLogger().addHandler(handler)
 
     async with CustomBot() as bot:
-        await bot.start(os.getenv('TOKEN', ''))
+        await bot.start(os.environ['DISCORD_TOKEN'])
 
 if __name__ == "__main__":
     asyncio.run(main())

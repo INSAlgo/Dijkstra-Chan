@@ -33,7 +33,7 @@ jobs:
       - name: Run bot
         env:
           RUNNER_TRACKING_ID: ""
-          TOKEN: ${{ secrets.TOKEN }}
+          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           cd ~/Dijkstra-Chan
