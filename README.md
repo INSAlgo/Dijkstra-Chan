@@ -16,6 +16,8 @@ Then you can do :
  - `pip install -r requirements.txt`
  - `python main.py`
 
+If you want to add new games, just clone them in the `games` folder.
+
 ## Deploy on the VPS
 
 The normal way to deploy the bot is with the GitHub action. It runs automatically when a commit is pushed on the master branch, but you can trigger it manually on any branch from the "Actions" panel.
@@ -27,7 +29,7 @@ The normal way to deploy the bot is with the GitHub action. It runs automaticall
  - `cd Dijkstra-Chan/`
  - logs are in `bot.log`
 
-If you want to add new games, just clone them in the `games` folder. You will have to pull the updates manually. (submodules are a pain, please don't try them again)
+Games updates must be pulled manually (submodules are a pain, please don't try it again).
 
 ## Discord Token
 
