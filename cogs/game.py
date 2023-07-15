@@ -99,6 +99,7 @@ class Game(commands.Cog, name="Games"):
                             break
                         else:
                             await ctx.send(f"{user.mention} has not submitted any AI :cry:")
+                            return
                     is_human = False
             else:
                 game_args.append(arg)
