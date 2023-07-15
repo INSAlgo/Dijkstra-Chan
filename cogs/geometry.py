@@ -74,13 +74,15 @@ class Geometry(cmds.Cog) :
         remove("temp.png")
     
     @geom.command()
-    async def IFS(self, ctx: commands.Context, *values) :
+    async def IFS(self, ctx: commands.Context, nb_iter: int, *values: float) :
+        N = nb_iter
+
         r = []
         theta = []
         x = []
         y = []
 
-        if len(values) % 4 != 1 or len(values) == 1:
+        if len(values) % 4 != 0 or len(values) == 0:
             await ctx.channel.send("Format de l'IFS invalide :poop:")
             return
 
@@ -90,7 +92,6 @@ class Geometry(cmds.Cog) :
                     await ctx.channel.send("Format de l\'IFS invalide :poop:")
                     return
 
-        N = int(values[0])
         n = len(values) // 4
 
         if N < 1:
@@ -98,20 +99,19 @@ class Geometry(cmds.Cog) :
             return
 
         if n ** N > self.nb_pts_max:
-            while n ** N > self.nb_pts_max:
-                N -= 1
-            await ctx.channel.send("Désolé j'ai pas une RAM infinie :exploding_head:\n"
-                                "le nombre d'itérations a été réduit à "
-                                + str(N))
-
+            N = self.nb_pts_max // n
+            await ctx.channel.send(
+                "Désolé j'ai pas une RAM infinie :exploding_head:\n"
+                f"le nombre d'itérations a été réduit à {N}"
+            )
+        
         for i in range(n):
             r.append(float(values[4 * i + 1]))
             theta.append(float(values[4 * i + 2]))
             x.append(float(values[4 * i + 3]))
             y.append(float(values[4 * i + 4]))
 
-        S = set()
-        S.add(0)
+        S = {0}
         for it in range(N):
             tmp = set()
             for z in S:
@@ -130,7 +130,9 @@ class Geometry(cmds.Cog) :
         remove("foo.png")
     
     @geom.command()
-    async def IFS2(self, ctx: commands.Context, *values) :
+    async def IFS2(self, ctx: commands.Context, nb_iter: int, *values: float) :
+        N = nb_iter
+
         A11 = []
         A12 = []
         A21 = []
@@ -138,7 +140,7 @@ class Geometry(cmds.Cog) :
         V1 = []
         V2 = []
 
-        if len(values) % 6 != 1 or len(values) == 1:
+        if len(values) % 6 != 0 or len(values) == 0:
             await ctx.channel.send('Format de l\'IFS invalide :poop:')
             return
 
@@ -148,7 +150,6 @@ class Geometry(cmds.Cog) :
                     await ctx.channel.send('Format de l\'IFS invalide :poop:')
                     return
 
-        N = int(values[0])
         n = len(values) // 6
 
         if N < 1:
@@ -156,11 +157,11 @@ class Geometry(cmds.Cog) :
             return
 
         if n ** N > self.nb_pts_max:
-            while n ** N > self.nb_pts_max:
-                N -= 1
-            await ctx.channel.send('Désolé j\'ai pas une RAM infinie :exploding_head:\n'
-                                'le nombre d\'itérations a été réduit à '
-                                + str(N))
+            N = self.nb_pts_max // n
+            await ctx.channel.send(
+                "Désolé j'ai pas une RAM infinie :exploding_head:\n"
+                f"le nombre d'itérations a été réduit à {N}"
+            )
 
         for i in range(n):
             A11.append(float(values[6 * i + 1]))
@@ -170,8 +171,7 @@ class Geometry(cmds.Cog) :
             V1.append(float(values[6 * i + 5]))
             V2.append(float(values[6 * i + 6]))
 
-        S = set()
-        S.add(0)
+        S = {0}
         for _ in range(N):
             tmp = set()
             for z in S:
