@@ -50,8 +50,6 @@ class CustomHelp(commands.HelpCommand):
                               description=cog.description)
         
         for cmd in cog.get_commands():
-            if cmd.hidden and not self.show_hidden:
-                continue
             desc = []
             desc.append(f"`{cmd.qualified_name}`")
             desc.append(f"{cmd.short_doc}\n")
