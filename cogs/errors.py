@@ -23,7 +23,7 @@ class ErrorHandler(commands.Cog, name="Errors"):
             await ctx.send(f"{self.emote} {d_error}")
         except commands.MissingRequiredArgument as d_error:
             assert ctx.command
-            await ctx.send(f"{self.emote} Missing argument: `{ctx.clean_prefix}{ctx.command} <{'> <'.join(ctx.command.clean_params)}>`")
+            await ctx.send(f"{self.emote} Missing argument: `{ctx.command} <{'> <'.join(ctx.command.clean_params)}>`")
         except commands.MissingRequiredAttachment as d_error:
             await ctx.send(f"{self.emote} Missing required attachement")
         # UserInputError -> BadArgument

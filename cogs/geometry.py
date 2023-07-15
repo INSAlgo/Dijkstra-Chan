@@ -47,7 +47,7 @@ class Geometry(cmds.Cog) :
         """
 
         if ctx.invoked_subcommand is None:
-            raise commands.BadArgument("Invalid subcommand. Use `!help geom` for details")
+            raise commands.BadArgument("Invalid subcommand. Use `help geom` for details")
 
     @geom.command()
     async def CH(self, ctx: cmds.Context, exercise: str = None) :
