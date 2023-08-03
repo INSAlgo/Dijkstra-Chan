@@ -1,21 +1,24 @@
 from datetime import datetime, timedelta
 from queue import PriorityQueue as PQ
+from logging import getLogger
 import asyncio, json, os
 
 import discord
 import discord.ext.commands as cmds
 from discord.ext.tasks import loop
-from main import CustomBot
-
-from utils.ids import *
-from utils.checks import *
 
 from cogs.codeforces import CodeforcesClient
 
 from modules.evt.event_class import Event
 from modules.evt.reminder_class import Reminder, delays
-import logging
-logger = logging.getLogger(__name__)
+
+from utils.ids import *
+from utils.checks import *
+
+from main import CustomBot
+
+
+logger = getLogger(__name__)
 
 class EventReminder(cmds.Cog, name="Events reminder"):
     """
@@ -237,5 +240,5 @@ class EventReminder(cmds.Cog, name="Events reminder"):
 
             self.launch_reminder()
 
-async def setup(bot):
+async def setup(bot: CustomBot):
     await bot.add_cog(EventReminder(bot))

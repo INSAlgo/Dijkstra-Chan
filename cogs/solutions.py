@@ -1,7 +1,7 @@
-from discord.ext.commands  as cmds
+import discord.ext.commands as cmds
 
-from utils.ids import *
 from utils.checks import *
+from utils.ids import *
 from utils.token_error import TokenError
 from utils.github import github_client
 
@@ -10,9 +10,6 @@ class Solutions(cmds.Cog) :
     """
     Commands related to exercises corrections
     """
-    
-    def __init__(self) -> None:
-        pass
     
     @cmds.group(pass_context=True)
     @in_channel(COMMANDS, force_guild=False)

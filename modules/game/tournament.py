@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
 
-import itertools
-import os
-import sys
-import pathlib
-import subprocess
-import argparse
-import asyncio
-import random
-import time
-from typing import Tuple
+import asyncio, itertools, os, sys
+from argparse import ArgumentParser
+from pathlib import Path
+from subprocess import run
+from time import time as t
+from random import shuffle
+
 import discord
+
 from modules.game.game_classes import AvailableGame
 
 MAX_PARALLEL_PROCESSES = 10
@@ -21,7 +19,7 @@ class Progress():
     def __init__(self):
         self.nb_games: int
         self.game_nb = 0
-        self.start_time = time.time()
+        self.start_time = t()
         self.message: discord.Message
 
     def log_results(self, bot, log, players, winner, errors):
@@ -41,13 +39,13 @@ class Progress():
     async def update_message(self):
         if self.game_nb % 30 == 0:
             await self.message.edit(content=f"{round(self.game_nb / self.nb_games * 100)}%" +
-                                    f" ({round(time.time() - self.start_time)}s)")
+                                    f" ({round(t() - self.start_time)}s)")
 
 def explore(out_dir):
     ai_paths = list()
     for root, _, files in os.walk(out_dir):
         for file in files:
-            ai_path = pathlib.Path(root) / file
+            ai_path = Path(root) / file
             if ai_path.suffix in ALLOWED_EXTENSIONS and not ai_path.stem.startswith("."):
                 ai_paths.append(ai_path)
     return ai_paths
@@ -66,7 +64,7 @@ async def safe_game(game, semaphore, bot, log, progress: Progress, players, args
 
 def make(game, *args):
     args = *("make", "--directory", str(game.game_dir)), *args
-    subprocess.run(args, capture_output=True)
+    run(args, capture_output=True)
 
 async def tournament(ctx, game, rematches, nb_players, src_dir, args):
 
@@ -77,7 +75,7 @@ async def tournament(ctx, game, rematches, nb_players, src_dir, args):
     await ctx.channel.send(f"Compilation done" )
 
     # Get all programs
-    out_dir: pathlib.Path = game.game_dir / "out"
+    out_dir: Path = game.game_dir / "out"
     ai_files = explore(out_dir)
 
     # Initialize score
@@ -96,7 +94,7 @@ async def tournament(ctx, game, rematches, nb_players, src_dir, args):
                 games.append(safe_game(game, semaphore, ctx.bot, log_file, progress, players, args))
 
     progress.nb_games = len(games)
-    random.shuffle(games)
+    shuffle(games)
     
     await ctx.channel.send(f"Running **{progress.nb_games}** games between **{len(ai_files)}** AI")
     await progress.first_message(ctx)
@@ -123,9 +121,9 @@ async def tournament(ctx, game, rematches, nb_players, src_dir, args):
 
     return scoreboard
 
-async def main(ctx, game, raw_args=None) -> list[Tuple]:
+async def main(ctx, game, raw_args=None) -> list[tuple]:
 
-    parser = argparse.ArgumentParser()
+    parser = ArgumentParser()
     parser.add_argument("-r", "--rematches", type=int, default=1, metavar="NB_REMATCHES")
     parser.add_argument("-p", "--players", type=int, default=2, metavar="NB_PLAYERS")
     parser.add_argument("-d", "--directory", default=AvailableGame.AI_DIR_NAME, metavar="SRC_DIRECTORY")

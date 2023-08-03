@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-import numpy as np
 
 def plot_point(x: int, y: int, col: str = 'k'):
     plt.plot(x, y, color=col, marker='.')

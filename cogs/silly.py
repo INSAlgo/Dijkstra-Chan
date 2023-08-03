@@ -1,15 +1,16 @@
+import asyncio, re
+
 import discord
-from discord.ext import commands
-import re
-from utils import checks
-import asyncio
+import discord.ext.commands as cmds
+from utils.checks import in_channel
 
 from main import CustomBot
-from utils import ids
+from utils.ids import COMMANDS
+
 
 fact = 1
 
-class Silly(commands.Cog, name="Silly commands"):
+class Silly(cmds.Cog, name="Silly commands"):
     """
     Silly commands
     """
@@ -41,7 +42,7 @@ class Silly(commands.Cog, name="Silly commands"):
                 await message.channel.send(word[3:].upper())
                 return
 
-    @commands.Cog.listener()
+    @cmds.Cog.listener()
     async def on_message(self, message: discord.Message) :
         """
         Parse every message to find if there is a silly thing to answer
@@ -63,14 +64,14 @@ class Silly(commands.Cog, name="Silly commands"):
         if "di" in message.content or "cri" in message.content:
             await self.__di_cri(message)
 
-    @commands.command()
-    @checks.in_channel(ids.COMMANDS)
-    async def factorial(self, ctx: commands.Context, nb: int):
+    @cmds.command()
+    @in_channel(COMMANDS)
+    async def factorial(self, ctx: cmds.Context, nb: int):
         """
         Computes the factorial of a number in a very efficient way
         """
         await self.__factorial(ctx.message, nb)
         
 
-async def setup(bot):
+async def setup(bot: CustomBot):
     await bot.add_cog(Silly(bot))
