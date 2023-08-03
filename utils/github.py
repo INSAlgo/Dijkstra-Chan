@@ -1,30 +1,27 @@
-import os
-from base64 import standard_b64decode as b64dcd
 from datetime import datetime
+from base64 import standard_b64decode as b64dcd
+from logging import getLogger
+from os import environ
 from random import choice
-
-from discord.ext.commands import Cog
-from main import CustomBot
 
 from utils.token_error import TokenError
 from utils.client_template import Client
-import logging
-logger = logging.getLogger(__name__)
+
+logger = getLogger(__name__)
 
 languages = {"py": "python", "cpp": "C++", "c": "C", "jar": "java", "js": "javascript"}
 
 
-class GithubClient(Client, Cog) :
-    def __init__(self, bot: CustomBot) :
+class GithubClient(Client) :
+    def __init__(self) :
         Client.__init__(self, "api.github.com/")
 
         logger.info("initializing github client")
-        self.bot = bot
 
         self.files: dict[str, list[str]] = {}
 
         try :
-            self.set_token(os.environ["GH_TOKEN"])
+            self.set_token(environ["GH_TOKEN"])
         except KeyError :
             logger.error("GH_TOKEN not in environment variables")
             return
@@ -56,7 +53,7 @@ class GithubClient(Client, Cog) :
             raise Exception(f"status code not OK : {self.lr_status_code()}")
         
         self.token = new_token
-        os.environ["GH_TOKEN"] = new_token
+        environ["GH_TOKEN"] = new_token
     
     # Levenshtein distance :
     @staticmethod
@@ -281,6 +278,4 @@ class GithubClient(Client, Cog) :
         
         return self.get_repo_readme(repo, lesson)
 
-
-async def setup(bot):
-    await bot.add_cog(GithubClient(bot))
+github_client = GithubClient()

@@ -1,8 +1,10 @@
 import logging
+
 import discord
 from discord.ext import commands
-from cogs.github import GithubClient
-from utils import embeding
+
+from utils.embeding import embed_lesson
+from utils.github import github_client
 
 from main import CustomBot
 from utils import ids
@@ -24,13 +26,11 @@ class Admin(commands.Cog):
         If no repo is given, takes the repo named after the current schoolyear : `INSAlgo-{year1}-{year2}`.
         If no lesson is given, takes the lesson with the highest number.
         """
-        github_client: GithubClient = self.bot.get_cog("GithubClient")
-        assert type(github_client).__name__ == GithubClient.__name__
-        # Can't do `isinstance` because cog was imported with `bot.add_extension` while class is imported here
+
         err_code, res = github_client.get_lesson_ressource(repo, lesson)
 
         if err_code == 0:
-            emb = embeding.embed_lesson(res).set_thumbnail(url="attachment://INSAlgo.png")
+            emb = embed_lesson(res).set_thumbnail(url="attachment://INSAlgo.png")
             logo = discord.File("data/INSAlgo.png", filename="INSAlgo.png")
             channel = self.bot.get_channel(ids.RESSOURCES)
             assert isinstance(channel, discord.TextChannel)

@@ -1,11 +1,9 @@
-import discord.ext.commands as cmds
+from discord.ext.commands  as cmds
 
 from utils.ids import *
 from utils.checks import *
-
 from utils.token_error import TokenError
-from cogs.github import GithubClient
-from main import CustomBot
+from utils.github import github_client
 
 
 class Solutions(cmds.Cog) :
@@ -13,9 +11,8 @@ class Solutions(cmds.Cog) :
     Commands related to exercises corrections
     """
     
-    def __init__(self, bot: CustomBot) -> None:
-        self.bot = bot
-        self.gh_client: GithubClient = bot.get_cog("GithubClient")
+    def __init__(self) -> None:
+        pass
     
     @cmds.group(pass_context=True)
     @in_channel(COMMANDS, force_guild=False)
@@ -32,7 +29,7 @@ class Solutions(cmds.Cog) :
         Fetches a solution of any exercise we have documented
         You need to specify the website before an exercise name, use `!sol get` to see available websites
         """
-        _, raw_message = self.gh_client.search_correction(site, file)
+        _, raw_message = github_client.search_correction(site, file)
         await ctx.channel.send(raw_message)
         return
     
@@ -46,7 +43,7 @@ class Solutions(cmds.Cog) :
         (TODO : setup a cmds.loop for a daily refresh)
         """
 
-        _, msg = self.gh_client.reload_repo_tree()
+        _, msg = github_client.reload_repo_tree()
         await ctx.channel.send(msg)
         return
 
@@ -65,7 +62,7 @@ class Solutions(cmds.Cog) :
             return
         
         try :
-            self.gh_client.set_token(token)
+            github_client.set_token(token)
         except TokenError :
             await ctx.send("Invalid token !")
         except Exception as e :
@@ -73,4 +70,4 @@ class Solutions(cmds.Cog) :
 
 
 async def setup(bot):
-	await bot.add_cog(Solutions(bot))
+	await bot.add_cog(Solutions())

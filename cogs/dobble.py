@@ -1,9 +1,10 @@
 import discord
 from discord.ext import commands
-from cogs.github import GithubClient
+
+from utils.ids import ADMIN
+from utils.github import github_client
 
 from main import CustomBot
-from utils import ids
 
 class Dobble(commands.Cog) :
     """
@@ -45,7 +46,7 @@ class Dobble(commands.Cog) :
     # Commands :
 
     @commands.command(hidden=True)
-    @commands.has_role(ids.ADMIN)
+    @commands.has_role(ADMIN)
     async def geturl(self, ctx, emoji: discord.Emoji):
         await ctx.send(emoji.url)
 
