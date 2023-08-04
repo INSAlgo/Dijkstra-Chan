@@ -1,16 +1,12 @@
-from discord.ext.commands import Cog
-from main import CustomBot
+from modules.evt.event_class import Event
 
 from utils.client_template import Client
 
-from modules.evt.event_class import Event
 
+class CodeforcesClient(Client) :
 
-class CodeforcesClient(Client, Cog) :
-
-    def __init__(self, bot: CustomBot):
+    def __init__(self):
         Client.__init__(self, "codeforces.com/api/")
-        self.bot = bot
         self.contests = []
 
     def get_contests(self, statuses: set[str] = {"BEFORE"}) -> tuple[int, str] :
@@ -74,5 +70,4 @@ class CodeforcesClient(Client, Cog) :
         
         return 0, events
 
-async def setup(bot):
-    await bot.add_cog(CodeforcesClient(bot))
+cf_client = CodeforcesClient()

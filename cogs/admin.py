@@ -1,12 +1,16 @@
-import logging
+from logging import getLogger
+
 import discord
-from discord.ext import commands
-from cogs.github import GithubClient
-from utils import embeding
+import discord.ext.commands as commands
+
+from utils.ids import *
+from utils.embeding import embed_lesson
+from utils.github import github_client
 
 from main import CustomBot
-from utils import ids
-logger = logging.getLogger(__name__)
+
+
+logger = getLogger(__name__)
 
 class Admin(commands.Cog):
     """
@@ -17,22 +21,20 @@ class Admin(commands.Cog):
         self.bot = bot
 
     @commands.command(hidden=True)
-    @commands.has_role(ids.BUREAU)
+    @commands.has_role(BUREAU)
     async def lesson(self, ctx: commands.Context, repo: str = "", *, lesson: str = ""):
         """
         Get an embed from the README of a given lesson in a given repo.
         If no repo is given, takes the repo named after the current schoolyear : `INSAlgo-{year1}-{year2}`.
         If no lesson is given, takes the lesson with the highest number.
         """
-        github_client: GithubClient = self.bot.get_cog("GithubClient")
-        assert type(github_client).__name__ == GithubClient.__name__
-        # Can't do `isinstance` because cog was imported with `bot.add_extension` while class is imported here
+
         err_code, res = github_client.get_lesson_ressource(repo, lesson)
 
         if err_code == 0:
-            emb = embeding.embed_lesson(res).set_thumbnail(url="attachment://INSAlgo.png")
+            emb = embed_lesson(res).set_thumbnail(url="attachment://INSAlgo.png")
             logo = discord.File("data/INSAlgo.png", filename="INSAlgo.png")
-            channel = self.bot.get_channel(ids.RESSOURCES)
+            channel = self.bot.get_channel(RESSOURCES)
             assert isinstance(channel, discord.TextChannel)
             await channel.send(file=logo, embed=emb)
         
@@ -42,7 +44,7 @@ class Admin(commands.Cog):
             if err_code == 6 :
                 res += "\nYou can also pass the exact lesson (folder) name as an argument of this function."
             
-            await self.bot.get_channel(ids.DEBUG).send(res)
+            await self.bot.get_channel(DEBUG).send(res)
 
     @commands.command(hidden=True)
     @commands.is_owner()
@@ -54,5 +56,5 @@ class Admin(commands.Cog):
         logger.info("shutting down")
         await self.bot.close()
 
-async def setup(bot):
+async def setup(bot: CustomBot):
     await bot.add_cog(Admin(bot))

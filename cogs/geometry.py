@@ -1,19 +1,19 @@
+from cmath import exp
 from os import remove
 from requests import get
-from cmath import exp
 
 import discord
 import discord.ext.commands as cmds
 
 import matplotlib.pyplot as plt
 
-from main import CustomBot
-
-from utils.ids import *
-from utils.checks import *
-
 from modules.geom.check import check
 from modules.geom.read import draw_submission
+
+from utils.checks import *
+from utils.ids import *
+
+from main import CustomBot
 
 
 class Geometry(cmds.Cog) :
@@ -193,5 +193,5 @@ class Geometry(cmds.Cog) :
         plt.clf()
         remove("foo.png")
 
-async def setup(bot):
+async def setup(bot: CustomBot):
     await bot.add_cog(Geometry(bot))

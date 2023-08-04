@@ -1,24 +1,22 @@
-import asyncio
-import contextlib
-import requests
-import re
-import argparse
+import argparse, asyncio, contextlib, re, requests
 
 import discord
-from discord.ext.commands import Context
-from discord.ext import commands
-from utils import ids
+import discord.ext.commands as cmds
 
-from utils import checks
-from modules.game.game_classes import AvailableGame, Ifunc, Ofunc
-from modules.game import tournament
-
+# Home made auto compiler for multiple languages
 from auto_compiler.auto_compiler import AutoCompiler
 from auto_compiler.errors import CompilerException
+
+import modules.game.tournament as trnmnt
+from modules.game.game_classes import AvailableGame, Ifunc, Ofunc
+
+from utils.ids import *
+from utils.checks import in_channel
+
 from main import CustomBot
 
 
-class Game(commands.Cog, name="Games"):
+class Game(cmds.Cog, name="Games"):
     """
     Commands related to games
     """
@@ -27,16 +25,16 @@ class Game(commands.Cog, name="Games"):
         self.bot = bot
         AvailableGame.load_games()
 
-    @commands.group()
-    async def game(self, ctx: Context):
+    @cmds.group()
+    async def game(self, ctx: cmds.Context):
         """
         Commands to play games with users or their handcrafted AI, and participate in tournaments
         """
         if ctx.invoked_subcommand is None:
-            raise commands.BadArgument("Invalid subcommand, see `help game`")
+            raise cmds.BadArgument("Invalid subcommand, see `help game`")
 
     @game.command()
-    async def list(self, ctx: Context):
+    async def list(self, ctx: cmds.Context):
         """
         List available games, with their prefixes and rules
         """
@@ -49,7 +47,7 @@ class Game(commands.Cog, name="Games"):
         await ctx.send(embed=embed)
 
     @game.command()
-    async def participants(self, ctx: Context, game: AvailableGame):
+    async def participants(self, ctx: cmds.Context, game: AvailableGame):
         """
         Get the list of users who submitted an AI to the game
         """
@@ -58,8 +56,8 @@ class Game(commands.Cog, name="Games"):
         await ctx.send(embed=embed)
 
     @game.command()
-    @checks.in_channel(ids.GAMES)
-    async def play(self, ctx: Context, game: AvailableGame, *args: str):
+    @in_channel(GAMES)
+    async def play(self, ctx: cmds.Context, game: AvailableGame, *args: str):
         """
         Play a game between AI or users if available
         Specify the list of players in the <args> by mentionning them. \
@@ -68,6 +66,7 @@ class Game(commands.Cog, name="Games"):
         You can play in private channel by adding the 
         You can also append any other flag that the game supports (see the game page).
         """
+        
         parser = argparse.ArgumentParser()
         parser.add_argument("--private", action="store_true")
         parsed_args, remaining_args = parser.parse_known_args(args)
@@ -105,7 +104,7 @@ class Game(commands.Cog, name="Games"):
                 game_args.append(arg)
 
         if len(players) < 2:
-            raise commands.BadArgument("Not enough players to start a game :grimacing:")
+            raise cmds.BadArgument("Not enough players to start a game :grimacing:")
 
         if parsed_args.private:
             channel_type = discord.ChannelType.private_thread
@@ -156,13 +155,13 @@ class Game(commands.Cog, name="Games"):
 
 
     @game.command(hidden=True)
-    @commands.has_role(ids.BUREAU)
-    async def tournament(self, ctx: Context, game: AvailableGame, *args: str):
+    @cmds.has_role(BUREAU)
+    async def tournament(self, ctx: cmds.Context, game: AvailableGame, *args: str):
         """
         Start a tournament between every player that have submitted an AI
         You can also append flags supported by the game.
         """
-        scoreboard = await tournament.main(ctx, game, args)
+        scoreboard = await trnmnt.main(ctx, game, args)
         game.log_file.touch()
 
         embed = discord.Embed(title=f"{game.name} tournament results")
@@ -182,8 +181,8 @@ class Game(commands.Cog, name="Games"):
         game.log_file.unlink()
 
     @game.command()
-    @commands.dm_only()
-    async def submit(self, ctx: Context, game: AvailableGame, attachment: discord.Attachment):
+    @cmds.dm_only()
+    async def submit(self, ctx: cmds.Context, game: AvailableGame, attachment: discord.Attachment):
         """
         Submit an AI to a game
         This command must be used in private message, with your program as an attachment.
@@ -221,8 +220,8 @@ class Game(commands.Cog, name="Games"):
         await ctx.send("AI submitted (new)! <:feelsgood:737960024390762568>")
 
     @game.command(hidden=True)
-    @commands.has_role(ids.BUREAU)
-    async def invite(self, ctx: Context, game: AvailableGame):
+    @cmds.has_role(BUREAU)
+    async def invite(self, ctx: cmds.Context, game: AvailableGame):
         """
         Invite missing players of a tournament on the server
         """
@@ -242,5 +241,5 @@ class Game(commands.Cog, name="Games"):
             await ctx.send(f"No missing participants on the server :thumbsup:")
 
 
-async def setup(bot):
+async def setup(bot: CustomBot):
 	await bot.add_cog(Game(bot))
