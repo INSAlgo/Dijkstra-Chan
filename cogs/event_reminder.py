@@ -7,7 +7,7 @@ import discord
 import discord.ext.commands as cmds
 from discord.ext.tasks import loop
 
-from cogs.codeforces import CodeforcesClient
+from utils.codeforces import cf_client
 
 from modules.evt.event_class import Event
 from modules.evt.reminder_class import Reminder, delays
@@ -36,8 +36,6 @@ class EventReminder(cmds.Cog, name="Events reminder"):
         self.reminders: PQ[Reminder] = PQ()
         self.cur_rem: asyncio.Task[None] | None = None
 
-        self.cf_client: CodeforcesClient = bot.get_cog("CodeforcesClient")
-
     async def cog_unload(self):
         self.save_events()
         return await super().cog_unload()
@@ -61,7 +59,7 @@ class EventReminder(cmds.Cog, name="Events reminder"):
     def update_events(self) -> int :
         prev_N = len(self.events)
 
-        err_code, res = self.cf_client.get_fut_cont_events()
+        err_code, res = cf_client.get_fut_cont_events()
         if err_code == 1 :
             logger.error(res)
         

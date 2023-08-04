@@ -1,13 +1,9 @@
-from discord.ext.commands import Cog
-
 from modules.evt.event_class import Event
 
 from utils.client_template import Client
 
-from main import CustomBot
 
-
-class CodeforcesClient(Client, Cog) :
+class CodeforcesClient(Client) :
 
     def __init__(self):
         Client.__init__(self, "codeforces.com/api/")
@@ -74,5 +70,4 @@ class CodeforcesClient(Client, Cog) :
         
         return 0, events
 
-async def setup(bot: CustomBot):
-    await bot.add_cog(CodeforcesClient())
+cf_client = CodeforcesClient()
