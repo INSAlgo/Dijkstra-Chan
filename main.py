@@ -1,21 +1,21 @@
-import asyncio
-import logging
-import logging.handlers
-import os
-import discord
-import typing
+import logging, logging.handlers, typing
+from pathlib import Path
+from asyncio import run
+from requests import post
+from os import environ
 
-from discord.ext import commands
-import pathlib
+import discord
+import discord.ext.commands as cmds
+
 from utils.help import CustomHelp
-from utils import ids
+from utils.ids import *
+
 
 logger = logging.getLogger(__name__)
 
 # Good practices from discord example repository:
 # https://github.com/Rapptz/discord.py/blob/v2.3.1/examples/advanced_startup.py
-
-class CustomBot(commands.Bot):
+class CustomBot(cmds.Bot):
 
     def __init__(self, *args, **kwargs):
         super().__init__(
@@ -28,7 +28,7 @@ class CustomBot(commands.Bot):
 
     async def setup_hook(self):
 
-        cog_dir = pathlib.Path("cogs")
+        cog_dir = Path("cogs")
 
         for extension in cog_dir.iterdir():
             if extension.is_file():
@@ -36,10 +36,11 @@ class CustomBot(commands.Bot):
                 logger.info(f"extension {extension.stem} loaded")
 
     async def on_ready(self):
-        self.insalgo = typing.cast(discord.Guild, self.get_guild(ids.INSALGO))
-        self.debug_channel = typing.cast(discord.TextChannel, self.get_channel(ids.DEBUG))
+        self.insalgo = typing.cast(discord.Guild, self.get_guild(INSALGO))
+        self.debug_channel = typing.cast(discord.TextChannel, self.get_channel(DEBUG))
         await self.debug_channel.send("Up")
         logger.info("bot up")
+
 
 async def main():
 
@@ -54,7 +55,15 @@ async def main():
     logging.getLogger().addHandler(handler)
 
     async with CustomBot() as bot:
-        await bot.start(os.environ['DISCORD_TOKEN'])
+        await bot.start(environ['DISCORD_TOKEN'])
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        run(main())
+    except KeyboardInterrupt as kb_interrupt:
+        pass
+    
+    # Sending a message to confirm shutdown :
+    headers = {'Authorization': 'Bot %s' % environ['DISCORD_TOKEN'] }
+    post(f"https://discord.com/api/v6/channels/{DEBUG}/messages", headers=headers, json={"content": "Down"})
+#hehe
