@@ -35,10 +35,10 @@ class Silly(cmds.Cog, name="Silly commands"):
 
     async def __di_cri(self, message: discord.Message):
         for word in message.content.split():
-            if word.lower().startswith("di") and len(word) > 2:
+            if word.lower().startswith("di") and len(word) > 2 + 5:
                 await message.channel.send(word[2:])
                 return
-            if word.lower().startswith("cri") and len(word) > 3:
+            if word.lower().startswith("cri") and len(word) > 3 + 5:
                 await message.channel.send(word[3:].upper())
                 return
 
