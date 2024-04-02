@@ -46,16 +46,39 @@ class CodeGolf(cmds.Cog, name="Code golf"):
         challenge_path = CodeGolf.FILES_PATH / str(challenge)
         name = str(ctx.message.author.name)
         file = challenge_path / f"{name}.{extension}"
+        program = requests.get(attachment.url).text
+        size = len(program.encode())    # size in bytes
 
         if not challenge_path.is_dir():
             challenge_path.mkdir(parents=True)
         
-        # TODO only warn of replacement if the new submission is not shorter
-        for previous_file in challenge_path.glob(f"{name}.*"):
-            previous_file.unlink()
-            await ctx.send("Your previous submission will be replaced")
+        # Overwrite previous submissions
+        previous_files = tuple(challenge_path.glob(f"{name}.*"))
+        if previous_files:
+            best_size = min(file.stat().st_size for file in previous_files)
+            if best_size < size:
+                message = await ctx.send(
+                    f"Your previous submission is better: {best_size} bytes < {size} bytes\n"
+                    "Are you sure you want to replace it? <:chokbar:1224778767025569874>")
+                await message.add_reaction("👍")
+                await message.add_reaction("👎")
+                
+                def check(reaction: discord.Reaction, user: discord.User):
+                    return user == ctx.author and reaction.message == message and reaction.emoji in ("👍", "👎")
+                
+                try:
+                    reaction, _ = await self.bot.wait_for("reaction_add", check=check, timeout=30)
+                    if reaction.emoji == "👎":
+                        await ctx.send("Submission cancelled <:sad_cat:1224776278092288051>")
+                        return
+                except TimeoutError:
+                    await ctx.send("Submission cancelled <:sad_cat:1224776278092288051>")
+                    return
+            
+            for file in previous_files:
+                file.unlink()
 
-        program = requests.get(attachment.url).text
+        
         with file.open("w") as content:
             content.write(program)
         
@@ -63,7 +86,7 @@ class CodeGolf(cmds.Cog, name="Code golf"):
         characters = len(program)
         # TODO send a message in the code golf channel if it is a new record
 
-        await ctx.send(f"Program submitted! <:feelsgood:737960024390762568> {bytes} bytes / {characters} characters")
+        await ctx.send(f"Program submitted! <:feelsgood:737960024390762568> {bytes} bytes{f' ({characters} characters)' if characters != bytes else ''}")
 
     @golf.command()
     async def leaderboard(self, ctx: cmds.Context, challenge: challenge = None):
