@@ -19,6 +19,8 @@ class CodeGolf(cmds.Cog, name="Code golf"):
 
     def __init__(self, bot: CustomBot):
         self.bot = bot
+        if not CodeGolf.FILES_PATH.exists():
+            CodeGolf.FILES_PATH.mkdir()
 
     @cmds.group()
     async def golf(self, ctx: cmds.Context):
@@ -46,7 +48,7 @@ class CodeGolf(cmds.Cog, name="Code golf"):
         challenge_path = CodeGolf.FILES_PATH / challenge
         if not challenge_path.is_dir():
             await ctx.send(f"Created challenge {challenge}")
-            challenge_path.mkdir(parents=True)
+            challenge_path.mkdir()
 
         for file in challenge_path.glob(f"{CodeGolf.REFERENCE_IMPLEM}.*"):
             file.unlink()
