@@ -51,7 +51,7 @@ class Geometry(cmds.Cog) :
 
     @geom.command()
     async def CH(self, ctx: cmds.Context, exercise: str = None) :
-
+        return
         if exercise not in self.CH_exos :
             message = f"Invalid exercise `{exercise}`, available exercises are : {self.CH_exos_txt}"
             raise commands.BadArgument(message)
