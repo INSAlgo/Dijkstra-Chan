@@ -58,7 +58,7 @@ class Admin(commands.Cog):
             await self.bot.get_channel(DEBUG).send(res)
 
 
-    @commands.command()
+    @commands.command(aliases=["down"])
     @commands.has_role(BUREAU)
     async def shutdown(self, ctx: commands.Context) :
         """

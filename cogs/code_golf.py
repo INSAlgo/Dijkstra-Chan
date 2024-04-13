@@ -19,17 +19,19 @@ class CodeGolf(cmds.Cog, name="Code golf"):
 
     def __init__(self, bot: CustomBot):
         self.bot = bot
-        if not CodeGolf.FILES_PATH.exists():
-            CodeGolf.FILES_PATH.mkdir()
+
 
     @cmds.group()
     async def golf(self, ctx: cmds.Context):
         """
         Commands to participate in a code golf contest
         """
+        if not CodeGolf.FILES_PATH.exists():
+            CodeGolf.FILES_PATH.mkdir()
         if ctx.invoked_subcommand is None:
             raise cmds.BadArgument("Invalid subcommand, see `help golf`")
     
+
     def challenge(argument: str) -> str:
         path = CodeGolf.FILES_PATH / argument
         if path.is_dir():
@@ -73,7 +75,7 @@ class CodeGolf(cmds.Cog, name="Code golf"):
         extension = attachment.filename.split(".")[-1]
         challenge_path = CodeGolf.FILES_PATH / challenge
         name = str(ctx.message.author.name)
-        file = challenge_path / f"{name}.{extension}"
+        submission = challenge_path / f"{name}.{extension}"
         program = requests.get(attachment.url).text
         size = len(program.encode())    # size in bytes
         
@@ -106,10 +108,10 @@ class CodeGolf(cmds.Cog, name="Code golf"):
                 file.unlink()
 
         # Save new submission
-        with file.open("w") as content:
+        with submission.open("w") as content:
             content.write(program)
         
-        size = file.stat().st_size
+        size = submission.stat().st_size
         characters = len(program)
         await ctx.send(f"Program submitted! {size} bytes{f' ({characters} characters)' if characters != size else ''} <:feelsgood:737960024390762568> ")
 
@@ -117,9 +119,10 @@ class CodeGolf(cmds.Cog, name="Code golf"):
         code_golf_channel = self.bot.get_channel(ids.CODE_GOLF)
         if size < best_size:
             best_author = discord.utils.get(code_golf_channel.guild.members, name=best_name)
+            best_name = best_author.mention if best_author else best_name
             await code_golf_channel.send(
                 (f"{ctx.author.mention} has just beaten the record on challenge {challenge} with {size} bytes! :golf:\n"
-                f"Previous record holder: {best_author.mention} with {best_size} bytes")
+                f"Previous record holder: {best_name} with {best_size} bytes")
             )
 
 
@@ -142,7 +145,8 @@ class CodeGolf(cmds.Cog, name="Code golf"):
             for i, submission in enumerate(submissions):
                 size, participant = submission
                 if ctx.guild:
-                    participant = discord.utils.get(ctx.guild.members, name=participant).mention
+                    participant = discord.utils.get(ctx.guild.members, name=participant)
+                    participant = participant.mention if participant else participant
                 text.append(f"{i}. {participant} : {size} bytes")
 
             embed.add_field(name=f"Challenge {challenge}", value="\n".join(text), inline=False)
@@ -196,7 +200,8 @@ class CodeGolf(cmds.Cog, name="Code golf"):
         for i, item in enumerate(leaderboard):
             size, count, participant = item
             if ctx.guild:
-                participant = discord.utils.get(ctx.guild.members, name=participant).mention
+                participant = discord.utils.get(ctx.guild.members, name=participant)
+                participant = participant.mention if participant else participant
             text.append(f"{i}. {participant} : {size} bytes ({count} challenges)")
 
         embed.add_field(name=f"Leaderboard", value="\n".join(text), inline=False)
