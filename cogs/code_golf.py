@@ -14,11 +14,12 @@ class CodeGolf(cmds.Cog, name="Code golf"):
     Commands related to a code golf contest
     """
     
-    NB_CHALLENGES = 7
     FILES_PATH = pathlib.Path("saved_data/code_golf")
+    REFERENCE_IMPLEM = "everyone"
 
     def __init__(self, bot: CustomBot):
         self.bot = bot
+        CodeGolf.NB_CHALLENGES = len(tuple(dir for dir in CodeGolf.FILES_PATH.iterdir() if dir.is_dir()))
 
     @cmds.group()
     async def golf(self, ctx: cmds.Context):
@@ -53,6 +54,8 @@ class CodeGolf(cmds.Cog, name="Code golf"):
         if not challenge_path.is_dir():
             challenge_path.mkdir(parents=True)
         
+        best_size, best_name = min((file.stat().st_size, file.stem) for file in challenge_path.iterdir())
+
         # Overwrite previous submissions
         previous_files = tuple(challenge_path.glob(f"{name}.*"))
         if previous_files:
@@ -60,7 +63,7 @@ class CodeGolf(cmds.Cog, name="Code golf"):
             if best_size < size:
                 message = await ctx.send(
                     f"Your previous submission is better: {best_size} bytes < {size} bytes\n"
-                    "Are you sure you want to replace it? <:ah:737340475866087526>")
+                    "Are you sure you want to replace it? <:chokbar:1224778687375741051>")
                 await message.add_reaction("👍")
                 await message.add_reaction("👎")
                 
@@ -79,42 +82,95 @@ class CodeGolf(cmds.Cog, name="Code golf"):
             for file in previous_files:
                 file.unlink()
 
-        best_size, best_name = min((file.stat().st_size, file.stem) for file in challenge_path.iterdir())
-
         # Save new submission
         with file.open("w") as content:
             content.write(program)
         
         size = file.stat().st_size
         characters = len(program)
-        await ctx.send(f"Program submitted! <:feelsgood:737960024390762568> {size} bytes{f' ({characters} characters)' if characters != bytes else ''}")
+        await ctx.send(f"Program submitted!{size} bytes{f' ({characters} characters)' if characters != size else ''} <:feelsgood:737960024390762568> ")
 
         # Send message if new record
         code_golf_channel = self.bot.get_channel(ids.CODE_GOLF)
-        if size < best_size and name != best_name:
+        if size < best_size:
             await code_golf_channel.send(
-                (f"{ctx.author.mention} has just beaten the record on challenge {challenge} with **{size} bytes**! <:chokbar:1224778687375741051>\n"
+                (f"{ctx.author.mention} has just beaten the record on challenge {challenge} with {size} bytes! :golf:\n"
                 f"Previous record holder: {best_name} with {best_size} bytes")
             )
 
 
     @golf.command()
-    async def scores(self, ctx: cmds.Context, challenge: challenge = None):
+    async def scores(self, ctx: cmds.Context, challenge: challenge):
         """
-        Display the scoreboard of the code golf
+        Display the scoreboard of a code golf challenge
         """
 
-        embed = discord.Embed(title=f"Code golf leaderboard")
-        if challenge is not None:
-            challenge_path = CodeGolf.FILES_PATH / str(challenge)
-            leaderboard = [(file.stat().st_size, file.stem) for file in challenge_path.iterdir()]
-            leaderboard.sort()
-            leaderboard = "\n".join(f"{user} : {size} bytes" for size, user in leaderboard)
-            embed.add_field(name=f"Challenge {challenge}", value=leaderboard, inline=False)
-        else:
-            embed.add_field(name=f"All challenges", value="TODO", inline=False) 
+        embed = discord.Embed(title=f"Code golf scoreboard :golf:")
+        
+        challenge_path = CodeGolf.FILES_PATH / str(challenge)
+        submissions = [(file.stat().st_size, file.stem) for file in challenge_path.iterdir() if file.stem != CodeGolf.REFERENCE_IMPLEM]
+        submissions.sort()
 
+        text = []
+        for i, submission in enumerate(submissions):
+            size, participant = submission
+            text.append(f"{i}. {participant} : {size} bytes")
+
+        embed.add_field(name=f"Challenge {challenge}", value="\n".join(text), inline=False)
+        
         await ctx.send(embed=embed)
+
+
+    @golf.command()
+    async def lead(self, ctx: cmds.Context):
+        """
+        Display the leaderboard of of the code golf contest
+        """
+        embed = discord.Embed(title=f"Code golf contest :golf:")
+        
+        participants = set(file.stem for file in CodeGolf.FILES_PATH.glob("*/*"))
+        if CodeGolf.REFERENCE_IMPLEM in participants:
+            participants.remove(CodeGolf.REFERENCE_IMPLEM)
+        
+        sizes = {participant: 0 for participant in participants}
+        chall_count = {participant: 0 for participant in participants}
+        
+        for challenge_dir in CodeGolf.FILES_PATH.iterdir():
+            if not challenge_dir.is_dir() or not len(tuple(challenge_dir.iterdir())):
+                continue
+        
+            try:
+                reference_file = next(challenge_dir.glob(f"{CodeGolf.REFERENCE_IMPLEM}.*"))
+                default_size = reference_file.stat().st_size
+            except StopIteration:
+                default_size = max(file.stat().st_size for file in challenge_dir.iterdir())
+ 
+
+            chall_sizes = {participant: default_size for participant in participants}
+        
+            for file in challenge_dir.iterdir():
+                participant = file.stem
+                if participant == CodeGolf.REFERENCE_IMPLEM:
+                    continue
+                chall_sizes[participant] = file.stat().st_size
+                chall_count[participant] += 1
+        
+            for participant, chall_size in chall_sizes.items():
+                sizes[participant] += chall_size
+
+        leaderboard = []
+        for participant in participants:
+            leaderboard.append((sizes[participant], chall_count[participant], participant))
+        leaderboard.sort()
+
+        text = []
+        for i, item in enumerate(leaderboard):
+            size, count, participant = item
+            text.append(f"{i}. {participant} : {size} bytes ({count} challenges)")
+
+        embed.add_field(name=f"Leaderboard", value="\n".join(text), inline=False)
+        await ctx.send(embed=embed)
+
 
 async def setup(bot: CustomBot):
     await bot.add_cog(CodeGolf(bot))
