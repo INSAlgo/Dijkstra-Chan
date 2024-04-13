@@ -19,7 +19,6 @@ class CodeGolf(cmds.Cog, name="Code golf"):
 
     def __init__(self, bot: CustomBot):
         self.bot = bot
-        CodeGolf.NB_CHALLENGES = len(tuple(dir for dir in CodeGolf.FILES_PATH.iterdir() if dir.is_dir()))
 
     @cmds.group()
     async def golf(self, ctx: cmds.Context):
@@ -29,11 +28,36 @@ class CodeGolf(cmds.Cog, name="Code golf"):
         if ctx.invoked_subcommand is None:
             raise cmds.BadArgument("Invalid subcommand, see `help golf`")
     
-    def challenge(argument: str) -> int:
-        if argument.isnumeric() and 0 < int(argument) <= CodeGolf.NB_CHALLENGES:
-            return int(argument)
+    def challenge(argument: str) -> str:
+        path = CodeGolf.FILES_PATH / argument
+        if path.is_dir():
+            return argument
         else:
-            raise cmds.BadArgument(f"Input the number of the challenge ({CodeGolf.NB_CHALLENGES} available)")
+            challenges = ", ".join(f"{dir.name}" for dir in sorted(CodeGolf.FILES_PATH.iterdir()) if dir.is_dir())
+            raise cmds.BadArgument(f"Invalid challenge name. Available challenges are: {challenges}" )
+
+
+    @golf.command(aliases=["ref"], hidden=True)
+    @cmds.has_role(ids.BUREAU)
+    async def reference(self, ctx: cmds.Context, challenge: str, attachment: discord.Attachment):
+        """
+        Submit a reference implementation for a code golf challenge
+        """
+        challenge_path = CodeGolf.FILES_PATH / challenge
+        if not challenge_path.is_dir():
+            await ctx.send(f"Created challenge {challenge}")
+            challenge_path.mkdir(parents=True)
+
+        for file in challenge_path.glob(f"{CodeGolf.REFERENCE_IMPLEM}.*"):
+            file.unlink()
+
+        extension = attachment.filename.split(".")[-1]
+        file = challenge_path / f"{CodeGolf.REFERENCE_IMPLEM}.{extension}"
+        program = requests.get(attachment.url).text
+        with file.open("w") as content:
+            content.write(program)
+
+        await ctx.send(f"Reference implementation of challenge {challenge} saved :ok_hand:")
 
 
     @golf.command(aliases=["sub"])
@@ -45,14 +69,11 @@ class CodeGolf(cmds.Cog, name="Code golf"):
         """
 
         extension = attachment.filename.split(".")[-1]
-        challenge_path = CodeGolf.FILES_PATH / str(challenge)
+        challenge_path = CodeGolf.FILES_PATH / challenge
         name = str(ctx.message.author.name)
         file = challenge_path / f"{name}.{extension}"
         program = requests.get(attachment.url).text
         size = len(program.encode())    # size in bytes
-
-        if not challenge_path.is_dir():
-            challenge_path.mkdir(parents=True)
         
         best_size, best_name = min((file.stat().st_size, file.stem) for file in challenge_path.iterdir())
 
@@ -101,26 +122,29 @@ class CodeGolf(cmds.Cog, name="Code golf"):
 
 
     @golf.command()
-    async def scores(self, ctx: cmds.Context, challenge: challenge):
+    async def scores(self, ctx: cmds.Context, challenge: challenge = None):
         """
         Display the scoreboard of a code golf challenge
         """
 
         embed = discord.Embed(title=f"Code golf scoreboard :golf:")
         
-        challenge_path = CodeGolf.FILES_PATH / str(challenge)
-        submissions = [(file.stat().st_size, file.stem) for file in challenge_path.iterdir() if file.stem != CodeGolf.REFERENCE_IMPLEM]
-        submissions.sort()
+        challenges = [challenge] if challenge else [dir.name for dir in sorted(CodeGolf.FILES_PATH.iterdir()) if dir.is_dir()]
 
-        text = []
-        for i, submission in enumerate(submissions):
-            size, participant = submission
-            if ctx.guild:
-                participant = discord.utils.get(ctx.guild.members, name=participant).mention
-            text.append(f"{i}. {participant} : {size} bytes")
+        for challenge in challenges:
+            challenge_path = CodeGolf.FILES_PATH / challenge
+            submissions = [(file.stat().st_size, file.stem) for file in challenge_path.iterdir() if file.stem != CodeGolf.REFERENCE_IMPLEM]
+            submissions.sort()
 
-        embed.add_field(name=f"Challenge {challenge}", value="\n".join(text), inline=False)
-        
+            text = []
+            for i, submission in enumerate(submissions):
+                size, participant = submission
+                if ctx.guild:
+                    participant = discord.utils.get(ctx.guild.members, name=participant).mention
+                text.append(f"{i}. {participant} : {size} bytes")
+
+            embed.add_field(name=f"Challenge {challenge}", value="\n".join(text), inline=False)
+            
         await ctx.send(embed=embed, silent=True)
 
 
