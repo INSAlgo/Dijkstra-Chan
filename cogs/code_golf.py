@@ -121,8 +121,8 @@ class CodeGolf(cmds.Cog, name="Code golf"):
         await ctx.send(embed=embed)
 
 
-    @golf.command()
-    async def lead(self, ctx: cmds.Context):
+    @golf.command(aliases=["lead"])
+    async def leaderboard(self, ctx: cmds.Context):
         """
         Display the leaderboard of of the code golf contest
         """
