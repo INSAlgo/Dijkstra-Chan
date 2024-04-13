@@ -1,4 +1,5 @@
 from logging import getLogger
+from pathlib import Path
 
 import discord
 import discord.ext.commands as commands
@@ -20,9 +21,19 @@ class Admin(commands.Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
 
+    @commands.group(aliases=["re"])
+    async def reload(self, ctx: commands.Context, extension: str = ""):
+        """
+        Reload the bot
+        """
+        for cog in Path("cogs").glob("*.py"):
+            await self.bot.reload_extension(f"cogs.{cog.stem}")
+        await ctx.send("Reloaded :rocket:")
+
+
     @commands.command(hidden=True)
     @commands.has_role(BUREAU)
-    async def lesson(self, ctx: commands.Context, repo: str = "", *, lesson: str = ""):
+    async def lesson(self, ctx: commands.Context, repo: str = "", lesson: str = ""):
         """
         Get an embed from the README of a given lesson in a given repo.
         If no repo is given, takes the repo named after the current schoolyear : `INSAlgo-{year1}-{year2}`.
@@ -46,8 +57,9 @@ class Admin(commands.Cog):
             
             await self.bot.get_channel(DEBUG).send(res)
 
-    @commands.command(hidden=True)
-    @commands.is_owner()
+
+    @commands.command()
+    @commands.has_role(BUREAU)
     async def shutdown(self, ctx: commands.Context) :
         """
         Shutdown the bot
@@ -55,6 +67,7 @@ class Admin(commands.Cog):
         await ctx.send("Down")
         logger.info("shutting down")
         await self.bot.close()
+
 
 async def setup(bot: CustomBot):
     await bot.add_cog(Admin(bot))
