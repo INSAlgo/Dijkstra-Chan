@@ -115,11 +115,13 @@ class CodeGolf(cmds.Cog, name="Code golf"):
         text = []
         for i, submission in enumerate(submissions):
             size, participant = submission
+            if ctx.guild:
+                participant = discord.utils.get(ctx.guild.members, name=participant).mention
             text.append(f"{i}. {participant} : {size} bytes")
 
         embed.add_field(name=f"Challenge {challenge}", value="\n".join(text), inline=False)
         
-        await ctx.send(embed=embed)
+        await ctx.send(embed=embed, silent=True)
 
 
     @golf.command(aliases=["lead"])
@@ -167,10 +169,12 @@ class CodeGolf(cmds.Cog, name="Code golf"):
         text = []
         for i, item in enumerate(leaderboard):
             size, count, participant = item
+            if ctx.guild:
+                participant = discord.utils.get(ctx.guild.members, name=participant).mention
             text.append(f"{i}. {participant} : {size} bytes ({count} challenges)")
 
         embed.add_field(name=f"Leaderboard", value="\n".join(text), inline=False)
-        await ctx.send(embed=embed)
+        await ctx.send(embed=embed, silent=True)
 
 
 async def setup(bot: CustomBot):

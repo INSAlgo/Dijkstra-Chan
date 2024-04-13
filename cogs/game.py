@@ -176,7 +176,7 @@ class Game(cmds.Cog, name="Games"):
         
         await ctx.send(embed=embed)
 
-        await ctx.send(file=discord.File(game.log_file))
+        await ctx.send(file=discord.File(game.log_file), silent=True)
 
         game.log_file.unlink()
 
