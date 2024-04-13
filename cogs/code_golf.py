@@ -36,7 +36,7 @@ class CodeGolf(cmds.Cog, name="Code golf"):
             raise cmds.BadArgument(f"Input the number of the challenge ({CodeGolf.NB_CHALLENGES} available)")
 
 
-    @golf.command()
+    @golf.command(aliases=["sub"])
     @cmds.dm_only()
     async def submit(self, ctx: cmds.Context, challenge: challenge, attachment: discord.Attachment):
         """
@@ -88,14 +88,15 @@ class CodeGolf(cmds.Cog, name="Code golf"):
         
         size = file.stat().st_size
         characters = len(program)
-        await ctx.send(f"Program submitted!{size} bytes{f' ({characters} characters)' if characters != size else ''} <:feelsgood:737960024390762568> ")
+        await ctx.send(f"Program submitted! {size} bytes{f' ({characters} characters)' if characters != size else ''} <:feelsgood:737960024390762568> ")
 
         # Send message if new record
         code_golf_channel = self.bot.get_channel(ids.CODE_GOLF)
         if size < best_size:
+            best_author = discord.utils.get(code_golf_channel.guild.members, name=best_name)
             await code_golf_channel.send(
                 (f"{ctx.author.mention} has just beaten the record on challenge {challenge} with {size} bytes! :golf:\n"
-                f"Previous record holder: {best_name} with {best_size} bytes")
+                f"Previous record holder: {best_author.mention} with {best_size} bytes")
             )
 
 
