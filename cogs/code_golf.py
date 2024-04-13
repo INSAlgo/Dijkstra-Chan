@@ -202,7 +202,7 @@ class CodeGolf(cmds.Cog, name="Code golf"):
             if ctx.guild:
                 participant = discord.utils.get(ctx.guild.members, name=participant)
                 participant = participant.mention if participant else participant
-            text.append(f"{i}. {participant} : {size} bytes ({count} challenges)")
+            text.append(f"{i}. {participant} : {size} bytes ({count} challenge{'s' if count > 1 else ''})")
 
         embed.add_field(name=f"Leaderboard", value="\n".join(text), inline=False)
         await ctx.send(embed=embed, silent=True)
