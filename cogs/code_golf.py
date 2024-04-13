@@ -34,6 +34,7 @@ class CodeGolf(cmds.Cog, name="Code golf"):
         else:
             raise cmds.BadArgument(f"Input the number of the challenge ({CodeGolf.NB_CHALLENGES} available)")
 
+
     @golf.command()
     @cmds.dm_only()
     async def submit(self, ctx: cmds.Context, challenge: challenge, attachment: discord.Attachment):
@@ -59,7 +60,7 @@ class CodeGolf(cmds.Cog, name="Code golf"):
             if best_size < size:
                 message = await ctx.send(
                     f"Your previous submission is better: {best_size} bytes < {size} bytes\n"
-                    "Are you sure you want to replace it? <:chokbar:1224778767025569874>")
+                    "Are you sure you want to replace it? <:ah:737340475866087526>")
                 await message.add_reaction("👍")
                 await message.add_reaction("👎")
                 
@@ -78,20 +79,29 @@ class CodeGolf(cmds.Cog, name="Code golf"):
             for file in previous_files:
                 file.unlink()
 
-        
+        best_size, best_name = min((file.stat().st_size, file.stem) for file in challenge_path.iterdir())
+
+        # Save new submission
         with file.open("w") as content:
             content.write(program)
         
-        bytes = file.stat().st_size
+        size = file.stat().st_size
         characters = len(program)
-        # TODO send a message in the code golf channel if it is a new record
+        await ctx.send(f"Program submitted! <:feelsgood:737960024390762568> {size} bytes{f' ({characters} characters)' if characters != bytes else ''}")
 
-        await ctx.send(f"Program submitted! <:feelsgood:737960024390762568> {bytes} bytes{f' ({characters} characters)' if characters != bytes else ''}")
+        # Send message if new record
+        code_golf_channel = self.bot.get_channel(ids.CODE_GOLF)
+        if size < best_size and name != best_name:
+            await code_golf_channel.send(
+                (f"{ctx.author.mention} has just beaten the record on challenge {challenge} with **{size} bytes**! <:chokbar:1224778687375741051>\n"
+                f"Previous record holder: {best_name} with {best_size} bytes")
+            )
+
 
     @golf.command()
-    async def leaderboard(self, ctx: cmds.Context, challenge: challenge = None):
+    async def scores(self, ctx: cmds.Context, challenge: challenge = None):
         """
-        Display the leaderboard of the code golf
+        Display the scoreboard of the code golf
         """
 
         embed = discord.Embed(title=f"Code golf leaderboard")
