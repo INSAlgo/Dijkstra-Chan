@@ -15,7 +15,7 @@ class CustomHelp(commands.HelpCommand):
     async def send_bot_help(self, mapping: Mapping[Optional[Cog], List[Command[Any, ..., Any]]], /) -> None:
 
         desc = []
-        desc.append(f"INSAlgo's personal bot ! Available on [GitHub](https://github.com/INSAlgo/Dijkstra-Chan) and open to contributions.")
+        desc.append(f"INSAlgo's personal bot! Available on [GitHub](https://github.com/INSAlgo/Dijkstra-Chan) and open to contributions.")
         desc.append(f"The following is a list of the commands that you can use with the prefix `{self.context.prefix}`")
         embed = discord.Embed(color=discord.Color.dark_grey(),
                               title = "Dijkstra-Chan's help",
