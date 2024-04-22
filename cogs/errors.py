@@ -42,7 +42,7 @@ class ErrorHandler(cmds.Cog, name="Errors"):
         except cmds.PrivateMessageOnly:
             await ctx.send(f"{self.emote} This command can only be used in DM")
         except cmds.NoPrivateMessage:
-            await ctx.send(f"{self.emote} This is not working as excpected")
+            await ctx.send(f"{self.emote} This command does not work in DM")
         except cmds.NotOwner:
             await ctx.send(f"{self.emote} You must own this bot to run this command")
         except cmds.MissingPermissions as d_error:
