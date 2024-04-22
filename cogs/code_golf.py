@@ -36,6 +36,7 @@ class CodeGolf(cmds.Cog, name="Code golf"):
         "zig": "Zig",
         "nim": "Nim",
         "ua": "Uiua",
+        "sage": "Sage",
     }
 
     def __init__(self, bot: CustomBot):
