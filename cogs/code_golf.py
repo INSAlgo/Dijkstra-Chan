@@ -16,6 +16,26 @@ class CodeGolf(cmds.Cog, name="Code golf"):
     
     FILES_PATH = pathlib.Path("saved_data/code_golf")
     REFERENCE_IMPLEM = "everyone"
+    EXTENSIONS = {
+        "py": "Python",
+        "c": "C",
+        "cpp": "C++",
+        "java": "Java",
+        "js": "JavaScript",
+        "rs": "Rust",
+        "hs": "Haskell",
+        "pl": "Perl/Prolog",
+        "sh": "Shell",
+        "go": "Go",
+        "cs": "C#",
+        "kt": "Kotlin",
+        "php": "PHP",
+        "lua": "Lua",
+        "rb": "Ruby",
+        "ml": "OCaml",
+        "zig": "Zig",
+        "nim": "Nim",
+    }
 
     def __init__(self, bot: CustomBot):
         self.bot = bot
@@ -71,6 +91,10 @@ class CodeGolf(cmds.Cog, name="Code golf"):
         Submit a program to the code golf contest.
         This command must be used in private message, with your program as an attachment.
         """
+        
+        if "." not in attachment.filename:
+            await ctx.send("Missing file extension, I can't tell the language of your program :confused:")
+            return
 
         extension = attachment.filename.split(".")[-1]
         challenge_path = CodeGolf.FILES_PATH / challenge
@@ -138,16 +162,18 @@ class CodeGolf(cmds.Cog, name="Code golf"):
 
         for challenge in challenges:
             challenge_path = CodeGolf.FILES_PATH / challenge
-            submissions = [(file.stat().st_size, file.stem) for file in challenge_path.iterdir() if file.stem != CodeGolf.REFERENCE_IMPLEM]
+            submissions = [(file.stat().st_size, file.stat().st_mtime, file) for file in challenge_path.iterdir() if file.stem != CodeGolf.REFERENCE_IMPLEM]
             submissions.sort()
 
             text = []
             for i, submission in enumerate(submissions):
-                size, participant = submission
+                size, _, file = submission
+                participant, extension = file.stem, file.suffix[1:]
+                language = CodeGolf.EXTENSIONS[extension] if extension in CodeGolf.EXTENSIONS else extension
                 if ctx.guild:
                     participant = discord.utils.get(ctx.guild.members, name=participant)
                     participant = participant.mention if participant else participant
-                text.append(f"{i}. {participant} : {size} bytes")
+                text.append(f"{i}. {participant} : {size} bytes ({language})")
 
             embed.add_field(name=f"Challenge {challenge}", value="\n".join(text), inline=False)
             
