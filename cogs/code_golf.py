@@ -84,10 +84,10 @@ class CodeGolf(cmds.Cog, name="Code golf"):
         # Overwrite previous submissions
         previous_files = tuple(challenge_path.glob(f"{name}.*"))
         if previous_files:
-            best_size = min(file.stat().st_size for file in previous_files)
-            if best_size < size:
+            previous_size = min(file.stat().st_size for file in previous_files)
+            if previous_size < size:
                 message = await ctx.send(
-                    f"Your previous submission is better: {best_size} bytes < {size} bytes\n"
+                    f"Your previous submission is better: {previous_size} bytes < {size} bytes\n"
                     "Are you sure you want to replace it? <:chokbar:1224778687375741051>")
                 await message.add_reaction("👍")
                 await message.add_reaction("👎")
