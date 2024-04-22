@@ -35,6 +35,7 @@ class CodeGolf(cmds.Cog, name="Code golf"):
         "ml": "OCaml",
         "zig": "Zig",
         "nim": "Nim",
+        "ua": "Uiua",
     }
 
     def __init__(self, bot: CustomBot):
@@ -151,6 +152,7 @@ class CodeGolf(cmds.Cog, name="Code golf"):
 
 
     @golf.command()
+    @cmds.guild_only()
     async def scores(self, ctx: cmds.Context, challenge: challenge = None):
         """
         Display the scoreboard of a code golf challenge
@@ -168,12 +170,22 @@ class CodeGolf(cmds.Cog, name="Code golf"):
             text = []
             for i, submission in enumerate(submissions):
                 size, _, file = submission
-                participant, extension = file.stem, file.suffix[1:]
+                name, extension = file.stem, file.suffix[1:]
                 language = CodeGolf.EXTENSIONS[extension] if extension in CodeGolf.EXTENSIONS else extension
-                if ctx.guild:
-                    participant = discord.utils.get(ctx.guild.members, name=participant)
-                    participant = participant.mention if participant else participant
-                text.append(f"{i}. {participant} : {size} bytes ({language})")
+                
+                member = discord.utils.get(ctx.guild.members, name=name)
+                mention = member.mention if member else name
+                bureau = discord.utils.get(ctx.guild.roles, id=ids.BUREAU)
+
+                if member and bureau in member.roles:
+                    mention = f"~~{mention}~~"
+                
+                line = f"{i}. {mention} : {size} bytes ({language})"
+                
+                if member and bureau in member.roles:
+                    line = f"{line} {bureau.mention}"
+
+                text.append(line)
 
             embed.add_field(name=f"Challenge {challenge}", value="\n".join(text), inline=False)
             
@@ -181,6 +193,7 @@ class CodeGolf(cmds.Cog, name="Code golf"):
 
 
     @golf.command(aliases=["lead"])
+    @cmds.guild_only()
     async def leaderboard(self, ctx: cmds.Context):
         """
         Display the leaderboard of of the code golf contest
@@ -224,11 +237,22 @@ class CodeGolf(cmds.Cog, name="Code golf"):
 
         text = []
         for i, item in enumerate(leaderboard):
-            size, count, participant = item
-            if ctx.guild:
-                participant = discord.utils.get(ctx.guild.members, name=participant)
-                participant = participant.mention if participant else participant
-            text.append(f"{i}. {participant} : {size} bytes ({count} challenge{'s' if count > 1 else ''})")
+            size, count, name = item
+            mention = name
+
+            participant = discord.utils.get(ctx.guild.members, name=name)
+            mention = participant.mention if participant else name
+            bureau = discord.utils.get(ctx.guild.roles, id=ids.BUREAU)
+
+            if participant and bureau in participant.roles:
+                mention = f"~~{mention}~~"
+            
+            line = f"{i}. {mention} : {size} bytes ({count} challenge{'s' if count > 1 else ''})"
+
+            if participant and bureau in participant.roles:
+                line = f"{line} {bureau.mention}"
+
+            text.append(line)
 
         embed.add_field(name=f"Leaderboard", value="\n".join(text), inline=False)
         await ctx.send(embed=embed, silent=True)
