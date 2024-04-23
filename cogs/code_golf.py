@@ -246,18 +246,18 @@ class CodeGolf(cmds.Cog, name="Code golf"):
             size, count, name = item
             mention = name
 
-            participant = discord.utils.get(ctx.guild.members, name=name)
-            mention = participant.mention if participant else name
+            member = discord.utils.get(ctx.guild.members, name=name)
+            mention = member.mention if member else name
             if name == CodeGolf.REFERENCE_IMPLEM:
                     mention = ctx.guild.default_role
             bureau = discord.utils.get(ctx.guild.roles, id=ids.BUREAU)
 
-            if participant and bureau in participant.roles:
+            if member and bureau in member.roles:
                 mention = f"~~{mention}~~"
             
             line = f"{i}. {mention} : {size} bytes ({count} challenge{'s' if count > 1 else ''})"
 
-            if participant and bureau in participant.roles:
+            if member and bureau in member.roles:
                 line = f"{line} {bureau.mention}"
 
             text.append(line)
