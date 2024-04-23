@@ -150,6 +150,13 @@ class CodeGolf(cmds.Cog, name="Code golf"):
                 (f"{ctx.author.mention} has just beaten the record on challenge {challenge} with {size} bytes! :golf:\n"
                 f"Previous record holder: {best_name} with {best_size} bytes")
             )
+        
+        # Add role Code Golf to author
+        guild = discord.utils.get(self.bot.guilds, id=ids.INSALGO)
+        member = discord.utils.get(guild.members, id=ctx.message.author.id)
+        if member:
+            code_golf = discord.utils.get(guild.roles, id=ids.CODE_GOLF_ROLE)
+            await member.add_roles(code_golf)
 
 
     @golf.command()
