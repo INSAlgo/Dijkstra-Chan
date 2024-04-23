@@ -160,7 +160,7 @@ class CodeGolf(cmds.Cog, name="Code golf"):
 
 
     @golf.command()
-    @cmds.guild_only()
+    @cmds.guild_only(aliases=["sb"])
     async def scores(self, ctx: cmds.Context, challenge: challenge = None):
         """
         Display the scoreboard of a code golf challenge
@@ -202,7 +202,7 @@ class CodeGolf(cmds.Cog, name="Code golf"):
         await ctx.send(embed=embed, silent=True)
 
 
-    @golf.command(aliases=["lead"])
+    @golf.command(aliases=["lead", "lb"])
     @cmds.guild_only()
     async def leaderboard(self, ctx: cmds.Context):
         """
