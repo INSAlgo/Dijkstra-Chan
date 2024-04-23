@@ -172,7 +172,7 @@ class CodeGolf(cmds.Cog, name="Code golf"):
 
         for challenge in challenges:
             challenge_path = CodeGolf.FILES_PATH / challenge
-            submissions = [(file.stat().st_size, file.stat().st_mtime, file) for file in challenge_path.iterdir() if file.stem != CodeGolf.REFERENCE_IMPLEM]
+            submissions = [(file.stat().st_size, file.stat().st_mtime, file) for file in challenge_path.iterdir()]
             submissions.sort()
 
             text = []
@@ -183,6 +183,8 @@ class CodeGolf(cmds.Cog, name="Code golf"):
                 
                 member = discord.utils.get(ctx.guild.members, name=name)
                 mention = member.mention if member else name
+                if name == CodeGolf.REFERENCE_IMPLEM:
+                    mention = ctx.guild.default_role
                 bureau = discord.utils.get(ctx.guild.roles, id=ids.BUREAU)
 
                 if member and bureau in member.roles:
@@ -209,8 +211,6 @@ class CodeGolf(cmds.Cog, name="Code golf"):
         embed = discord.Embed(title=f"Code golf contest :golf:")
         
         participants = set(file.stem for file in CodeGolf.FILES_PATH.glob("*/*"))
-        if CodeGolf.REFERENCE_IMPLEM in participants:
-            participants.remove(CodeGolf.REFERENCE_IMPLEM)
         
         sizes = {participant: 0 for participant in participants}
         chall_count = {participant: 0 for participant in participants}
@@ -230,8 +230,6 @@ class CodeGolf(cmds.Cog, name="Code golf"):
         
             for file in challenge_dir.iterdir():
                 participant = file.stem
-                if participant == CodeGolf.REFERENCE_IMPLEM:
-                    continue
                 chall_sizes[participant] = file.stat().st_size
                 chall_count[participant] += 1
         
@@ -250,6 +248,8 @@ class CodeGolf(cmds.Cog, name="Code golf"):
 
             participant = discord.utils.get(ctx.guild.members, name=name)
             mention = participant.mention if participant else name
+            if name == CodeGolf.REFERENCE_IMPLEM:
+                    mention = ctx.guild.default_role
             bureau = discord.utils.get(ctx.guild.roles, id=ids.BUREAU)
 
             if participant and bureau in participant.roles:
