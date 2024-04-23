@@ -159,8 +159,8 @@ class CodeGolf(cmds.Cog, name="Code golf"):
             await member.add_roles(code_golf)
 
 
-    @golf.command()
-    @cmds.guild_only(aliases=["sb"])
+    @golf.command(aliases=["sb"])
+    @cmds.guild_only()
     async def scores(self, ctx: cmds.Context, challenge: challenge = None):
         """
         Display the scoreboard of a code golf challenge
