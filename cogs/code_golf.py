@@ -60,8 +60,14 @@ class CodeGolf(cmds.Cog, name="Code golf"):
             return argument
         else:
             challenges = ", ".join(f"{dir.name}" for dir in sorted(CodeGolf.FILES_PATH.iterdir()) if dir.is_dir())
-            raise cmds.BadArgument(f"Invalid challenge name. Available challenges are: {challenges}" )
+            raise cmds.BadArgument(f"{argument} is not a valid challenge. Available challenges are: {challenges}" )
 
+    def challenges(arguments: str) -> str:
+        challenges = []
+        for argument in arguments.split(","):
+            if argument:
+                challenges.append(CodeGolf.challenge(argument))
+        return challenges
 
     @golf.command(aliases=["ref"], hidden=True)
     @cmds.has_role(ids.BUREAU)
@@ -161,14 +167,12 @@ class CodeGolf(cmds.Cog, name="Code golf"):
 
     @golf.command(aliases=["sb"])
     @cmds.guild_only()
-    async def scores(self, ctx: cmds.Context, challenge: challenge):
+    async def scores(self, ctx: cmds.Context, challenges: challenges):
         """
         Display the scoreboard of a code golf challenge
         """
 
         embed = discord.Embed(title=f"Code golf scoreboard :golf:")
-        
-        challenges = [challenge] if challenge else [dir.name for dir in sorted(CodeGolf.FILES_PATH.iterdir()) if dir.is_dir()]
 
         for challenge in challenges:
             challenge_path = CodeGolf.FILES_PATH / challenge
