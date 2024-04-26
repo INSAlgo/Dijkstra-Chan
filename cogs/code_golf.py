@@ -253,7 +253,8 @@ class CodeGolf(cmds.Cog, name="Code golf"):
             member = discord.utils.get(ctx.guild.members, name=name)
             mention = member.mention if member else name
             if name == CodeGolf.REFERENCE_IMPLEM:
-                    mention = ctx.guild.default_role
+                mention = ctx.guild.default_role
+                count = 0
             bureau = discord.utils.get(ctx.guild.roles, id=ids.BUREAU)
 
             if member and bureau in member.roles:
