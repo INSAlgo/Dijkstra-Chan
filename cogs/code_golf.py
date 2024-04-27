@@ -107,9 +107,7 @@ class CodeGolf(cmds.Cog, name="Code golf"):
         extension = attachment.filename.split(".")[-1]
         challenge_path = CodeGolf.FILES_PATH / challenge
         name = str(ctx.message.author.name)
-        submission = challenge_path / f"{name}.{extension}"
-        program = requests.get(attachment.url).text
-        size = len(program.encode())    # size in bytes
+        submission: pathlib.Path = challenge_path / f"{name}.{extension}"
         
         best_size, best_name = min((file.stat().st_size, file.stem) for file in challenge_path.iterdir())
 
@@ -117,9 +115,9 @@ class CodeGolf(cmds.Cog, name="Code golf"):
         previous_files = tuple(challenge_path.glob(f"{name}.*"))
         if previous_files:
             previous_size = min(file.stat().st_size for file in previous_files)
-            if previous_size < size:
+            if previous_size < attachment.size:
                 message = await ctx.send(
-                    f"Your previous submission is better: {previous_size} bytes < {size} bytes\n"
+                    f"Your previous submission is better: {previous_size} bytes < {attachment.size} bytes\n"
                     "Are you sure you want to replace it? <:chokbar:1224778687375741051>")
                 await message.add_reaction("👍")
                 await message.add_reaction("👎")
@@ -130,22 +128,20 @@ class CodeGolf(cmds.Cog, name="Code golf"):
                 try:
                     reaction, _ = await self.bot.wait_for("reaction_add", check=check, timeout=30)
                     if reaction.emoji == "👎":
-                        await ctx.send("Submission cancelled <:sad_cat:1224776278092288051>")
+                        await ctx.send("Submission cancelled <:sad_cat:737953393816895549>")
                         return
                 except TimeoutError:
-                    await ctx.send("Submission cancelled <:sad_cat:1224776278092288051>")
+                    await ctx.send("Submission cancelled <:sad_cat:737953393816895549>")
                     return
             
             for file in previous_files:
                 file.unlink()
 
         # Save new submission
-        with submission.open("w") as content:
-            content.write(program)
+        await attachment.save(submission)
         
         size = submission.stat().st_size
-        characters = len(program)
-        await ctx.send(f"Program submitted! {size} bytes{f' ({characters} characters)' if characters != size else ''} <:feelsgood:737960024390762568> ")
+        await ctx.send(f"Program submitted! {size} bytes <:feelsgood:737960024390762568> ")
 
         # Send message if new record
         code_golf_channel = self.bot.get_channel(ids.CODE_GOLF)
