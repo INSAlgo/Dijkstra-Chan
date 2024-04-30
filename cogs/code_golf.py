@@ -14,7 +14,8 @@ class CodeGolf(cmds.Cog, name="Code golf"):
     Commands related to a code golf contest
     """
     
-    FILES_PATH = pathlib.Path("saved_data/code_golf")
+    ONGOING = False
+    FILES_PATH = pathlib.Path("saved_data/code_golf_2024")
     REFERENCE_IMPLEM = "everyone"
     EXTENSIONS = {
         "py": "Python",
@@ -99,6 +100,10 @@ class CodeGolf(cmds.Cog, name="Code golf"):
         Submit a program to the code golf contest.
         This command must be used in private message, with your program as an attachment.
         """
+
+        if not CodeGolf.ONGOING:
+            await ctx.send("The contest has ended, you can no longer submit :face_in_clouds:")
+            return
         
         if "." not in attachment.filename:
             await ctx.send("Missing file extension, I can't tell the language of your program :confused:")
