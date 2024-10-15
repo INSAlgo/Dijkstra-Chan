@@ -1,5 +1,6 @@
 from logging import getLogger
 from pathlib import Path
+from urllib.parse import quote
 
 import discord
 import discord.ext.commands as commands
@@ -38,17 +39,30 @@ class Admin(commands.Cog):
         Get an embed from the README of a given lesson in a given repo.
         If no repo is given, takes the repo named after the current schoolyear : `INSAlgo-{year1}-{year2}`.
         If no lesson is given, takes the lesson with the highest number.
+        You can pass a lesson number for the current year, or the year of the repo followed by the lesson number, or the name of either or both.
         """
 
-        err_code, res = github_client.get_lesson_ressource(repo, lesson)
+        if lesson == "" :
+            lesson = repo
+            repo = ""
+
+        err_code, repo, lesson = github_client.find_lesson_ressource(repo, lesson)
+        err_code, res = github_client.get_repo_readme(repo, lesson)
+
 
         if err_code == 0:
             emb = embed_lesson(res).set_thumbnail(url="attachment://INSAlgo.png")
             logo = discord.File("data/INSAlgo.png", filename="INSAlgo.png")
             channel = self.bot.get_channel(RESSOURCES)
+
+            if not emb.url.startswith('http'):
+                file = emb.url
+                url = f"https://github.com/INSAlgo/{repo}/blob/main/{lesson}/{file}"
+                emb.url = quote(url, safe=':/')
+
             assert isinstance(channel, discord.TextChannel)
             await channel.send(file=logo, embed=emb)
-        
+
         else :
             if err_code == 5 :
                 res += "\nYou can also pass the exact repo name as an argument of this function."

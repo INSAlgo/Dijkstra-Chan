@@ -246,36 +246,67 @@ class GithubClient(Client) :
         
         return 0, [dir_["name"] for dir_ in self.lr_response(json=True)]
 
-    def get_lesson_ressource(self, repo: str = "", lesson: str = "") -> tuple[int, str] :
+    def find_lesson_ressource(self, repo: str = "", lesson: str = "") -> tuple[int, str] :
+        err_code, res = self.get_INSAlgo_repos()
+    
+        if err_code > 0 :
+            return 5, f"Could not get INSAlgo's repos :\n{res}"
+
         if repo == "" :
-            err_code, res = self.get_INSAlgo_repos()
-        
-            if err_code > 0 :
-                return 5, f"Could not get INSAlgo's repos :\n{res}"
-            
             cur_year = datetime.today().year
 
-            cur_name = f"INSAlgo-{cur_year-1}-{cur_year}"
+            cur_name = f"INSAlgo-{cur_year}-{cur_year+1}"
             if cur_name not in res :
-                cur_name = f"INSAlgo-{cur_year}-{cur_year+1}"
+                cur_name = f"INSAlgo-{cur_year-1}-{cur_year}"
                 if cur_name not in res :
                     return 5, "Could not find an appropriate repo for the current year. Name should be `INSAlgo-{year1}-{year2}`."
             
             repo = cur_name
+        else:
+            found = False
+            if repo not in res and repo.isdigit() :
+                for repo_name in res:
+                    if not repo_name.startswith("INSAlgo-") or len(repo_name.split('-')) != 3: continue
 
-        if lesson == "" :
+                    _, year_a, year_b = repo_name.split('-')
+                    if int(year_a) == int(repo):
+                        repo = repo_name
+                        found = True
+                        break
 
-            err_code, res = self.get_INSAlgo_lessons(repo)
+            if not found:
+                return 5, "Could not find an appropriate repo for the current year. Name should be `INSAlgo-{year1}-{year2}`."
 
-            if err_code > 0 :
-                return 6, f"Could not get lessons from `{repo}` :\n{res}"
+        # if lesson == "" :
 
-            try :
-                lesson = max(res, key=lambda s: int(s.split(' ')[0]))
-            
-            except ValueError :
-                return 6, f"No valid lesson name found in `{repo}`. Check `https://github.com/INSAlgo/INSAlgo-2022-2023` for reference."
-        
-        return self.get_repo_readme(repo, lesson)
+        err_code, res = self.get_INSAlgo_lessons(repo)
+
+        if err_code > 0 :
+            return 6, f"Could not get lessons from `{repo}` :\n{res}"
+
+        if lesson == "":
+            best = 0
+            for l in res:
+                num = l.split(' ')[0]
+                if num.isdigit() and int(num) > best:
+                    best = int(num)
+                    lesson = l
+        else:
+            found = False
+            for l in res:
+                if l == lesson:
+                    found = True
+                    break
+                elif lesson.isdigit():
+                    num = l.split(' ')[0]
+                    if num.isdigit() and int(num) == int(lesson) :
+                        lesson = l
+                        found = True
+                        break
+
+            if not found:
+                raise Exception(f"No valid lesson name found in `{repo}`. Check `https://github.com/INSAlgo/INSAlgo-2022-2023` for reference.")
+
+        return 0, repo, lesson
 
 github_client = GithubClient()
