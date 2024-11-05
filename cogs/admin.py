@@ -46,11 +46,13 @@ class Admin(commands.Cog):
             lesson = repo
             repo = ""
 
-        err_code, repo, lesson = github_client.find_lesson_ressource(repo, lesson)
-        err_code, res = github_client.get_repo_readme(repo, lesson)
+        try:
+            repo, lesson = github_client.find_lesson_ressource(repo, lesson)
+            res = github_client.get_repo_readme(repo, lesson)
+        except Exception as e:
+            await self.bot.get_channel(DEBUG).send(str(res))
 
-
-        if err_code == 0:
+        else:
             emb = embed_lesson(res).set_thumbnail(url="attachment://INSAlgo.png")
             logo = discord.File("data/INSAlgo.png", filename="INSAlgo.png")
             channel = self.bot.get_channel(RESSOURCES)
@@ -63,13 +65,6 @@ class Admin(commands.Cog):
             assert isinstance(channel, discord.TextChannel)
             await channel.send(file=logo, embed=emb)
 
-        else :
-            if err_code == 5 :
-                res += "\nYou can also pass the exact repo name as an argument of this function."
-            if err_code == 6 :
-                res += "\nYou can also pass the exact lesson (folder) name as an argument of this function."
-            
-            await self.bot.get_channel(DEBUG).send(res)
 
 
     @commands.command(aliases=["down"])

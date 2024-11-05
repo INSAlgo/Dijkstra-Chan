@@ -196,23 +196,23 @@ class GithubClient(Client) :
             path = f"repos/INSAlgo/{repo}/contents/README.md"
         
         if not self.get(path) :
-            return 3, f"cannot connect to GitHub API through `api.github.com/{path}`"
-        
+            raise Exception(f"cannot connect to GitHub API through `api.github.com/{path}`")
+
         resp = self.lr_response()
 
         if self.lr_status_code() == 403 :
-            return 2, self.get_api_rate()[1]
-        
+            raise Exception(self.get_api_rate()[1])
+
         if self.lr_status_code() != 200 :
-            return 3, f"response status code not OK : {self.lr_status_code()}"
+            raise Exception(f"response status code not OK : {self.lr_status_code()}")
 
         try :
             raw_text = b64dcd(resp["content"]).decode("utf-8")
 
-            return 0, raw_text
+            return raw_text
         
         except Exception as err:
-            return 4, f"could not decode file : {err}"
+            raise Exception(f"could not decode file : {err}")
 
 
     # Methods to get the ressources for a lesson.
@@ -248,9 +248,9 @@ class GithubClient(Client) :
 
     def find_lesson_ressource(self, repo: str = "", lesson: str = "") -> tuple[int, str] :
         err_code, res = self.get_INSAlgo_repos()
-    
+
         if err_code > 0 :
-            return 5, f"Could not get INSAlgo's repos :\n{res}"
+            raise Exception(f"Could not get INSAlgo's repos :\n{res}")
 
         if repo == "" :
             cur_year = datetime.today().year
@@ -259,7 +259,7 @@ class GithubClient(Client) :
             if cur_name not in res :
                 cur_name = f"INSAlgo-{cur_year-1}-{cur_year}"
                 if cur_name not in res :
-                    return 5, "Could not find an appropriate repo for the current year. Name should be `INSAlgo-{year1}-{year2}`."
+                    raise Exception("Could not find an appropriate repo for the current year. Name should be `INSAlgo-{year1}-{year2}`.")
             
             repo = cur_name
         else:
@@ -275,14 +275,14 @@ class GithubClient(Client) :
                         break
 
             if not found:
-                return 5, "Could not find an appropriate repo for the current year. Name should be `INSAlgo-{year1}-{year2}`."
+                raise Exception("Could not find an appropriate repo for the current year. Name should be `INSAlgo-{year1}-{year2}`.")
 
         # if lesson == "" :
 
         err_code, res = self.get_INSAlgo_lessons(repo)
 
         if err_code > 0 :
-            return 6, f"Could not get lessons from `{repo}` :\n{res}"
+            raise Exception(f"Could not get lessons from `{repo}` :\n{res}")
 
         if lesson == "":
             best = 0
@@ -307,6 +307,6 @@ class GithubClient(Client) :
             if not found:
                 raise Exception(f"No valid lesson name found in `{repo}`. Check `https://github.com/INSAlgo/INSAlgo-2022-2023` for reference.")
 
-        return 0, repo, lesson
+        return repo, lesson
 
 github_client = GithubClient()
