@@ -48,7 +48,7 @@ async def main():
     logging.basicConfig(format="[%(levelname)s] %(name)s: %(message)s", level=logging.INFO)
 
     # File logger
-    handler = logging.handlers.RotatingFileHandler(filename="bot.log")
+    handler = logging.handlers.RotatingFileHandler(filename="bot.log", maxBytes=10**5, backupCount=5)
     date_format = '%Y-%m-%d %H:%M:%S'
     formatter = logging.Formatter('[{asctime}] [{levelname:<8}] {name}: {message}', date_format, style='{')
     handler.setFormatter(formatter)
