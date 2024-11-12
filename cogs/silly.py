@@ -7,6 +7,7 @@ from utils.checks import in_channel
 from main import CustomBot
 from utils.ids import COMMANDS
 
+fact = 1
 
 class Silly(cmds.Cog, name="Silly commands"):
     """
@@ -17,19 +18,19 @@ class Silly(cmds.Cog, name="Silly commands"):
         self.bot = bot
 
     async def __factorial(self, message: discord.Message, nb: int):
+        "Yes, it seems that this is ugly on purpose"
+        global fact
         if nb < 0 :
             await message.channel.send("number cannot be negative !")
         elif nb > 20 :
             await message.channel.send(f"!factorial {nb-1}\njust joking, I'm not doing that")
-        else:
-            fact = 1
-            while nb > 1 :
-                await asyncio.sleep(1)
-                await message.channel.send(f"!factorial {nb-1}")
-                fact *= nb
-                nb -= 1
-
+        elif nb <= 1 :
             await message.channel.send(f"result : {fact}")
+            fact = 1
+        else :
+            fact *= nb
+            await asyncio.sleep(1)
+            await message.channel.send(f"!factorial {nb-1}")
         return
 
     async def __di_cri(self, message: discord.Message):
@@ -46,6 +47,13 @@ class Silly(cmds.Cog, name="Silly commands"):
         """
         Parse every message to find if there is a silly thing to answer
         """
+        
+        # Self responding :
+
+        if message.author == self.bot.user:
+            if re.fullmatch(r"^\!factorial [0-9]+$", message.content) is not None:
+                nb = int(message.content.split(' ')[-1])
+                await self.__factorial(message, nb)
 
         # To prevent self response
         if message.author == self.bot.user :
