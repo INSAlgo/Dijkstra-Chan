@@ -55,7 +55,7 @@ class Admin(commands.Cog):
         else:
             emb = embed_lesson(res).set_thumbnail(url="attachment://INSAlgo.png")
             logo = discord.File("data/INSAlgo.png", filename="INSAlgo.png")
-            channel = self.bot.get_channel(RESSOURCES)
+            channel = self.bot.get_channel(COMM_SEANCE)
 
             if not emb.url.startswith('http'):
                 file = emb.url
