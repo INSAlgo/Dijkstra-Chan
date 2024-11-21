@@ -5,9 +5,8 @@ from requests.exceptions import HTTPError, JSONDecodeError
 from requests.compat import urljoin
 
 class Client:
-    def __init__(self, baseUrl: str, defaultProtocol: str = "https") :
-        self.__baseUrl__ = baseUrl
-        self.__defaultProtocol__ = defaultProtocol
+    def __init__(self, baseUrl: str) :
+        self.__baseUrl__ = baseUrl # WITH protocol
         self.__r__ = None #Server response
         self.__error__ = None #errors
 
@@ -16,16 +15,14 @@ class Client:
         self.__baseUrl__ = baseUrl
 
     #Creates a url out of a Client object, a route and a protocol
-    def make_url(self, route: str, protocol: str | None = None) -> str :
-        if protocol is None:
-            protocol = self.__defaultProtocol__
-        return protocol + "://" + urljoin(self.__baseUrl__, route)
+    def make_url(self, route: str, ) -> str :
+        return urljoin(self.__baseUrl__, route)
 
     #issues an http get request
-    def get(self, route: str = "", protocol: str | None = None, payload: dict[str, str] = {}, headers: dict[str, str] = {}) -> bool :
+    def get(self, route: str = "", payload: dict[str, str] = {}, headers: dict[str, str] = {}) -> bool :
         res = True
         try :
-            self.__r__ = r.get(self.make_url(route, protocol), params=payload, headers=headers)
+            self.__r__ = r.get(self.make_url(route), params=payload, headers=headers)
             self.__error__ = None
         #possible errors
         except HTTPError as http_err:
@@ -40,13 +37,13 @@ class Client:
     
 
     #issues an http post request
-    def post(self, route: str = "", protocol: str | None = None, data: str | None = None, headers: dict[str, str] = {}) -> bool :
+    def post(self, route: str = "", data: str | None = None, headers: dict[str, str] = {}) -> bool :
         res = True
         try :
             if data is None :
-                self.__r__ = r.post(self.make_url(route, protocol))
+                self.__r__ = r.post(self.make_url(route))
             else :
-                self.__r__ = r.post(self.make_url(route, protocol), data=data, headers=headers)
+                self.__r__ = r.post(self.make_url(route), data=data, headers=headers)
             self.__error__ = None
         #possible errors
         except HTTPError as http_err:

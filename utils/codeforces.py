@@ -6,7 +6,7 @@ from utils.client_template import Client
 class CodeforcesClient(Client) :
 
     def __init__(self):
-        Client.__init__(self, "codeforces.com/api/")
+        Client.__init__(self, "https://codeforces.com/api/")
         self.contests = []
 
     def get_contests(self, statuses: set[str] = {"BEFORE"}) -> tuple[int, str] :
