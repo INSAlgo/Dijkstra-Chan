@@ -235,7 +235,7 @@ class Game(cmds.Cog, name="Games"):
                 ai = self.bot.get_user(user_id)
                 assert ai 
                 assert isinstance(ctx.channel, discord.TextChannel)
-                await ai.create_dm().send(f"Please join our server to take part in the connect4 AI tournament : {ctx.channel.create_invite(max_uses=1)}")
+                await ai.create_dm().send(f"Please join our server to take part in the AI tournament : {ctx.channel.create_invite(max_uses=1)}")
                 await ctx.send(f"Sent invite to {ai.mention}")
         else:
             await ctx.send(f"No missing participants on the server :thumbsup:")

@@ -21,3 +21,5 @@ token.*
 
 # NixOs related
 venv/
+bot.log.*
+flake.*
