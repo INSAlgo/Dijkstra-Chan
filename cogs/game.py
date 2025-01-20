@@ -1,4 +1,5 @@
 import argparse, asyncio, contextlib, re, requests
+import traceback
 
 import discord
 import discord.ext.commands as cmds
@@ -91,7 +92,7 @@ class Game(cmds.Cog, name="Games"):
                             challenged_users.add(user)
                         ai_only = False
                     else:
-                        for ai_file in game.ai_path.glob(f"{user.id}.*"):
+                        for ai_file in game.ai_path.glob(f"ai_{user.id}.*"):
                             players.append(str(ai_file))
                             if user != ctx.author:
                                 challenged_users.add(user)
@@ -135,16 +136,24 @@ class Game(cmds.Cog, name="Games"):
                         return 
 
             game_args.extend(players)
-            game_args.extend(("--emoji", "--nodebug"))
+            # game_args.extend(("--emoji", "--nodebug"))
             if ai_only:
                 game_args.append("--silent")
 
             ofunc = Ofunc(thread)
             ifunc = Ifunc(thread, self.bot)
 
-            with game.log_file.open("w") as file:
-                with contextlib.redirect_stdout(file):
-                    await game.module.main(game_args, ifunc, ofunc, discord=True)
+            try:
+                with game.log_file.open("w") as file:
+                    with contextlib.redirect_stdout(file):
+                        with contextlib.redirect_stderr(file):
+                            await game.module.main(game_args, ifunc, ofunc, discord=True)
+            except Exception:
+                traceback.print_exc()
+                raise
+            except SystemExit:
+                # Might happen if wrong arguments are passed
+                traceback.print_exc()
 
             await thread.send(file=discord.File(game.log_file))
             game.log_file.unlink()
