@@ -33,7 +33,7 @@ class AvailableGame(cmds.Converter):
     @classmethod
     def load_games(cls):
         if cls.games_path.is_dir():
-            loaded_path_names = (game.game_path.name for game in cls.games)
+            loaded_path_names = set(game.game_path.name for game in cls.games)
             for game_path in cls.games_path.iterdir():
                 if game_path.name not in loaded_path_names:
                     cls.games.append(AvailableGame(game_path))
