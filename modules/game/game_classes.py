@@ -65,5 +65,5 @@ class Ofunc:
     def __init__(self, channel: discord.TextChannel):
         self.channel = channel
 
-    async def __call__(self, output: str):
-        await self.channel.send(output)
+    async def __call__(self, *args, **kwargs):
+        await self.channel.send(*args, **kwargs)
