@@ -1,5 +1,6 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
+import io
 from pathlib import Path
 from types import ModuleType
 from importlib import import_module
@@ -66,4 +67,9 @@ class Ofunc:
         self.channel = channel
 
     async def __call__(self, *args, **kwargs):
+        if 'file' in kwargs:
+            file = kwargs['file']
+            if isinstance(file, (Path, str, io.BytesIO)):
+                kwargs['file'] = discord.File(fp=file, filename=file.name)
+
         await self.channel.send(*args, **kwargs)
