@@ -37,7 +37,7 @@ class Progress():
         self.message = await ctx.send("0%")
 
     async def update_message(self):
-        if self.game_nb % 30 == 0:
+        if self.game_nb % 30 == 0 and self.nb_games != 0:
             await self.message.edit(content=f"{round(self.game_nb / self.nb_games * 100)}%" +
                                     f" ({round(t() - self.start_time)}s)")
 
@@ -63,7 +63,7 @@ async def safe_game(game, semaphore, bot, log, progress: Progress, players, args
         return players, winner
 
 def make(game, *args):
-    args = *("make", "--directory", str(game.game_dir)), *args
+    args = *("make", "--directory", str(game.game_path)), *args
     run(args, capture_output=True)
 
 async def tournament(ctx, game, rematches, nb_players, src_dir, args):
@@ -75,11 +75,16 @@ async def tournament(ctx, game, rematches, nb_players, src_dir, args):
     await ctx.channel.send(f"Compilation done" )
 
     # Get all programs
-    out_dir: Path = game.game_dir / "out"
+    out_dir: Path = game.game_path / "ai" / "ais"
     ai_files = explore(out_dir)
 
     # Initialize score
-    scores = {ai_file.stem : 0 for ai_file in ai_files}
+    scores = {}
+    for ai_file in ai_files:
+        name = ai_file.stem
+        if name.startswith("ai_"):
+            name = name[3:]
+        scores[name] = 0
 
     # Create list of coroutines to run
     games = list()
@@ -129,6 +134,6 @@ async def main(ctx, game, raw_args=None) -> list[tuple]:
     parser.add_argument("-d", "--directory", default=AvailableGame.AI_DIR_NAME, metavar="SRC_DIRECTORY")
 
     args, remaining_args = parser.parse_known_args(raw_args)
-    src_dir = game.game_dir / args.directory
+    src_dir = game.game_path / args.directory
 
     return await tournament(ctx, game, args.rematches, args.players, src_dir, remaining_args)

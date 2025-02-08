@@ -178,6 +178,8 @@ class Game(cmds.Cog, name="Games"):
 
         lines = []
         for i, (ai, score) in enumerate(scoreboard):
+            if ai.startswith("ai_"):
+                ai = ai[3:]
             user = self.bot.get_user(int(str(ai)))
             assert user
             lines.append(f"{i+1}. {user.mention} score : {score}")
