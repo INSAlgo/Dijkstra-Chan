@@ -53,7 +53,8 @@ class Game(cmds.Cog, name="Games"):
         Get the list of users who submitted an AI to the game
         """
         embed = discord.Embed(title=f"{game.name} tournament participants")
-        embed.description = '\n'.join(f"<@{file.stem}>" for file in game.ai_path.iterdir())
+        ids = [file.stem[3:] for file in game.ai_path.iterdir() if file.stem.startswith('ai_')]
+        embed.description = '\n'.join(f"<@{id}>" for id in ids)
         await ctx.send(embed=embed)
 
     @game.command()

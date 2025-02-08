@@ -70,6 +70,9 @@ class Ofunc:
         if 'file' in kwargs:
             file = kwargs['file']
             if isinstance(file, (Path, str, io.BytesIO)):
+                if isinstance(file, io.BytesIO):
+                    file.seek(0) # Just in case
+
                 kwargs['file'] = discord.File(fp=file, filename=file.name)
 
         await self.channel.send(*args, **kwargs)
