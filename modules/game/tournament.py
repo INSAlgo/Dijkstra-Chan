@@ -76,7 +76,7 @@ async def tournament(ctx, game, rematches, nb_players, src_dir, args):
     await ctx.channel.send(f"Compilation done" )
 
     # Get all programs
-    out_dir: Path = game.game_path / "ai" / "ais"
+    out_dir: Path = game.game_path / "ai"
     ai_files = explore(out_dir)
 
     # Initialize score
