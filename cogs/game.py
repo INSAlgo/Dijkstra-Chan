@@ -163,7 +163,7 @@ class Game(cmds.Cog, name="Games"):
 
             with io.StringIO() as file:
                 try:
-                    writer = MultiWriter(lambda *args, **kwargs:file.write(*args), sys.stdout.write(*args))
+                    writer = MultiWriter(lambda *args, **kwargs:file.write(*args), sys.stdout.write)
                     with contextlib.redirect_stdout(writer):
                         with contextlib.redirect_stderr(writer):
                             await game.module.main(game_args, ifunc, ofunc, discord=True)
