@@ -157,7 +157,8 @@ class Game(cmds.Cog, name="Games"):
                         try:
                             writer(data)
                         except BrokenPipeError:
-                            sys.stdout.write(f"Broken pipe error while writing to {writer}: {data}")
+                            with open('error.log', 'a') as file:
+                                file.write(f"Broken pipe error while writing to {writer}: {data}")
 
             with io.StringIO() as file:
                 try:
