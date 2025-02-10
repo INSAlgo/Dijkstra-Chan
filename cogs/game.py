@@ -149,9 +149,17 @@ class Game(cmds.Cog, name="Games"):
 
             with io.StringIO() as file:
                 try:
-                    with contextlib.redirect_stdout(file):
-                        with contextlib.redirect_stderr(file):
-                            await game.module.main(game_args, ifunc, ofunc, discord=True)
+                    with io.StringIO() as log_buffer:
+                        with contextlib.redirect_stdout(log_buffer):
+                            with contextlib.redirect_stderr(log_buffer):
+                                await game.module.main(game_args, ifunc, ofunc, discord=True)
+
+                        log_buffer.seek(0)
+                        data = log_buffer.read()
+
+                        print(data)
+                        file.write(data)
+
                 except Exception:
                     await thread.send("An error occured during the game :cry:")
                     traceback.print_exc()
