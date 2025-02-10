@@ -17,6 +17,7 @@ from utils.ids import *
 from utils.checks import in_channel
 
 from main import CustomBot
+from utils.multiwriter import MultiWriter
 
 
 class Game(cmds.Cog, name="Games"):
@@ -146,21 +147,6 @@ class Game(cmds.Cog, name="Games"):
             ofunc = Ofunc(thread)
             ifunc = Ifunc(thread, self.bot)
 
-            await thread.send('aaaaa')
-
-            class MultiWriter(io.StringIO):
-                def __init__(self, *writers):
-                    self.writers = writers
-
-                def write(self, data):
-                    for writer in self.writers:
-                        try:
-                            writer(data)
-                        except Exception as e:
-                            with open('error.log', 'a') as file:
-                                file.write(f"{str(e)} error while writing to {writer}: {data}")
-                                traceback.print_exc(file=file)
-
             with io.StringIO() as file:
                 try:
                     writer = MultiWriter(lambda *args, **kwargs:file.write(*args), sys.stdout.write)
@@ -168,24 +154,16 @@ class Game(cmds.Cog, name="Games"):
                         with contextlib.redirect_stderr(writer):
                             await game.module.main(game_args, ifunc, ofunc, discord=True)
 
-                    await thread.send('aaaaaTEST2')
-
                 except Exception:
-                    await thread.send("An error occured during the game :cry:")
                     traceback.print_exc()
                     raise
                 except SystemExit:
                     # Might happen if wrong arguments are passed
-                    await thread.send("An error occured during the game SYSTEMEXIT :cry:")
                     traceback.print_exc()
-
-                await thread.send('aaaaaTEST')
 
                 file.seek(0)
                 with io.BytesIO(file.read().encode()) as raw_file: 
                     await thread.send(file=discord.File(raw_file, filename="game_log.txt"))
-
-                await thread.send('aaaaaTESTdone')
 
         finally:
             await thread.edit(archived=True, locked=True)
