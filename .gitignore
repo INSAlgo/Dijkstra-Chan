@@ -23,3 +23,4 @@ token.*
 venv/
 bot.log.*
 flake.*
+ais/

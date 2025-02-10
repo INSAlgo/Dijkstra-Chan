@@ -145,21 +145,29 @@ class Game(cmds.Cog, name="Games"):
             ofunc = Ofunc(thread)
             ifunc = Ifunc(thread, self.bot)
 
+            await thread.send('aaaaa')
+
             with io.StringIO() as file:
                 try:
                     with contextlib.redirect_stdout(file):
                         with contextlib.redirect_stderr(file):
                             await game.module.main(game_args, ifunc, ofunc, discord=True)
                 except Exception:
+                    await thread.send("An error occured during the game :cry:")
                     traceback.print_exc()
                     raise
                 except SystemExit:
                     # Might happen if wrong arguments are passed
+                    await thread.send("An error occured during the game SYSTEMEXIT :cry:")
                     traceback.print_exc()
+
+                await thread.send('aaaaaTEST')
 
                 file.seek(0)
                 with io.BytesIO(file.read().encode()) as raw_file: 
                     await thread.send(file=discord.File(raw_file, filename="game_log.txt"))
+
+                await thread.send('aaaaaTESTdone')
 
         finally:
             await thread.edit(archived=True, locked=True)
