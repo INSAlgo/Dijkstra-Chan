@@ -80,6 +80,8 @@ class Game(cmds.Cog, name="Games"):
         is_human = False
         challenged_users: set[discord.User] = set()
 
+        raise Exception("Hi, this is a test")
+
         for arg in remaining_args :
             if arg == "-d" or arg == "--discord":
                 is_human = True
@@ -161,7 +163,6 @@ class Game(cmds.Cog, name="Games"):
 
         finally:
             await thread.edit(archived=True, locked=True)
-
 
 
     @game.command(hidden=True)

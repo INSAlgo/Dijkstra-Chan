@@ -52,7 +52,9 @@ async def main():
     date_format = '%Y-%m-%d %H:%M:%S'
     formatter = logging.Formatter('[{asctime}] [{levelname:<8}] {name}: {message}', date_format, style='{')
     handler.setFormatter(formatter)
-    logging.getLogger().addHandler(handler)
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    logger.addHandler(handler)
 
     async with CustomBot() as bot:
         await bot.start(environ['DISCORD_TOKEN'])
