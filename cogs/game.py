@@ -163,6 +163,7 @@ class Game(cmds.Cog, name="Games"):
                         with contextlib.redirect_stderr(writer):
                             await game.module.main(game_args, ifunc, ofunc, discord=True)
 
+                    await thread.send('aaaaaTEST2')
 
                 except Exception:
                     await thread.send("An error occured during the game :cry:")
