@@ -1,3 +1,4 @@
+import io
 import argparse, asyncio, contextlib, re, requests
 import traceback
 
@@ -80,8 +81,6 @@ class Game(cmds.Cog, name="Games"):
         is_human = False
         challenged_users: set[discord.User] = set()
 
-        raise Exception("Hi, this is a test")
-
         for arg in remaining_args :
             if arg == "-d" or arg == "--discord":
                 is_human = True
@@ -146,20 +145,21 @@ class Game(cmds.Cog, name="Games"):
             ofunc = Ofunc(thread)
             ifunc = Ifunc(thread, self.bot)
 
-            try:
-                with game.log_file.open("w") as file:
+            with io.StringIO() as file:
+                try:
                     with contextlib.redirect_stdout(file):
                         with contextlib.redirect_stderr(file):
                             await game.module.main(game_args, ifunc, ofunc, discord=True)
-            except Exception:
-                traceback.print_exc()
-                raise
-            except SystemExit:
-                # Might happen if wrong arguments are passed
-                traceback.print_exc()
+                except Exception:
+                    traceback.print_exc()
+                    raise
+                except SystemExit:
+                    # Might happen if wrong arguments are passed
+                    traceback.print_exc()
 
-            await thread.send(file=discord.File(game.log_file))
-            game.log_file.unlink()
+                file.seek(0)
+                with io.BytesIO(file.read().encode()) as raw_file: 
+                    await thread.send(file=discord.File(raw_file, filename="game_log.txt"))
 
         finally:
             await thread.edit(archived=True, locked=True)
