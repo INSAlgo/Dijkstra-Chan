@@ -156,13 +156,14 @@ class Game(cmds.Cog, name="Games"):
                     for writer in self.writers:
                         try:
                             writer(data)
-                        except BrokenPipeError:
+                        except Exception as e:
                             with open('error.log', 'a') as file:
-                                file.write(f"Broken pipe error while writing to {writer}: {data}")
+                                file.write(f"{str(e)} error while writing to {writer}: {data}")
+                                traceback.print_exc(file=file)
 
             with io.StringIO() as file:
                 try:
-                    writer = MultiWriter(lambda *args, **kwargs:file.write(*args), lambda *args, **kwargs:sys.stdout.write(*args))
+                    writer = MultiWriter(lambda *args, **kwargs:file.write(*args), sys.stdout.write(*args))
                     with contextlib.redirect_stdout(writer):
                         with contextlib.redirect_stderr(writer):
                             await game.module.main(game_args, ifunc, ofunc, discord=True)
