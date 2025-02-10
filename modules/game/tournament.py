@@ -28,6 +28,7 @@ class Progress():
               f"{' vs '.join(display_name(bot, player) for player in players)} ->",
               f"{display_name(bot, winner) if winner else 'draw'}",
               sep = " ", end = "", file=log)
+        errors = {player: error for player, error in errors.items() if error}
         if errors:
             print(f" ({', '.join(f'{display_name(bot, player)}: {error}' for player, error in errors.items())})", file=log)
         else:
