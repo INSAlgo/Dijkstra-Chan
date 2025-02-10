@@ -1,5 +1,6 @@
 import io
 import argparse, asyncio, contextlib, re, requests
+import sys
 import traceback
 
 import discord
@@ -147,18 +148,21 @@ class Game(cmds.Cog, name="Games"):
 
             await thread.send('aaaaa')
 
+            class MultiWriter(io.StringIO):
+                def __init__(self, *writers):
+                    self.writers = writers
+
+                def write(self, data):
+                    for writer in self.writers:
+                        writer(data)
+
             with io.StringIO() as file:
                 try:
-                    with io.StringIO() as log_buffer:
-                        with contextlib.redirect_stdout(log_buffer):
-                            with contextlib.redirect_stderr(log_buffer):
-                                await game.module.main(game_args, ifunc, ofunc, discord=True)
+                    writer = MultiWriter(lambda *args, **kwargs:file.write(*args), sys.stdout.write)
+                    with contextlib.redirect_stdout(writer):
+                        with contextlib.redirect_stderr(writer):
+                            await game.module.main(game_args, ifunc, ofunc, discord=True)
 
-                        log_buffer.seek(0)
-                        data = log_buffer.read()
-
-                        print(data)
-                        file.write(data)
 
                 except Exception:
                     await thread.send("An error occured during the game :cry:")
