@@ -43,7 +43,7 @@ class Game(cmds.Cog, name="Games"):
         List available games, with their prefixes and rules
         """
         AvailableGame.load_games()
-        embed = discord.Embed(title=f"INSAlgo tournament games")
+        embed = discord.Embed(title="INSAlgo tournament games")
         for game in AvailableGame.games:
             embed.add_field(name=game.name,
                     value=f"`{game.cmd}` - [game page]({game.url})",
@@ -83,8 +83,8 @@ class Game(cmds.Cog, name="Games"):
         is_human = False
         challenged_users: set[discord.User] = set()
 
-        for arg in remaining_args :
-            if arg == "-d" or arg == "--discord":
+        for arg in remaining_args:
+            if arg in ["-d", "--discord"]:
                 is_human = True
                 continue
             if pattern.match(arg):
@@ -113,7 +113,7 @@ class Game(cmds.Cog, name="Games"):
 
         if parsed_args.private:
             channel_type = discord.ChannelType.private_thread
-            await ctx.send(f"The game will be played in the private thread :spy:")
+            await ctx.send("The game will be played in the private thread :spy:")
         else:
             channel_type = discord.ChannelType.public_thread
         assert isinstance(ctx.channel, discord.TextChannel)
@@ -147,23 +147,23 @@ class Game(cmds.Cog, name="Games"):
             ofunc = Ofunc(thread)
             ifunc = Ifunc(thread, self.bot)
 
-            with io.StringIO() as file:
-                try:
-                    writer = MultiWriter(lambda *args, **kwargs:file.write(*args), sys.stdout.write)
-                    with contextlib.redirect_stdout(writer):
-                        with contextlib.redirect_stderr(writer):
-                            await game.module.main(game_args, ifunc, ofunc, discord=True)
+            file = io.StringIO()
+            try:
+                writer = MultiWriter(lambda *args, **kwargs:file.write(*args), sys.stdout.write)
+                with contextlib.redirect_stdout(writer):
+                    with contextlib.redirect_stderr(writer):
+                        await game.module.main(game_args, ifunc, ofunc, discord=True)
 
-                except Exception:
-                    traceback.print_exc()
-                    raise
-                except SystemExit:
-                    # Might happen if wrong arguments are passed
-                    traceback.print_exc()
+            except Exception:
+                traceback.print_exc()
+                raise
+            except SystemExit:
+                # Might happen if wrong arguments are passed
+                traceback.print_exc()
 
-                file.seek(0)
-                with io.BytesIO(file.read().encode()) as raw_file: 
-                    await thread.send(file=discord.File(raw_file, filename="game_log.txt"))
+            file.seek(0)
+            raw_file = io.BytesIO(file.read().encode())
+            await thread.send(file=discord.File(raw_file, filename="game_log.txt"))
 
         finally:
             await thread.edit(archived=True, locked=True)
@@ -245,9 +245,7 @@ class Game(cmds.Cog, name="Games"):
         user_ids = {int(file.stem) for file in game.ai_path.iterdir()}
         assert ctx.guild
         guild_users = {user.id for user in ctx.guild.members}
-        missing_users = user_ids.difference(guild_users)
-
-        if missing_users:
+        if missing_users := user_ids.difference(guild_users):
             for user_id in missing_users:
                 ai = self.bot.get_user(user_id)
                 assert ai 
@@ -255,7 +253,7 @@ class Game(cmds.Cog, name="Games"):
                 await ai.create_dm().send(f"Please join our server to take part in the AI tournament : {ctx.channel.create_invite(max_uses=1)}")
                 await ctx.send(f"Sent invite to {ai.mention}")
         else:
-            await ctx.send(f"No missing participants on the server :thumbsup:")
+            await ctx.send("No missing participants on the server :thumbsup:")
 
 
 async def setup(bot: CustomBot):
