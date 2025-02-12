@@ -35,6 +35,7 @@ jobs:
           RUNNER_TRACKING_ID: ""
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          FIREJAIL_AVAILABLE: ${{ secrets.FIREJAIL_AVAILABLE }}
         run: |
           cd ~/Dijkstra-Chan
           source env/bin/activate
