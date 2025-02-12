@@ -96,7 +96,7 @@ class Game(cmds.Cog, name="Games"):
                             challenged_users.add(user)
                         ai_only = False
                     else:
-                        for ai_file in game.ai_path.glob(f"ai_{user.id}.*"):
+                        for ai_file in game.ai_path.glob(f"ai_{user.id}*"):
                             players.append(str(ai_file))
                             if user != ctx.author:
                                 challenged_users.add(user)
@@ -214,12 +214,12 @@ class Game(cmds.Cog, name="Games"):
         """
         new_ext = attachment.filename.split(".")[-1]
         name = str(ctx.message.author.id)
-        new_submission = game.ai_path / f"ai_{name}.{new_ext}"
+        new_submission = game.submit_path / f"ai_{name}.{new_ext}"
 
-        if not game.ai_path.is_dir():
-            game.ai_path.mkdir()
+        if not game.submit_path.is_dir():
+            game.submit_path.mkdir()
 
-        for ai_file in game.ai_path.glob(f"ai_{name}.*"):
+        for ai_file in game.submit_path.glob(f"ai_{name}.*"):
             await ctx.send("Your previous submission will be replaced")
             ai_file.replace(new_submission)
             break
@@ -227,7 +227,7 @@ class Game(cmds.Cog, name="Games"):
         with new_submission.open("w") as file:
             file.write(requests.get(attachment.url).text)
 
-        autocompiler = AutoCompiler(game.ai_path)
+        autocompiler = AutoCompiler(game.submit_path, game.compile_path, game.ai_path)
 
         try:
             _ = await autocompiler.compile_user(f"ai_{name}")
@@ -242,7 +242,7 @@ class Game(cmds.Cog, name="Games"):
         """
         Invite missing players of a tournament on the server
         """
-        user_ids = {int(file.stem) for file in game.ai_path.iterdir()}
+        user_ids = {int(file.stem[3:]) for file in game.ai_path.iterdir() if file.stem.startwith("ai_")}
         assert ctx.guild
         guild_users = {user.id for user in ctx.guild.members}
         if missing_users := user_ids.difference(guild_users):
