@@ -219,9 +219,13 @@ class Game(cmds.Cog, name="Games"):
         if not game.submit_path.is_dir():
             game.submit_path.mkdir()
 
-        for ai_file in game.submit_path.glob(f"ai_{name}.*"):
+        for submit_file in game.submit_path.glob(f"ai_{name}.*"):
             await ctx.send("Your previous submission will be replaced")
-            ai_file.replace(new_submission)
+            submit_file.replace(new_submission)
+            break
+
+        for ai_file in game.ai_path.glob(f"ai_{name}*"):
+            ai_file.unlink()
             break
 
         with new_submission.open("w") as file:
