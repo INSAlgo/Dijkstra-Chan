@@ -16,7 +16,9 @@ class AvailableGame(cmds.Converter):
     games: list[AvailableGame] = []
 
     games_path = Path("games") 
-    AI_DIR_NAME = "ai"
+    UPLOAD_DIR_NAME = "ai"
+    COMPILE_DIR_NAME = "out"
+    RESULT_DIR_NAME = "ais"
     LOG_FIlE_NAME = "log.txt"
     
     def __init__(self, game_path: Path) -> None:
@@ -28,7 +30,9 @@ class AvailableGame(cmds.Converter):
         self.cmd: str = self.package.COMMAND
         self.url: str = self.package.URL
         self.game_path = game_path
-        self.ai_path = self.game_path / AvailableGame.AI_DIR_NAME
+        self.submit_path = self.game_path / AvailableGame.UPLOAD_DIR_NAME
+        self.compile_path = self.game_path / AvailableGame.COMPILE_DIR_NAME
+        self.ai_path = self.game_path / AvailableGame.RESULT_DIR_NAME
         self.log_file = self.game_path / AvailableGame.LOG_FIlE_NAME
 
     @classmethod
