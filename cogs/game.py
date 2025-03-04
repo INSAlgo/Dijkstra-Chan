@@ -20,6 +20,8 @@ from main import CustomBot
 from utils.multiwriter import MultiWriter
 
 
+ASK_CHALLENGED_PLAYERS = False
+
 class Game(cmds.Cog, name="Games"):
     """
     Commands related to games
@@ -121,7 +123,7 @@ class Game(cmds.Cog, name="Games"):
                                              type=channel_type)
 
         try:
-            if challenged_users:
+            if ASK_CHALLENGED_PLAYERS and challenged_users:
                 message = await thread.send(f"{', '.join(user.mention for user in challenged_users)}" +
                                          f" do you accept {ctx.author.mention}'s challenge to a game of {game.name} ?")
                 await message.add_reaction("👍")

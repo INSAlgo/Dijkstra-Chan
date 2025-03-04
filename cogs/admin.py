@@ -50,7 +50,7 @@ class Admin(commands.Cog):
             repo, lesson = github_client.find_lesson_ressource(repo, lesson)
             res = github_client.get_repo_readme(repo, lesson)
         except Exception as e:
-            await self.bot.get_channel(DEBUG).send(str(res))
+            await self.bot.get_channel(DEBUG).send(str(e))
 
         else:
             emb = embed_lesson(res).set_thumbnail(url="attachment://INSAlgo.png")
