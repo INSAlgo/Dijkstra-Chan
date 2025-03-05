@@ -114,13 +114,12 @@ class Game(cmds.Cog, name="Games"):
             raise cmds.BadArgument("Not enough players to start a game :grimacing:")
 
         if parsed_args.private:
-            channel_type = discord.ChannelType.private_thread
-            await ctx.send("The game will be played in the private thread :spy:")
+            assert isinstance(ctx.channel, discord.TextChannel)
+            thread = await ctx.channel.create_thread(name=f"{game.name} game",
+                                                type=discord.ChannelType.private_thread)
+            await ctx.send(f"{game.name} game private thread :spy: {thread.mention}")
         else:
-            channel_type = discord.ChannelType.public_thread
-        assert isinstance(ctx.channel, discord.TextChannel)
-        thread = await ctx.channel.create_thread(name=f"{game.name} game started by {ctx.author.display_name}",
-                                             type=channel_type)
+            thread = await ctx.message.create_thread(name=f"{game.name} game")
 
         try:
             if ASK_CHALLENGED_PLAYERS and challenged_users:
@@ -150,22 +149,32 @@ class Game(cmds.Cog, name="Games"):
             ifunc = Ifunc(thread, self.bot)
 
             file = io.StringIO()
-            try:
-                writer = MultiWriter(lambda *args, **kwargs:file.write(*args), sys.stdout.write)
-                with contextlib.redirect_stdout(writer):
-                    with contextlib.redirect_stderr(writer):
-                        await game.module.main(game_args, ifunc, ofunc, discord=True)
-
-            except Exception:
-                traceback.print_exc()
-                raise
-            except SystemExit:
-                # Might happen if wrong arguments are passed
-                traceback.print_exc()
+            winner = None
+            # use this writer instead of file for server side debugging:
+            # writer = MultiWriter(lambda *args, **kwargs:file.write(*args), sys.stdout.write)
+            with contextlib.redirect_stdout(file):
+                with contextlib.redirect_stderr(file):
+                    _, winner, _ = await game.module.main(game_args, ifunc, ofunc, discord=True)
 
             file.seek(0)
-            raw_file = io.BytesIO(file.read().encode())
-            await thread.send(file=discord.File(raw_file, filename="game_log.txt"))
+            with io.BytesIO(file.read().encode()) as raw_file: 
+                await thread.send(file=discord.File(raw_file, filename="game_log.txt"))
+            
+            if winner:
+                if game.name == "Snake":
+                    lines = file.getvalue().splitlines(keepends=True)
+                    if len(lines) >= 37: await thread.send(''.join(lines[-37:-25]))
+                    if len(lines) >= 25: await thread.send(''.join(lines[-25:-13]))
+                    if len(lines) >= 13: await thread.send(''.join(lines[-13:]))
+
+                await thread.send(f"{winner} won!")
+                
+                def display_name(guild, player):
+                    member = guild.get_member(int(player.name))
+                    assert member
+                    return member.display_name
+
+                await thread.edit(name=f"{thread.name} won by {display_name(ctx.guild, winner)}")
 
         finally:
             await thread.edit(archived=True, locked=True)
