@@ -23,6 +23,7 @@ class Admin(commands.Cog):
         self.bot = bot
 
     @commands.group(aliases=["re"])
+    @commands.has_role(ADMIN)
     async def reload(self, ctx: commands.Context, extension: str = ""):
         """
         Reload the bot
@@ -68,7 +69,7 @@ class Admin(commands.Cog):
 
 
     @commands.command(aliases=["down"])
-    @commands.has_role(BUREAU)
+    @commands.has_role(ADMIN)
     async def shutdown(self, ctx: commands.Context) :
         """
         Shutdown the bot
