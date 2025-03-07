@@ -141,7 +141,8 @@ class Game(cmds.Cog, name="Games"):
                         return 
 
             game_args.extend(players)
-            # game_args.extend(("--emoji", "--nodebug"))
+            game_args.append("--nodebug")
+            # game_args.append("--emoji")
             if ai_only:
                 game_args.append("--silent")
 
