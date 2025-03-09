@@ -82,7 +82,7 @@ async def tournament(ctx, game, nb_players, src_dir, args, games_args=None):
 
     # Compile programs
     make(game, f"SRCDIR={src_dir.name}")
-    await ctx.channel.send(f"Compilation done" )
+    await ctx.channel.send("Compilation done" )
 
     # Get all programs
     out_dir: Path = game.ai_path
@@ -144,7 +144,7 @@ async def main(ctx, game, raw_args=None) -> list[tuple]:
 
     parser = ArgumentParser()
     parser.add_argument("-p", "--players", type=int, default=2, metavar="NB_PLAYERS")
-    parser.add_argument("-d", "--directory", default=AvailableGame.RESULT_DIR_NAME, metavar="SRC_DIRECTORY")
+    parser.add_argument("-d", "--directory", default=AvailableGame.UPLOAD_DIR_NAME, metavar="SRC_DIRECTORY")
     parser.add_argument("-g", "--games_args", nargs=REMAINDER, metavar="ARGS", default=[])
 
     try:
