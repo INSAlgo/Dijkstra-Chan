@@ -73,6 +73,7 @@ async def safe_game(game, semaphore, bot, log, progress: Progress, players, args
         return players, winner
 
 def make(game, *args):
+    return # DO NOT USE, MAKEFILE IS NOT WORKING ANYMORE
     args = *("make", "--directory", str(game.game_path)), *args
     run(args, capture_output=True)
 
@@ -80,9 +81,9 @@ async def tournament(ctx, game, nb_players, src_dir, args, games_args=None):
 
     await ctx.channel.send(content=f"Starting **{game.name}** tournament")
 
-    # Compile programs
-    make(game, f"SRCDIR={src_dir.name}")
-    await ctx.channel.send("Compilation done" )
+    # # Compile programs -> no don't
+    # make(game, f"SRCDIR={src_dir.name}")
+    # await ctx.channel.send("Compilation done" )
 
     # Get all programs
     out_dir: Path = game.ai_path
@@ -136,7 +137,7 @@ async def tournament(ctx, game, nb_players, src_dir, args, games_args=None):
             scores[winner.name] += 1
 
     scoreboard = sorted(scores.items(), key=lambda score: score[1], reverse=True)
-    make(game, "clean")
+    # make(game, "clean") # big mistake
 
     return scoreboard
 
