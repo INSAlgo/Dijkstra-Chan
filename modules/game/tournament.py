@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import asyncio, itertools, os, sys
-from argparse import ArgumentParser
+from argparse import ArgumentParser, REMAINDER
 from pathlib import Path
 from subprocess import run
 from time import time as t
@@ -52,13 +52,22 @@ def explore(out_dir):
     return ai_paths
 
 def display_name(bot, player):
+    if isinstance(player, str):
+        return player
+
     user = bot.get_user(int(player.name))
     assert user
     return user.display_name
 
 async def safe_game(game, semaphore, bot, log, progress: Progress, players, args):
     async with semaphore:
-        players, winner, errors = await game.module.main(list(players) + args, discord=True)
+        try:
+            players, winner, errors = await game.module.main(list(players) + args, discord=True)
+        except SystemExit as e:
+            # Wrong arguments
+            players = [bot.get_user(int(player.split("_")[1].split('.')[0])).name for player in players]
+            winner, errors = None, {player: "SystemExit" for player in players}
+
         progress.log_results(bot, log, players, winner, errors)
         await progress.update_message()
         return players, winner
@@ -67,7 +76,7 @@ def make(game, *args):
     args = *("make", "--directory", str(game.game_path)), *args
     run(args, capture_output=True)
 
-async def tournament(ctx, game, rematches, nb_players, src_dir, args):
+async def tournament(ctx, game, nb_players, src_dir, args, games_args=None):
 
     await ctx.channel.send(content=f"Starting **{game.name}** tournament")
 
@@ -93,11 +102,15 @@ async def tournament(ctx, game, rematches, nb_players, src_dir, args):
 
     log_file = game.log_file.open("w")
     progress = Progress()
+    if not games_args:
+        games_args = [""]
 
-    for combinations in itertools.combinations(map(str, ai_files), nb_players):
-        for players in itertools.permutations(combinations):
-            for _ in range(rematches):
-                games.append(safe_game(game, semaphore, ctx.bot, log_file, progress, players, args))
+    for combinations in itertools.combinations(map(str, ai_files), nb_players): # All combinations of players
+        for players in itertools.permutations(combinations): # Each starting configuration
+            for current_args in games_args:
+                if isinstance(current_args, str):
+                    current_args = current_args.split()
+                games.append(safe_game(game, semaphore, ctx.bot, log_file, progress, players, args + current_args))
 
     progress.nb_games = len(games)
     shuffle(games)
@@ -130,11 +143,14 @@ async def tournament(ctx, game, rematches, nb_players, src_dir, args):
 async def main(ctx, game, raw_args=None) -> list[tuple]:
 
     parser = ArgumentParser()
-    parser.add_argument("-r", "--rematches", type=int, default=1, metavar="NB_REMATCHES")
     parser.add_argument("-p", "--players", type=int, default=2, metavar="NB_PLAYERS")
-    parser.add_argument("-d", "--directory", default=AvailableGame.AI_DIR_NAME, metavar="SRC_DIRECTORY")
+    parser.add_argument("-d", "--directory", default=AvailableGame.RESULT_DIR_NAME, metavar="SRC_DIRECTORY")
+    parser.add_argument("-g", "--games_args", nargs=REMAINDER, metavar="ARGS", default=[])
 
-    args, remaining_args = parser.parse_known_args(raw_args)
+    try:
+        args, remaining_args = parser.parse_known_args(raw_args)
+    except SystemExit:
+        return None
     src_dir = game.game_path / args.directory
 
-    return await tournament(ctx, game, args.rematches, args.players, src_dir, remaining_args)
+    return await tournament(ctx, game, args.players, src_dir, remaining_args, args.games_args)
