@@ -11,7 +11,7 @@ import discord
 
 from modules.game.game_classes import AvailableGame
 
-MAX_PARALLEL_PROCESSES = 10
+MAX_PARALLEL_PROCESSES = 1
 ALLOWED_EXTENSIONS = ('.py', '.js', '', '.out', '.class')
 
 class Progress():
@@ -114,7 +114,7 @@ async def tournament(ctx, game, nb_players, src_dir, args, games_args=None):
 
     progress.nb_games = len(games)
     shuffle(games)
-    
+
     await ctx.channel.send(f"Running **{progress.nb_games}** games between **{len(ai_files)}** AI")
     await progress.first_message(ctx)
 
