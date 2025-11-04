@@ -76,7 +76,12 @@ class Admin(commands.Cog):
     @commands.has_role(BUREAU)
     async def broadcast(self, ctx: commands.Context, text: str):
         SHARE_URL = "https://codingame-share.insalgo.fr/api/broadcast"
-        SHARE_TOKEN = os.environ['SHARE_TOKEN']
+        try:
+            SHARE_TOKEN = os.environ['SHARE_TOKEN']
+        except KeyError:
+            await ctx.send('SHARE_TOKEN env variable is not set!')
+            return
+
         headers = {
             'Authorization': f'Bearer {SHARE_TOKEN}',
             'Content-Type': 'application/json'
