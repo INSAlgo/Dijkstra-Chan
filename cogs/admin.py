@@ -1,6 +1,11 @@
+import asyncio
 from logging import getLogger
+import os
 from pathlib import Path
 from urllib.parse import quote
+
+import aiohttp
+import requests
 
 import discord
 import discord.ext.commands as commands
@@ -66,6 +71,36 @@ class Admin(commands.Cog):
             assert isinstance(channel, discord.TextChannel)
             await channel.send(file=logo, embed=emb)
 
+
+    @commands.command(hidden=True)
+    @commands.has_role(BUREAU)
+    async def broadcast(self, ctx: commands.Context, text: str):
+        SHARE_URL = "https://codingame-share.insalgo.fr/api/broadcast"
+        SHARE_TOKEN = os.environ['SHARE_TOKEN']
+        headers = {
+            'Authorization': f'Bearer {SHARE_TOKEN}',
+            'Content-Type': 'application/json'
+        }
+        data = {
+            'content': text
+        }
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(SHARE_URL, headers=headers, json=data) as response:
+                    # Raise an exception for HTTP status 4xx/5xx
+                    response.raise_for_status()
+                    response_data = await response.text()
+                    await ctx.send(f'Broadcast successful!')
+
+        except aiohttp.ClientResponseError as e:
+            await ctx.send(f'HTTP Error: {e.status} - {e.message}')
+        except aiohttp.ClientConnectionError as e:
+            await ctx.send(f'Connection Error: {e}')
+        except asyncio.TimeoutError:
+            await ctx.send('Request timed out')
+        except Exception as e:
+            await ctx.send(f'Unexpected error: {e}')
 
 
     @commands.command(aliases=["down"])
