@@ -7,3 +7,7 @@
 	path = games/Concours-Snake
 	url = https://github.com/INSAlgo/Concours-Snake.git
 	branch = main
+
+[submodule "games/Concours-Tetris"]
+	path = games/Concours-Tetris
+	url = https://github.com/INSAlgo/Concours-Tetris
