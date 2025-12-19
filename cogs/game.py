@@ -171,7 +171,9 @@ class Game(cmds.Cog, name="Games"):
                 await thread.send(f"{winner} won!")
                 
                 def display_name(guild, player):
-                    member = guild.get_member(int(player.name))
+                    if player.name.startswith("ai_"):
+                        player.name = player.name[3:]
+                    member = guild.get_member(int(player.name)) 
                     assert member
                     return member.display_name
 
