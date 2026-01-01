@@ -110,8 +110,8 @@ class Game(cmds.Cog, name="Games"):
             else:
                 game_args.append(arg)
 
-        if len(players) < 2:
-            raise cmds.BadArgument("Not enough players to start a game :grimacing:")
+        # if len(players) < 2:
+        #     raise cmds.BadArgument("Not enough players to start a game :grimacing:")
 
         if parsed_args.private:
             assert isinstance(ctx.channel, discord.TextChannel)
